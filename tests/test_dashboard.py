@@ -25,6 +25,14 @@ class DashboardDataTests(unittest.TestCase):
         self.assertEqual(payload["challenge_evaluation"]["metrics"]["false_positives"], 0)
         self.assertIn("regression", payload["challenge_evaluation"]["dataset_role"].lower())
 
+    def test_final_evaluation_is_honestly_pending_until_frozen_data_exists(self):
+        payload = dashboard_payload()
+        final = payload["final_evaluation"]
+        self.assertEqual(final["status"], "pending")
+        self.assertEqual(final["requirements"]["minimum_phishing"], 50)
+        self.assertEqual(final["requirements"]["minimum_legitimate"], 50)
+        self.assertIn("not yet", final["message"].lower())
+
     def test_chat_media_upload_is_exposed_before_the_demo(self):
         root = Path(__file__).resolve().parents[1]
         html = (root / "web" / "index.html").read_text(encoding="utf-8")

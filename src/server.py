@@ -38,6 +38,7 @@ EVIDENCE = ROOT / "data" / "public_evidence.json"
 SCENARIOS = ROOT / "data" / "dashboard_scenarios.json"
 EVALUATION = ROOT / "data" / "evaluation_results.json"
 CHALLENGE_EVALUATION = ROOT / "data" / "challenge_evaluation.json"
+FINAL_EVALUATION = ROOT / "data" / "independent_evaluation_results.json"
 model = load_or_train(MODEL, DATA)
 research_database = os.environ.get("SCAMSHIELD_RESEARCH_DB", "").strip()
 analysis_repository = (
@@ -179,7 +180,33 @@ def dashboard_payload() -> dict:
         evaluation = json.load(f)
     with open(CHALLENGE_EVALUATION, encoding="utf-8") as f:
         challenge_evaluation = json.load(f)
-    return {"evidence": evidence, "scenarios": scenarios, "evaluation": evaluation, "challenge_evaluation": challenge_evaluation}
+    if FINAL_EVALUATION.exists():
+        with open(FINAL_EVALUATION, encoding="utf-8") as f:
+            final_evaluation = json.load(f)
+        final_evaluation_status = {
+            "status": "measured",
+            "message": "A gate-approved frozen independent evaluation is available.",
+            "dataset": final_evaluation.get("dataset", {}),
+            "metrics": final_evaluation.get("metrics", {}),
+        }
+    else:
+        final_evaluation_status = {
+            "status": "pending",
+            "message": "Final independent evaluation pending: the dataset has not yet been collected, reviewed and frozen.",
+            "requirements": {
+                "minimum_phishing": 50,
+                "minimum_legitimate": 50,
+                "label_review": "adjudicated",
+                "development_overlap": "none permitted",
+            },
+        }
+    return {
+        "evidence": evidence,
+        "scenarios": scenarios,
+        "evaluation": evaluation,
+        "challenge_evaluation": challenge_evaluation,
+        "final_evaluation": final_evaluation_status,
+    }
 
 
 class Handler(BaseHTTPRequestHandler):

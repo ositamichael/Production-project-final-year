@@ -23,6 +23,7 @@ def evaluate(
     test_path: Path,
     repository: EvaluationRepository | None = None,
     dataset_role: str = "measured evaluation",
+    dataset_version: str | None = None,
 ) -> dict:
     model = train_from_csv(train_path)
     comparison = StrategyComparisonService(
@@ -47,7 +48,7 @@ def evaluate(
         prediction = int(result["risk_score"] >= DECISION_THRESHOLD)
         y_pred.append(prediction)
         baseline_pred.append(int(compared["tfidf_baseline"]["prediction"] == "phishing"))
-        records.append({
+        record = {
             "scenario": row["scenario"],
             "label": row["label"],
             "prediction": prediction,
@@ -55,7 +56,10 @@ def evaluate(
             "actual": "phishing" if prediction else "legitimate",
             "risk_score": result["risk_score"],
             "score_0_100": round(result["risk_score"] * 100),
-        })
+        }
+        if row.get("case_id", "").strip():
+            record["case_id"] = row["case_id"].strip()
+        records.append(record)
     tp = sum(a == b == 1 for a, b in zip(y_true, y_pred))
     tn = sum(a == b == 0 for a, b in zip(y_true, y_pred))
     fp = sum(a == 0 and b == 1 for a, b in zip(y_true, y_pred))
@@ -71,7 +75,7 @@ def evaluate(
     brecall = btp / (btp + bfn) if btp + bfn else 0.0
     bf1 = 2 * bprecision * brecall / (bprecision + brecall) if bprecision + brecall else 0.0
     result = {
-        "dataset": {"version": DATASET_VERSION if test_path.name == "heldout_messages.csv" else "challenge_messages-v1", "train": f"data/{train_path.name}", "test": f"data/{test_path.name}", "test_rows": len(rows), "class_distribution": dict(Counter(row["label"] for row in rows))},
+        "dataset": {"version": dataset_version or (DATASET_VERSION if test_path.name == "heldout_messages.csv" else "challenge_messages-v1"), "train": f"data/{train_path.name}", "test": f"data/{test_path.name}", "test_rows": len(rows), "class_distribution": dict(Counter(row["label"] for row in rows))},
         "evaluation_date": date.today().isoformat(),
         "model_version": MODEL_VERSION,
         "decision_threshold": DECISION_THRESHOLD,
