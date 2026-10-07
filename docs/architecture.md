@@ -15,7 +15,7 @@ flowchart LR
 
 The current implementation is intentionally small. Browser code handles the interface and local media workflow. The Python server exposes analysis, dashboard and constrained public-URL metadata endpoints. Versioned files contain training, evaluation, synthetic and public-context data.
 
-## Target architecture for Sprints 2–3
+## Implemented Sprint 2 application boundaries
 
 ```mermaid
 flowchart TB
@@ -30,25 +30,31 @@ flowchart TB
     DS --> TF[TF-IDF baseline]
     DS --> CTX[Contextual detector]
     DS --> FUT[Future comparison model]
-    APP --> REPO[Case repository interface]
-    REPO --> SQL[(SQLite research store)]
+    APP --> REPO[Analysis repository interface]
+    REPO --> NULL[Stateless repository — default]
+    REPO --> SQL[(Optional SQLite research metadata)]
     APP --> EX[Evidence-linked explanation]
     SQL --> EVAL[Versioned evaluation and replay]
     EVAL --> DASH
 ```
 
-### Intended patterns
+### Implemented patterns
 
-- **Strategy:** each detector implements the same analysis contract, allowing controlled comparison without conditional logic throughout the application.
-- **Adapter:** text, OCR output, recording-frame output and URL-pattern evidence are converted into one validated evidence representation.
-- **Repository:** application services depend on a storage interface rather than SQLite details, enabling isolated tests and future storage changes.
+- **Strategy:** `ContextualDetectorStrategy` and `TfidfBaselineStrategy` implement the same analysis contract, allowing controlled comparison without conditional logic throughout the server.
+- **Adapter:** pasted text, reviewed screenshot OCR and reviewed recording-frame OCR are converted into one validated `EvidenceItem` representation.
+- **Repository:** `AnalysisService` depends on an `AnalysisRepository` contract. `NullAnalysisRepository` keeps the deployed default stateless; `SqliteAnalysisRepository` stores optional research metadata.
 
-These patterns are target decisions, not a claim about the present code. Their implementation and tests are Sprint 2 acceptance criteria.
+The live `/api/analyse` route now uses the Adapter → Service → Strategy flow. Existing contextual output fields are regression-tested for equivalence. The URL metadata checker remains separate because it inspects a public destination rather than message evidence.
+
+`StrategyComparisonService` runs the contextual and TF-IDF baseline strategies against the same immutable evidence item. The reproducible evaluation uses this service so compared decisions cannot silently come from different input rows.
+
+See [`data_model.md`](data_model.md) for the schema and retention boundary.
 
 ## Current trust boundaries
 
 - Uploaded images and recordings are previewed in the browser.
 - OCR output must be reviewed before text is analysed.
 - The server receives analysed text, not raw uploaded media, in the current design.
+- Live analysis is stateless by default. Optional SQLite recording requires `SCAMSHIELD_RESEARCH_DB` and stores no raw text or media.
 - Public URL inspection accepts only public HTTP(S) destinations and returns technical metadata, not a reputation verdict.
 - Measured evaluation, synthetic demonstrations and public context use separate data sources and labels.

@@ -24,12 +24,12 @@ python3 -m venv .venv
 
 ```bash
 .venv/bin/coverage run -m unittest discover -s tests -p "test_*.py" -v
-.venv/bin/coverage report --fail-under=60
+.venv/bin/coverage report --fail-under=70
 node tests/test_conversation.js
 .venv/bin/python scripts/verify_evaluation.py
 ```
 
-The 60% branch-coverage threshold is an initial ratchet, not a quality target. Sprint 1 measured 65.5%; the gate prevents a silent fall below that baseline while later sprints add server and architecture tests and raise the threshold.
+The branch-coverage threshold is a ratchet, not a quality target. Sprint 1 established a 60% gate against 65.5% measured coverage. Sprint 2 architecture tests raised measured coverage to 73.3%, so the gate is now 70% and must not be lowered to make a failing change pass.
 
 ## Definition of done
 

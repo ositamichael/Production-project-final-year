@@ -5,6 +5,8 @@ __pycache__/
 coverage.xml
 htmlcov/
 .DS_Store
+*.sqlite3
+*.db
 artifacts/test_model.json
 work/
 web/static/test-fresh-fictional-sms.png
