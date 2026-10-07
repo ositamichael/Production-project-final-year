@@ -4,6 +4,8 @@ ScamShield is a final-year computer science project exploring whether an explain
 
 For a clean first explanation of the project, see [`docs/project_overview.md`](docs/project_overview.md) and the assessor-facing [Project Overview document](outputs/ScamShield_Project_Overview_Updated.docx).
 
+The formal software-engineering workflow begins with Sprint 1 on 7 October 2026. See the [software engineering plan](docs/software_engineering_plan.md), [requirements traceability matrix](docs/requirements_traceability.md), [architecture record](docs/architecture.md) and [Sprint 1 record](docs/sprints/01-engineering-foundation.md). These records intentionally distinguish the earlier iterative prototype from the branch-and-pull-request process used from this sprint onward.
+
 ## Project boundary
 
 This is a controlled academic prototype. It analyses pasted fictional or public message text and user-approved OCR text. It does not connect to email accounts, send messages, make financial decisions or replace human judgement. Its optional public-web checker requests technical response metadata for a supplied public URL; that check is not a safety or reputation verdict.
@@ -58,6 +60,8 @@ python3 -m venv .venv
 .venv/bin/python -m src.evaluate
 .venv/bin/python -m unittest -v tests.test_core tests.test_dashboard tests.test_evaluation
 ```
+
+For the complete development checks, install `requirements-dev.txt` and follow [`CONTRIBUTING.md`](CONTRIBUTING.md). `scripts/verify_evaluation.py` recalculates both evaluation sets and checks the versioned metrics and case decisions without treating the generated run date as a model result.
 
 The checked-in result is `data/evaluation_results.json`. It contains a small, hand-curated held-out set and must not be presented as real-world accuracy. After correcting the unexplained false-alarm path, the current reproducible run reports precision 1.000, recall 1.000 and F1 1.000 on 12 messages, with 0 false alarms and 0 missed scams. This perfect result is not evidence of real-world reliability; the dashboard explains the small sample and validation limitations.
 
