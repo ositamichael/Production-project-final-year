@@ -12,7 +12,7 @@ This matrix connects the final-year expectations to deliverables and verifiable 
 | Design patterns | Strategy for detectors, Adapter for evidence and Repository for persistence | `src/detectors.py`, `src/evidence.py`, `src/repository.py`, architecture tests | Implemented |
 | Working artefact | Scanner, Evidence Lab and Research Dashboard | Deployed application, source and verification screenshots | Implemented |
 | Artificial intelligence | Transparent TF-IDF baseline plus contextual analysis; future controlled comparison | Model card, evaluation exports and TrustLab | In progress |
-| Data engineering | Versioned SQLite schema, migration register, privacy boundary and ERD | `migrations/`, `docs/data_model.md`, repository tests | In progress |
+| Data engineering | Versioned SQLite schema, migration register, relational evaluation runs, privacy boundary and ERD | `migrations/`, `docs/data_model.md`, repository tests | Implemented |
 | Dashboard | Measured results separated from synthetic demonstrations and public context | Dashboard source and versioned JSON | Implemented |
 | Method comparison | Baseline and contextual model on the same frozen evaluation source | `src/evaluate.py`, dashboard and verification script | Implemented with small-data limitation |
 | Technical depth | Robustness transformations and versioned evidence replay | TrustLab Sprint 3 evidence | Planned |
@@ -21,6 +21,5 @@ This matrix connects the final-year expectations to deliverables and verifiable 
 ## Current priority gaps
 
 1. The independent evaluation set is too small for a general reliability claim.
-2. Evaluation replay and controlled strategy comparison are not yet backed by the repository abstraction.
-3. Historical development predates the formal branch and sprint workflow.
-4. Automated accessibility and end-to-end browser checks are not yet present.
+2. Historical development predates the formal branch and sprint workflow.
+3. Automated accessibility and end-to-end browser checks are not yet present.
