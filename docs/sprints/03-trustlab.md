@@ -1,7 +1,7 @@
 # Sprint 3 — TrustLab robustness and replay
 
 **Start:** 7 October 2026  
-**Status:** In progress  
+**Status:** Complete — merged in PR #3
 **Branch:** `feat/sprint-3-trustlab`
 
 ## Sprint goal
@@ -20,7 +20,7 @@ Measure how the contextual detector and TF-IDF baseline respond to controlled la
 - [x] Add privacy-preserving relational replay storage without raw transformed text.
 - [x] Review failures without tuning against the held-out set.
 - [x] Record remote CI evidence.
-- [ ] Complete the sprint retrospective after pull-request review.
+- [x] Complete the sprint retrospective after pull-request review.
 
 ## Demonstrable increment
 
@@ -61,3 +61,12 @@ The full interpretation and decision not to tune against these cases are recorde
 - Held-out and challenge evaluation exports reproduced unchanged.
 - TrustLab replay reproduced exactly.
 - GitHub Actions run [37601965643](https://github.com/ositamichael/Production-project-final-year/actions/runs/37601965643) completed successfully for commit `b810fcf` on the Sprint 3 branch.
+- Pull request [#3](https://github.com/ositamichael/Production-project-final-year/pull/3) merged to `main` as commit `70c0fa1` after two successful checks.
+
+## Retrospective
+
+**What worked:** explicit metamorphic relationships prevented prediction stability from being mistaken for correctness. Text-free replay records also gave useful evidence without duplicating the messages in storage.
+
+**What was learned:** the strongest contextual detector failure was not missed scams but false alarms on denials and awareness quotations. Because those cases were now visible during development, they were retained as known failures rather than used to tune the final test.
+
+**What changes next:** Sprint 4 adds a hard dataset gate. A final result cannot be generated until the dataset is frozen, labelled under a written policy, checked for overlap with every development source and large enough for both classes.

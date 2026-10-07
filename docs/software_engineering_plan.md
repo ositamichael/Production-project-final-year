@@ -19,6 +19,8 @@ The project is individually owned, so the student performs product, development 
 3. **TrustLab:** controlled language transformations, detector comparison and versioned replay.
 4. **Independent evaluation:** frozen data, final metrics, failure analysis, accessibility verification and submission evidence.
 
+Sprint 4 uses a machine-enforced entry gate. The final evaluator refuses to run unless the dataset is frozen, its digest matches the manifest, labels have been reviewed, both classes meet the minimum sample count and no exact or near-duplicate development overlap is found.
+
 ## Language and platform decisions
 
 ### Python
