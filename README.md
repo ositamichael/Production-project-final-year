@@ -4,7 +4,7 @@ ScamShield is a final-year computer science project exploring whether an explain
 
 For a clean first explanation of the project, see [`docs/project_overview.md`](docs/project_overview.md) and the assessor-facing [Project Overview document](outputs/ScamShield_Project_Overview_Updated.docx).
 
-The formal software-engineering workflow begins with Sprint 1 on 7 October 2026. See the [software engineering plan](docs/software_engineering_plan.md), [requirements traceability matrix](docs/requirements_traceability.md), [architecture record](docs/architecture.md), [Sprint 1 record](docs/sprints/01-engineering-foundation.md) and [Sprint 2 record](docs/sprints/02-architecture-data.md). These records intentionally distinguish the earlier iterative prototype from the branch-and-pull-request process used from this sprint onward.
+The formal software-engineering workflow begins with Sprint 1 on 7 October 2026. See the [software engineering plan](docs/software_engineering_plan.md), [requirements traceability matrix](docs/requirements_traceability.md), [architecture record](docs/architecture.md), [Sprint 1 record](docs/sprints/01-engineering-foundation.md), [Sprint 2 record](docs/sprints/02-architecture-data.md) and [Sprint 3 record](docs/sprints/03-trustlab.md). These records intentionally distinguish the earlier iterative prototype from the branch-and-pull-request process used from this sprint onward.
 
 ## Project boundary
 
@@ -66,6 +66,15 @@ python3 -m venv .venv
 ```
 
 For the complete development checks, install `requirements-dev.txt` and follow [`CONTRIBUTING.md`](CONTRIBUTING.md). `scripts/verify_evaluation.py` recalculates both evaluation sets and checks the versioned metrics and case decisions without treating the generated run date as a model result.
+
+## Reproduce the TrustLab development replay
+
+```bash
+.venv/bin/python -m src.trustlab
+.venv/bin/python scripts/verify_trustlab.py
+```
+
+TrustLab deterministically applies neutral padding, polite tone, urgency softening, formatting variation, explicit awareness quotation and denied-request context to the 24-message development challenge set. It compares the contextual detector with the TF-IDF baseline, records prediction stability and correctness separately, and preserves every failure for review. It never transforms the final held-out set. The checked-in `data/trustlab_results.json` stores case identifiers, scores, labels and SHA-256 digests rather than duplicated message text; optional SQLite replay storage follows the same boundary.
 
 The checked-in result is `data/evaluation_results.json`. It contains a small, hand-curated held-out set and must not be presented as real-world accuracy. After correcting the unexplained false-alarm path, the current reproducible run reports precision 1.000, recall 1.000 and F1 1.000 on 12 messages, with 0 false alarms and 0 missed scams. This perfect result is not evidence of real-world reliability; the dashboard explains the small sample and validation limitations.
 
