@@ -59,10 +59,42 @@ erDiagram
         REAL risk_score
     }
 
+    TRUSTLAB_RUNS {
+        INTEGER id PK
+        TEXT created_at
+        TEXT suite_version
+        TEXT transformation_version
+        TEXT dataset_role
+        TEXT seed_sha256
+        TEXT transformation_manifest_sha256
+        TEXT model_version
+        REAL decision_threshold
+        INTEGER seed_case_count
+        INTEGER transformed_case_count
+    }
+
+    TRUSTLAB_CASE_RESULTS {
+        INTEGER id PK
+        INTEGER run_id FK
+        TEXT case_key
+        TEXT source_key
+        TEXT scenario
+        TEXT detector
+        TEXT transformation
+        TEXT relation
+        TEXT expected_label
+        TEXT predicted_label
+        REAL risk_score
+        INTEGER correct
+        INTEGER changed_from_original
+        TEXT text_sha256
+    }
+
     EVALUATION_RUNS ||--o{ EVALUATION_CASE_RESULTS : contains
+    TRUSTLAB_RUNS ||--o{ TRUSTLAB_CASE_RESULTS : contains
 ```
 
-`schema_migrations` records each applied SQL file. `analysis_events` deliberately has no relationship to a user, session or raw evidence table. `evaluation_runs` captures one versioned metric result and `evaluation_case_results` links its individual outcomes without copying the source message.
+`schema_migrations` records each applied SQL file. `analysis_events` deliberately has no relationship to a user, session or raw evidence table. `evaluation_runs` captures one versioned metric result and `evaluation_case_results` links its individual outcomes without copying the source message. `trustlab_runs` binds a replay to the exact seed file and transformation manifest; `trustlab_case_results` stores paired detector outcomes and text digests, not transformed text.
 
 ## Migration process
 
@@ -74,5 +106,6 @@ Migrations are ordered SQL files under `migrations/`. `SqliteAnalysisRepository`
 - Optional research runtime: metadata only.
 - Digests help detect repeated controlled cases but must still be treated as derived data.
 - Evaluation dataset digests bind a run to exact source bytes while case rows retain only generated case keys, scenario labels and outcomes.
+- TrustLab digests bind replay outcomes to controlled inputs while avoiding a second stored copy of each transformed message.
 - No claim of anonymity is made.
 - Any future storage of raw evidence requires a separate consent, retention, access and deletion design.

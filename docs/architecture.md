@@ -48,6 +48,25 @@ The live `/api/analyse` route now uses the Adapter → Service → Strategy flow
 
 `StrategyComparisonService` runs the contextual and TF-IDF baseline strategies against the same immutable evidence item. The reproducible evaluation uses this service so compared decisions cannot silently come from different input rows.
 
+## Sprint 3 TrustLab replay
+
+```mermaid
+flowchart LR
+    DEV[Development challenge set] --> TX[Versioned deterministic transformations]
+    TX --> CASES[Label-preserving and label-changing cases]
+    CASES --> COMP[Strategy comparison service]
+    COMP --> CTX[Contextual detector]
+    COMP --> BASE[TF-IDF baseline]
+    CTX --> REPORT[Metrics, stability and failures]
+    BASE --> REPORT
+    REPORT --> JSON[Versioned JSON replay]
+    REPORT --> META[(Optional text-free SQLite metadata)]
+```
+
+TrustLab is a development robustness harness, not a new source of independent performance evidence. It applies declared transformations, keeps each expected-label relationship explicit, and evaluates both strategies on paired evidence. The module rejects the final held-out filename to reduce accidental leakage. The replay export contains outcome metadata and text digests rather than transformed message text.
+
+See [ADR 0004](adr/0004-trustlab-metamorphic-testing.md) for the decision and limitations.
+
 See [`data_model.md`](data_model.md) for the schema and retention boundary.
 
 ## Current trust boundaries

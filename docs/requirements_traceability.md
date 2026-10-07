@@ -15,7 +15,7 @@ This matrix connects the final-year expectations to deliverables and verifiable 
 | Data engineering | Versioned SQLite schema, migration register, relational evaluation runs, privacy boundary and ERD | `migrations/`, `docs/data_model.md`, repository tests | Implemented |
 | Dashboard | Measured results separated from synthetic demonstrations and public context | Dashboard source and versioned JSON | Implemented |
 | Method comparison | Baseline and contextual model on the same frozen evaluation source | `src/evaluate.py`, dashboard and verification script | Implemented with small-data limitation |
-| Technical depth | Robustness transformations and versioned evidence replay | TrustLab Sprint 3 evidence | Planned |
+| Technical depth | Deterministic robustness transformations, paired detector comparison and versioned evidence replay | `src/trustlab.py`, TrustLab export, migration and Sprint 3 evidence | In progress |
 | Professional quality | CI, branch coverage, accessibility checks, ADRs and release evidence | Workflow, reports, logs and sprint records | In progress |
 
 ## Current priority gaps
