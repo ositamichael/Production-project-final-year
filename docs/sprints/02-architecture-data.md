@@ -20,7 +20,7 @@ Separate evidence ingestion, detection and persistence behind tested contracts, 
 - [x] Verify imports using Render's direct-script execution mode.
 - [x] Add an ERD and data-retention boundary.
 - [x] Run baseline and contextual evaluation through one controlled strategy-comparison service.
-- [ ] Add optional persistence for versioned evaluation-run metadata.
+- [x] Add optional relational persistence for versioned evaluation runs and per-case outcomes without source text.
 - [x] Raise the branch-coverage gate from 60% to 70% after architecture tests lift measured coverage above 72%.
 - [x] Confirm the 70% quality gate on a remote feature-branch CI run.
 - [ ] Record the final sprint review and complete the retrospective.
@@ -41,7 +41,7 @@ The same reviewed message can be represented through text, screenshot-OCR or rec
 - Architecture tests compare the new contextual strategy with the existing `explain` result fields.
 - Migration tests prove idempotence and inspect the schema for the absence of a raw `text` column.
 - A deployment-mode import test simulates `python src/server.py` module resolution.
-- The complete local suite contains 46 Python tests, and measured branch coverage is 73.3% against a 70% gate.
+- The complete local suite contains 47 Python tests, and measured branch coverage is 74.1% against a 70% gate.
 - GitHub Actions run [37597825492](https://github.com/ositamichael/Production-project-final-year/actions/runs/37597825492) completed successfully for commit `f06fe54` on the Sprint 2 feature branch.
 - Full local suite and remote CI results will be recorded before sprint close.
 

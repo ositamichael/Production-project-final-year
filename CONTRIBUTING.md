@@ -29,7 +29,7 @@ node tests/test_conversation.js
 .venv/bin/python scripts/verify_evaluation.py
 ```
 
-The branch-coverage threshold is a ratchet, not a quality target. Sprint 1 established a 60% gate against 65.5% measured coverage. Sprint 2 architecture tests raised measured coverage to 73.3%, so the gate is now 70% and must not be lowered to make a failing change pass.
+The branch-coverage threshold is a ratchet, not a quality target. Sprint 1 established a 60% gate against 65.5% measured coverage. Sprint 2 architecture and persistence tests raised measured coverage to 74.1%, so the gate is now 70% and must not be lowered to make a failing change pass.
 
 ## Definition of done
 

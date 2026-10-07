@@ -27,12 +27,21 @@ class AnalysisRepository(Protocol):
     def record(self, evidence: EvidenceItem, result: dict) -> None: ...
 
 
+class EvaluationRepository(Protocol):
+    """Storage contract for versioned evaluation-run metadata."""
+
+    def record_evaluation(self, result: dict, data_sha256: str, dataset_role: str) -> int | None: ...
+
+
 class NullAnalysisRepository:
     """Default repository: analysis is returned but no history is stored."""
 
     status = "disabled"
 
     def record(self, evidence: EvidenceItem, result: dict) -> None:
+        return None
+
+    def record_evaluation(self, result: dict, data_sha256: str, dataset_role: str) -> None:
         return None
 
 
@@ -98,6 +107,69 @@ class SqliteAnalysisRepository:
         with self._lock:
             rows = self._connection.execute(
                 "SELECT * FROM analysis_events ORDER BY id DESC LIMIT ?", (safe_limit,)
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def record_evaluation(self, result: dict, data_sha256: str, dataset_role: str) -> int:
+        dataset = result["dataset"]
+        metrics = result["metrics"]
+        confusion = metrics["confusion_matrix"]
+        classes = dataset["class_distribution"]
+        with self._lock:
+            cursor = self._connection.execute(
+                """
+                INSERT INTO evaluation_runs (
+                    dataset_version, dataset_role, data_sha256, model_version,
+                    decision_threshold, sample_count, phishing_count, legitimate_count,
+                    precision, recall, f1, true_positive, true_negative,
+                    false_positive, false_negative
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    dataset["version"],
+                    dataset_role,
+                    data_sha256,
+                    result["model_version"],
+                    result["decision_threshold"],
+                    dataset["test_rows"],
+                    int(classes.get("phishing", 0)),
+                    int(classes.get("legitimate", 0)),
+                    metrics["precision"],
+                    metrics["recall"],
+                    metrics["f1"],
+                    confusion["true_positive"],
+                    confusion["true_negative"],
+                    confusion["false_positive"],
+                    confusion["false_negative"],
+                ),
+            )
+            run_id = int(cursor.lastrowid)
+            self._connection.executemany(
+                """
+                INSERT INTO evaluation_case_results (
+                    run_id, case_key, scenario, expected_label, predicted_label, risk_score
+                ) VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                [
+                    (
+                        run_id,
+                        f"case-{index:03d}",
+                        record["scenario"],
+                        record["expected"],
+                        record["actual"],
+                        record["risk_score"],
+                    )
+                    for index, record in enumerate(result["records"], start=1)
+                ],
+            )
+            self._connection.commit()
+        return run_id
+
+    def recent_evaluation_runs(self, limit: int = 20) -> list[dict]:
+        safe_limit = max(1, min(int(limit), 100))
+        with self._lock:
+            rows = self._connection.execute(
+                "SELECT * FROM evaluation_runs ORDER BY id DESC LIMIT ?", (safe_limit,)
             ).fetchall()
         return [dict(row) for row in rows]
 

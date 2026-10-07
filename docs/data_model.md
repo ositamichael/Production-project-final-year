@@ -28,9 +28,41 @@ erDiagram
         REAL risk_score
         TEXT signals_json
     }
+
+    EVALUATION_RUNS {
+        INTEGER id PK
+        TEXT created_at
+        TEXT dataset_version
+        TEXT dataset_role
+        TEXT data_sha256
+        TEXT model_version
+        REAL decision_threshold
+        INTEGER sample_count
+        INTEGER phishing_count
+        INTEGER legitimate_count
+        REAL precision
+        REAL recall
+        REAL f1
+        INTEGER true_positive
+        INTEGER true_negative
+        INTEGER false_positive
+        INTEGER false_negative
+    }
+
+    EVALUATION_CASE_RESULTS {
+        INTEGER id PK
+        INTEGER run_id FK
+        TEXT case_key
+        TEXT scenario
+        TEXT expected_label
+        TEXT predicted_label
+        REAL risk_score
+    }
+
+    EVALUATION_RUNS ||--o{ EVALUATION_CASE_RESULTS : contains
 ```
 
-`schema_migrations` records each applied SQL file. `analysis_events` deliberately has no relationship to a user, session or raw evidence table.
+`schema_migrations` records each applied SQL file. `analysis_events` deliberately has no relationship to a user, session or raw evidence table. `evaluation_runs` captures one versioned metric result and `evaluation_case_results` links its individual outcomes without copying the source message.
 
 ## Migration process
 
@@ -41,5 +73,6 @@ Migrations are ordered SQL files under `migrations/`. `SqliteAnalysisRepository`
 - Default runtime: no database and no analysis history.
 - Optional research runtime: metadata only.
 - Digests help detect repeated controlled cases but must still be treated as derived data.
+- Evaluation dataset digests bind a run to exact source bytes while case rows retain only generated case keys, scenario labels and outcomes.
 - No claim of anonymity is made.
 - Any future storage of raw evidence requires a separate consent, retention, access and deletion design.
