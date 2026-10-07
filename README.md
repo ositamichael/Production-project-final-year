@@ -33,7 +33,7 @@ Open `http://127.0.0.1:8000` in a browser.
 
 ## Publish with GitHub and Render
 
-1. Upload this project to the `michaelfandphealthcare/F-P` repository.
+1. Use the university project repository: [`ositamichael/Production-project-final-year`](https://github.com/ositamichael/Production-project-final-year).
 2. In Render, choose **New Web Service** and connect that repository.
 3. Render will use `render.yaml`, install `requirements.txt` and start the Python server.
 4. Set the service's port handling if required by the hosting provider before publishing.
