@@ -1,0 +1,22 @@
+{
+  "dataset_version": "independent-evaluation-v1",
+  "dataset_role": "independent_final_evaluation",
+  "status": "draft",
+  "frozen_at": null,
+  "row_count": 0,
+  "data_sha256": "replace-after-freeze",
+  "provenance_summary": "Replace with a concise account of sources, sampling and exclusions.",
+  "label_policy": "Replace with the written phishing-versus-legitimate decision rule.",
+  "label_review": {
+    "status": "pending",
+    "reviewer_count": 0,
+    "disagreement_count": null,
+    "resolution_method": "Replace with the adjudication process."
+  },
+  "separation": {
+    "model_frozen_before_labels_opened": false,
+    "not_used_for_prompt_or_rule_design": false,
+    "not_used_for_threshold_selection": false
+  }
+}
+

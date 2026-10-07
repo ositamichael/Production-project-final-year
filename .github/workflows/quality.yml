@@ -58,6 +58,9 @@ jobs:
       - name: Verify checked-in TrustLab replay
         run: python scripts/verify_trustlab.py
 
+      - name: Verify final evaluation gate or frozen replay
+        run: python scripts/verify_final_evaluation.py
+
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
