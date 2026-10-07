@@ -89,3 +89,7 @@ The final evaluation is **pending**, not missing by accident. Sprint 4 adds a gu
 ```
 
 Templates are provided in `data/independent_evaluation_template.csv` and `data/independent_evaluation_manifest.template.json`. They are process scaffolding, not measured evidence.
+
+## GitHub Stats
+
+![Michael's GitHub Stats](https://github-readme-stats.vercel.app/api?username=ositamichael&theme=radical&show_icons=true)
