@@ -18,8 +18,9 @@ Measure how the contextual detector and TF-IDF baseline respond to controlled la
 - [x] Reject use of `heldout_messages.csv` as a TrustLab development seed.
 - [x] Create a deterministic JSON replay export and CI verification command.
 - [x] Add privacy-preserving relational replay storage without raw transformed text.
-- [ ] Review failures without tuning against the held-out set.
-- [ ] Record remote CI evidence and complete the sprint retrospective.
+- [x] Review failures without tuning against the held-out set.
+- [x] Record remote CI evidence.
+- [ ] Complete the sprint retrospective after pull-request review.
 
 ## Demonstrable increment
 
@@ -49,3 +50,14 @@ The first deterministic replay produced 144 transformed messages and 288 paired 
 | TF-IDF baseline | 0.674 | 0.570 | 0.883 | 0.693 | 40 | 7 |
 
 All 16 contextual failures were false alarms in label-changing awareness or denial contexts: 12 in `denied_request_context` and four in `awareness_quotation`. This is a useful failure finding, not evidence of an 88.9% real-world accuracy rate. The label-preserving and per-transformation results remain available in `data/trustlab_results.json` for review.
+
+The full interpretation and decision not to tune against these cases are recorded in [`docs/trustlab_failure_analysis.md`](../trustlab_failure_analysis.md).
+
+## Verification evidence
+
+- 53 Python tests passed locally.
+- Branch coverage: 78.5% against the 70% gate.
+- Browser-side conversation tests passed.
+- Held-out and challenge evaluation exports reproduced unchanged.
+- TrustLab replay reproduced exactly.
+- GitHub Actions run [37601965643](https://github.com/ositamichael/Production-project-final-year/actions/runs/37601965643) completed successfully for commit `b810fcf` on the Sprint 3 branch.
