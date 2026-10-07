@@ -42,6 +42,14 @@ class DashboardDataTests(unittest.TestCase):
         self.assertIn("extractRecordingText", app)
         self.assertIn("Duplicates combined", app)
 
+    def test_reviewed_media_text_declares_its_evidence_adapter(self):
+        root = Path(__file__).resolve().parents[1]
+        app = (root / "web" / "static" / "app.js").read_text(encoding="utf-8")
+        self.assertIn("evidence_kind:evidenceKind", app)
+        self.assertIn("recording_text", app)
+        self.assertIn("ocr_text", app)
+        self.assertIn("browser_reviewed_screenshot_ocr", app)
+
     def test_random_recording_library_has_scam_and_legitimate_examples(self):
         root = Path(__file__).resolve().parents[1]
         recordings = sorted((root / "web" / "static" / "assets" / "demo-recordings").glob("*.mp4"))

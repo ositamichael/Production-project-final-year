@@ -53,13 +53,16 @@ function setEvidenceState(state, messageText) {
   }
 }
 
-async function analyseTextRequest(text, controller, timeoutMs = 12000) {
+async function analyseTextRequest(text, controller, options = {}) {
+  const timeoutMs = options.timeoutMs || 12000;
+  const evidenceKind = options.evidenceKind || 'text';
+  const sourceLabel = options.sourceLabel || (evidenceKind === 'text' ? 'pasted_text' : 'browser_reviewed_evidence');
   const timeout = window.setTimeout(() => controller.abort('timeout'), timeoutMs);
   try {
     const response = await fetch('/api/analyse', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({text}),
+      body: JSON.stringify({text, evidence_kind:evidenceKind, source_label:sourceLabel}),
       signal: controller.signal,
     });
     const raw = await response.text();
@@ -464,7 +467,13 @@ if (useOcrBtn) useOcrBtn.addEventListener('click', async () => {
   visualResult.classList.add('hidden');
   setEvidenceState('analysing', 'Analysing the current edited text. The previous result has been cleared.');
   try {
-    const data = await analyseTextRequest(extractedText, visualController);
+    const isRecordingText = selectedEvidenceKind === 'video';
+    const data = await analyseTextRequest(extractedText, visualController, {
+      evidenceKind: isRecordingText ? 'recording_text' : 'ocr_text',
+      sourceLabel: selectedExampleText
+        ? 'synthetic_pre_supplied_demo_text'
+        : (isRecordingText ? 'browser_reviewed_recording_ocr' : 'browser_reviewed_screenshot_ocr'),
+    });
     if (requestId !== visualAnalysisRequestId || extractedText !== document.getElementById('ocrText').value.trim()) return;
     const reasons = renderEvidenceFindings(data, true);
     const findingHeading = data.label === 'Few warning signs detected' ? 'What the analysis found' : 'Signals requiring attention';

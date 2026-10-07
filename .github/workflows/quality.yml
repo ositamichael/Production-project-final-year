@@ -46,7 +46,7 @@ jobs:
       - name: Run Python tests with branch coverage
         run: |
           coverage run -m unittest discover -s tests -p "test_*.py" -v
-          coverage report --fail-under=60
+          coverage report --fail-under=70
           coverage xml
 
       - name: Run browser-side conversation tests

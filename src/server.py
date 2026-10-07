@@ -17,9 +17,17 @@ from urllib.parse import urljoin, urlparse, urlunparse
 import certifi
 
 try:
-    from .core import MODEL_VERSION, explain, load_or_train
+    from .core import MODEL_VERSION, load_or_train
+    from .detectors import ContextualDetectorStrategy
+    from .evidence import adapter_for
+    from .repository import NullAnalysisRepository, SqliteAnalysisRepository
+    from .services import AnalysisService
 except ImportError:  # Supports both `python src/server.py` and package imports.
-    from core import MODEL_VERSION, explain, load_or_train
+    from core import MODEL_VERSION, load_or_train
+    from detectors import ContextualDetectorStrategy
+    from evidence import adapter_for
+    from repository import NullAnalysisRepository, SqliteAnalysisRepository
+    from services import AnalysisService
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "web"
@@ -31,6 +39,13 @@ SCENARIOS = ROOT / "data" / "dashboard_scenarios.json"
 EVALUATION = ROOT / "data" / "evaluation_results.json"
 CHALLENGE_EVALUATION = ROOT / "data" / "challenge_evaluation.json"
 model = load_or_train(MODEL, DATA)
+research_database = os.environ.get("SCAMSHIELD_RESEARCH_DB", "").strip()
+analysis_repository = (
+    SqliteAnalysisRepository(research_database)
+    if research_database
+    else NullAnalysisRepository()
+)
+analysis_service = AnalysisService(ContextualDetectorStrategy(model), analysis_repository)
 
 
 class PublicUrlError(ValueError):
@@ -182,9 +197,9 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/", "/index.html"):
             self._send(200, "text/html; charset=utf-8", (WEB / "index.html").read_bytes())
         elif path == "/health":
-            self._send(200, "application/json", json.dumps({"status": "ok", "prototype": "baseline", "build_id": BUILD_ID}).encode("utf-8"))
+            self._send(200, "application/json", json.dumps({"status": "ok", "prototype": "baseline", "build_id": BUILD_ID, "analysis_persistence": analysis_service.persistence_status}).encode("utf-8"))
         elif path == "/api/meta":
-            self._send(200, "application/json", json.dumps({"build_id": BUILD_ID, "model_version": MODEL_VERSION, "ocr": "browser-local-tesseract"}).encode("utf-8"))
+            self._send(200, "application/json", json.dumps({"build_id": BUILD_ID, "model_version": MODEL_VERSION, "ocr": "browser-local-tesseract", "analysis_persistence": analysis_service.persistence_status}).encode("utf-8"))
         elif path == "/api/dashboard":
             self._send(200, "application/json", json.dumps(dashboard_payload()).encode("utf-8"))
         elif path.startswith("/static/"):
@@ -237,13 +252,15 @@ class Handler(BaseHTTPRequestHandler):
                 result = inspect_public_url(str(payload.get("url", "")))
                 self._send(200, "application/json", json.dumps(result).encode("utf-8"))
                 return
-            text = str(payload.get("text", "")).strip()
-            if len(text) < 12:
-                raise ValueError("Please enter a longer message so the system has enough context to analyse it.")
-            if len(text) > 4000:
-                raise ValueError("Please keep the message below 4,000 characters for this prototype.")
-            probability = model.predict_probability(text)
-            result = explain(text, probability, model)
+            evidence_kind = str(payload.get("evidence_kind") or "text")
+            adapter = adapter_for(evidence_kind)
+            adapter_payload = dict(payload)
+            if evidence_kind == "ocr_text":
+                adapter_payload["ocr_text"] = payload.get("text", "")
+            elif evidence_kind == "recording_text":
+                adapter_payload["recording_text"] = payload.get("text", "")
+            evidence = adapter.adapt(adapter_payload)
+            result = analysis_service.analyse(evidence)
             self._send(200, "application/json", json.dumps(result).encode("utf-8"))
         except json.JSONDecodeError:
             self._send(400, "application/json", b'{"error":"Please send a valid JSON request."}')
