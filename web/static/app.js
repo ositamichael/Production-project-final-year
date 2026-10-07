@@ -188,6 +188,7 @@ async function loadDashboard() {
     if (!response.ok) throw new Error('Dashboard data is unavailable.');
     const data = await response.json();
     renderEvaluation(data.evaluation);
+    renderFinalEvaluationStatus(data.final_evaluation);
     const baselineNote = document.querySelector('.methodology-disclosure .disclosure-grid > div:first-child p:nth-of-type(2)');
     if (baselineNote) baselineNote.textContent = 'The TF-IDF-only baseline is measured on the same 12-message held-out split. It is a simple comparison point, not a production benchmark.';
     renderMeasuredCharts(data.evaluation);
@@ -201,6 +202,22 @@ async function loadDashboard() {
     document.getElementById('sectorChart').innerHTML = `<p class="chart-error">${escapeHtml(err.message)}</p>`;
     document.getElementById('signalChart').innerHTML = `<p class="chart-error">Try refreshing the prototype.</p>`;
   }
+}
+
+function renderFinalEvaluationStatus(finalEvaluation) {
+  const root = document.getElementById('finalEvaluationStatus');
+  if (!root || !finalEvaluation) return;
+  const measured = finalEvaluation.status === 'measured';
+  if (measured) {
+    const dataset = finalEvaluation.dataset || {};
+    const metrics = finalEvaluation.metrics || {};
+    root.classList.add('measured');
+    root.innerHTML = `<div><span class="chart-kicker">Final evidence gate</span><h2>Independent evaluation available</h2></div><p>${escapeHtml(dataset.test_rows || 0)} frozen cases · F1 ${Math.round((metrics.f1 || 0) * 100)}% · dataset ${escapeHtml(dataset.version || 'version not recorded')}.</p><span class="final-evaluation-badge">Measured</span>`;
+    return;
+  }
+  const requirements = finalEvaluation.requirements || {};
+  root.classList.remove('measured');
+  root.innerHTML = `<div><span class="chart-kicker">Final evidence gate</span><h2>Independent evaluation pending</h2></div><p>${escapeHtml(finalEvaluation.message || 'The final dataset is not yet frozen.')} Required minimum: ${escapeHtml(requirements.minimum_phishing || 50)} phishing and ${escapeHtml(requirements.minimum_legitimate || 50)} legitimate cases, reviewed and separated from development data.</p><span class="final-evaluation-badge">Pending</span>`;
 }
 
 function renderChallengeEvaluation(evaluation) {

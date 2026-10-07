@@ -4,7 +4,7 @@ ScamShield is a final-year computer science project exploring whether an explain
 
 For a clean first explanation of the project, see [`docs/project_overview.md`](docs/project_overview.md) and the assessor-facing [Project Overview document](outputs/ScamShield_Project_Overview_Updated.docx).
 
-The formal software-engineering workflow begins with Sprint 1 on 7 October 2026. See the [software engineering plan](docs/software_engineering_plan.md), [requirements traceability matrix](docs/requirements_traceability.md), [architecture record](docs/architecture.md), [Sprint 1 record](docs/sprints/01-engineering-foundation.md), [Sprint 2 record](docs/sprints/02-architecture-data.md) and [Sprint 3 record](docs/sprints/03-trustlab.md). These records intentionally distinguish the earlier iterative prototype from the branch-and-pull-request process used from this sprint onward.
+The formal software-engineering workflow begins with Sprint 1 on 7 October 2026. See the [software engineering plan](docs/software_engineering_plan.md), [requirements traceability matrix](docs/requirements_traceability.md), [architecture record](docs/architecture.md), [Sprint 1 record](docs/sprints/01-engineering-foundation.md), [Sprint 2 record](docs/sprints/02-architecture-data.md), [Sprint 3 record](docs/sprints/03-trustlab.md) and [Sprint 4 record](docs/sprints/04-independent-evaluation.md). These records intentionally distinguish the earlier iterative prototype from the branch-and-pull-request process used from this sprint onward.
 
 ## Project boundary
 
@@ -79,3 +79,13 @@ TrustLab deterministically applies neutral padding, polite tone, urgency softeni
 The checked-in result is `data/evaluation_results.json`. It contains a small, hand-curated held-out set and must not be presented as real-world accuracy. After correcting the unexplained false-alarm path, the current reproducible run reports precision 1.000, recall 1.000 and F1 1.000 on 12 messages, with 0 false alarms and 0 missed scams. This perfect result is not evidence of real-world reliability; the dashboard explains the small sample and validation limitations.
 
 The current rules build is `contextual-baseline-v5`, using a 36/100 screening-score threshold. The regression suite covers clause-level negation, mixed protective and malicious instructions, helpdesk authentication-code requests, changed-number family impersonation, discouraged verification, protective security advice, complete monetary amounts and exact supporting excerpts. A separate 24-message development challenge set is retained for regression checks. Because known failures have now been corrected against it, it is not described as an independent final test set.
+
+## Final independent evaluation status
+
+The final evaluation is **pending**, not missing by accident. Sprint 4 adds a guarded runner that requires a frozen dataset, matching SHA-256 manifest, written label policy, completed label review, at least 50 cases in each class and no exact or near-duplicate overlap with development data. CI reports the pending state without manufacturing charts or metrics; once a legitimate frozen dataset is present, the same check reproduces the final export and deterministic 95% bootstrap intervals.
+
+```bash
+.venv/bin/python scripts/verify_final_evaluation.py
+```
+
+Templates are provided in `data/independent_evaluation_template.csv` and `data/independent_evaluation_manifest.template.json`. They are process scaffolding, not measured evidence.

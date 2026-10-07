@@ -29,3 +29,9 @@ During the project, replace the demonstration arrays in `data/dashboard_scenario
 - the exact evaluation split used for model results.
 
 This gives the dashboard research value rather than making it a decorative graphic.
+
+## Final evaluation status
+
+The final independent dataset has not yet been collected, reviewed and frozen. The repository therefore includes only a CSV header template and manifest template. They are not data and must not be counted as samples.
+
+When the final file is added, every row must include an opaque case identifier, scenario, source/provenance description and written label rationale. The freeze manifest must match the exact CSV bytes and pass `scripts/verify_final_evaluation.py`. Raw private messages must not be introduced merely to increase the sample count.
