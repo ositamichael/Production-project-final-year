@@ -1,5 +1,10 @@
 __pycache__/
 *.py[cod]
+.venv/
+.coverage
+coverage.xml
+htmlcov/
+.DS_Store
 artifacts/test_model.json
 work/
 web/static/test-fresh-fictional-sms.png
