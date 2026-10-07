@@ -8,25 +8,38 @@ from collections import Counter
 from datetime import date
 from pathlib import Path
 
-from .core import DECISION_THRESHOLD, MODEL_VERSION, explain, train_from_csv
+from .core import DECISION_THRESHOLD, MODEL_VERSION, train_from_csv
+from .detectors import ContextualDetectorStrategy, TfidfBaselineStrategy
+from .evidence import EvidenceItem, EvidenceKind
+from .services import StrategyComparisonService
 
 DATASET_VERSION = "heldout_messages-v1"
 
 
 def evaluate(train_path: Path, test_path: Path) -> dict:
     model = train_from_csv(train_path)
+    comparison = StrategyComparisonService(
+        [ContextualDetectorStrategy(model), TfidfBaselineStrategy(model)]
+    )
     with test_path.open(encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
     y_true = [int(row["label"] == "phishing") for row in rows]
     y_pred = []
     baseline_pred = []
     records = []
+    source_label = "heldout_evaluation" if test_path.name == "heldout_messages.csv" else "challenge_evaluation"
     for row in rows:
         expected_label = row["label"].strip().lower()
-        result = explain(row["text"], model.predict_probability(row["text"]), model)
+        evidence = EvidenceItem(
+            text=row["text"],
+            kind=EvidenceKind.TEXT,
+            source_label=source_label,
+        )
+        compared = comparison.compare(evidence)
+        result = compared["contextual"]
         prediction = int(result["risk_score"] >= DECISION_THRESHOLD)
         y_pred.append(prediction)
-        baseline_pred.append(int(model.predict_probability(row["text"]) >= 0.5))
+        baseline_pred.append(int(compared["tfidf_baseline"]["prediction"] == "phishing"))
         records.append({
             "scenario": row["scenario"],
             "label": row["label"],
