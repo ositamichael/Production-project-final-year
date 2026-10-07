@@ -40,3 +40,16 @@ This log records investigated problems, evidence and outcomes. It begins with th
 - **Correction:** Resolve the repository root from `__file__` and add it to the import path before importing `src.evaluate`.
 - **Regression control:** The exact standalone command runs in GitHub Actions after the tests.
 - **Remaining risk:** A future packaging step should replace this bootstrap with an installable project package.
+
+## 2026-10-07 — direct server entry point could not import Sprint 2 modules
+
+- **Branch:** `feat/sprint-2-architecture-data`
+- **Observed behaviour:** All package-based tests passed, but the exact Render command `python src/server.py` failed while importing `detectors.py` because it used package-relative imports.
+- **Expected behaviour:** Both `python -m src.server` and the configured Render direct-script entry point should resolve the architecture modules.
+- **Reproduction:** Run `.venv/bin/python src/server.py` from the repository root.
+- **Evidence inspected:** Python traceback, `Procfile`, `render.yaml` and the existing compatibility import in `src/server.py`.
+- **Diagnostic technique:** Production-command reproduction rather than relying only on unit-test import paths.
+- **Root cause:** Direct script execution adds `src/` to `sys.path` but provides no package parent for relative imports such as `.core`.
+- **Correction:** Added the same package/direct-script compatibility imports to detector, repository and service modules.
+- **Regression control:** `test_render_direct_script_import_mode_resolves_architecture_modules` imports the server under direct-script path conditions and verifies stateless startup configuration.
+- **Remaining risk:** The local sandbox blocks opening a listening socket, so HTTP behaviour is verified through existing handler logic and CI rather than claiming a local bound-port smoke test here.

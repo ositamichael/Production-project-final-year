@@ -4,7 +4,7 @@ ScamShield is a final-year computer science project exploring whether an explain
 
 For a clean first explanation of the project, see [`docs/project_overview.md`](docs/project_overview.md) and the assessor-facing [Project Overview document](outputs/ScamShield_Project_Overview_Updated.docx).
 
-The formal software-engineering workflow begins with Sprint 1 on 7 October 2026. See the [software engineering plan](docs/software_engineering_plan.md), [requirements traceability matrix](docs/requirements_traceability.md), [architecture record](docs/architecture.md) and [Sprint 1 record](docs/sprints/01-engineering-foundation.md). These records intentionally distinguish the earlier iterative prototype from the branch-and-pull-request process used from this sprint onward.
+The formal software-engineering workflow begins with Sprint 1 on 7 October 2026. See the [software engineering plan](docs/software_engineering_plan.md), [requirements traceability matrix](docs/requirements_traceability.md), [architecture record](docs/architecture.md), [Sprint 1 record](docs/sprints/01-engineering-foundation.md) and [Sprint 2 record](docs/sprints/02-architecture-data.md). These records intentionally distinguish the earlier iterative prototype from the branch-and-pull-request process used from this sprint onward.
 
 ## Project boundary
 
@@ -18,6 +18,10 @@ The interface also includes a research dashboard and a multimodal evidence lab. 
 
 The current interface is published at https://scamshield-dahk.onrender.com/.
 Deployed verification endpoints are `/health` and `/api/meta`; they expose the non-secret build identifier and model version so a release can be checked without exposing credentials.
+
+### Architecture and optional research metadata
+
+The analysis path uses Evidence Adapters, interchangeable Detector Strategies and an Analysis Repository contract. The deployed default uses a stateless repository, so message text is not retained. For controlled local research only, `SCAMSHIELD_RESEARCH_DB=/path/to/research.sqlite3` enables SQLite metadata recording. That store contains a one-way text digest, length, evidence kind, detector version and result fields—not the raw message or media. See [`docs/data_model.md`](docs/data_model.md).
 
 ### Public-web verification
 

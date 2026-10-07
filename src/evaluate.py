@@ -3,30 +3,50 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 from collections import Counter
 from datetime import date
 from pathlib import Path
 
-from .core import DECISION_THRESHOLD, MODEL_VERSION, explain, train_from_csv
+from .core import DECISION_THRESHOLD, MODEL_VERSION, train_from_csv
+from .detectors import ContextualDetectorStrategy, TfidfBaselineStrategy
+from .evidence import EvidenceItem, EvidenceKind
+from .services import StrategyComparisonService
+from .repository import EvaluationRepository
 
 DATASET_VERSION = "heldout_messages-v1"
 
 
-def evaluate(train_path: Path, test_path: Path) -> dict:
+def evaluate(
+    train_path: Path,
+    test_path: Path,
+    repository: EvaluationRepository | None = None,
+    dataset_role: str = "measured evaluation",
+) -> dict:
     model = train_from_csv(train_path)
+    comparison = StrategyComparisonService(
+        [ContextualDetectorStrategy(model), TfidfBaselineStrategy(model)]
+    )
     with test_path.open(encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
     y_true = [int(row["label"] == "phishing") for row in rows]
     y_pred = []
     baseline_pred = []
     records = []
+    source_label = "heldout_evaluation" if test_path.name == "heldout_messages.csv" else "challenge_evaluation"
     for row in rows:
         expected_label = row["label"].strip().lower()
-        result = explain(row["text"], model.predict_probability(row["text"]), model)
+        evidence = EvidenceItem(
+            text=row["text"],
+            kind=EvidenceKind.TEXT,
+            source_label=source_label,
+        )
+        compared = comparison.compare(evidence)
+        result = compared["contextual"]
         prediction = int(result["risk_score"] >= DECISION_THRESHOLD)
         y_pred.append(prediction)
-        baseline_pred.append(int(model.predict_probability(row["text"]) >= 0.5))
+        baseline_pred.append(int(compared["tfidf_baseline"]["prediction"] == "phishing"))
         records.append({
             "scenario": row["scenario"],
             "label": row["label"],
@@ -50,7 +70,7 @@ def evaluate(train_path: Path, test_path: Path) -> dict:
     bprecision = btp / (btp + bfp) if btp + bfp else 0.0
     brecall = btp / (btp + bfn) if btp + bfn else 0.0
     bf1 = 2 * bprecision * brecall / (bprecision + brecall) if bprecision + brecall else 0.0
-    return {
+    result = {
         "dataset": {"version": DATASET_VERSION if test_path.name == "heldout_messages.csv" else "challenge_messages-v1", "train": f"data/{train_path.name}", "test": f"data/{test_path.name}", "test_rows": len(rows), "class_distribution": dict(Counter(row["label"] for row in rows))},
         "evaluation_date": date.today().isoformat(),
         "model_version": MODEL_VERSION,
@@ -62,6 +82,10 @@ def evaluate(train_path: Path, test_path: Path) -> dict:
         "failure_examples": [record for record in records if record["expected"] != record["actual"]],
         "limitations": ["Small, hand-curated development and held-out sets are not representative of real-world prevalence.", "The screening score is not a calibrated probability.", "The challenge set is a development regression set and is not independent evidence after known failures have been corrected.", "The optional public-web check reports technical reachability and response metadata only; it does not provide domain reputation, malware scanning or a safety verdict."],
     }
+    if repository is not None:
+        data_sha256 = hashlib.sha256(test_path.read_bytes()).hexdigest()
+        repository.record_evaluation(result, data_sha256, dataset_role)
+    return result
 
 
 if __name__ == "__main__":
