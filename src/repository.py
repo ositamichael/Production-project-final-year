@@ -32,6 +32,8 @@ class EvaluationRepository(Protocol):
 
     def record_evaluation(self, result: dict, data_sha256: str, dataset_role: str) -> int | None: ...
 
+    def record_trustlab(self, result: dict) -> int | None: ...
+
 
 class NullAnalysisRepository:
     """Default repository: analysis is returned but no history is stored."""
@@ -42,6 +44,9 @@ class NullAnalysisRepository:
         return None
 
     def record_evaluation(self, result: dict, data_sha256: str, dataset_role: str) -> None:
+        return None
+
+    def record_trustlab(self, result: dict) -> None:
         return None
 
 
@@ -170,6 +175,68 @@ class SqliteAnalysisRepository:
         with self._lock:
             rows = self._connection.execute(
                 "SELECT * FROM evaluation_runs ORDER BY id DESC LIMIT ?", (safe_limit,)
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def record_trustlab(self, result: dict) -> int:
+        suite = result["suite"]
+        with self._lock:
+            cursor = self._connection.execute(
+                """
+                INSERT INTO trustlab_runs (
+                    suite_version, transformation_version, dataset_role,
+                    seed_sha256, transformation_manifest_sha256, model_version,
+                    decision_threshold, seed_case_count, transformed_case_count
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    suite["version"],
+                    suite["transformation_version"],
+                    suite["dataset_role"],
+                    suite["seed_sha256"],
+                    suite["transformation_manifest_sha256"],
+                    result["model_version"],
+                    result["decision_threshold"],
+                    suite["seed_case_count"],
+                    suite["transformed_case_count"],
+                ),
+            )
+            run_id = int(cursor.lastrowid)
+            self._connection.executemany(
+                """
+                INSERT INTO trustlab_case_results (
+                    run_id, case_key, source_key, scenario, detector,
+                    transformation, relation, expected_label, predicted_label,
+                    risk_score, correct, changed_from_original, text_sha256
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                [
+                    (
+                        run_id,
+                        record["case_key"],
+                        record["source_key"],
+                        record["scenario"],
+                        record["detector"],
+                        record["transformation"],
+                        record["relation"],
+                        record["expected"],
+                        record["predicted"],
+                        record["score"],
+                        int(record["correct"]),
+                        int(record["changed_from_original"]),
+                        record["text_sha256"],
+                    )
+                    for record in result["records"]
+                ],
+            )
+            self._connection.commit()
+        return run_id
+
+    def recent_trustlab_runs(self, limit: int = 20) -> list[dict]:
+        safe_limit = max(1, min(int(limit), 100))
+        with self._lock:
+            rows = self._connection.execute(
+                "SELECT * FROM trustlab_runs ORDER BY id DESC LIMIT ?", (safe_limit,)
             ).fetchall()
         return [dict(row) for row in rows]
 

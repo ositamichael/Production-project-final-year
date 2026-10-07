@@ -153,7 +153,11 @@ class SqliteRepositoryTests(unittest.TestCase):
                 connection.close()
             self.assertEqual(
                 versions,
-                [("001_analysis_events.sql",), ("002_evaluation_runs.sql",)],
+                [
+                    ("001_analysis_events.sql",),
+                    ("002_evaluation_runs.sql",),
+                    ("003_trustlab_replays.sql",),
+                ],
             )
             self.assertNotIn("text", {column[1] for column in columns})
 
