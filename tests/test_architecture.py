@@ -14,6 +14,7 @@ from src.evidence import (
     TextEvidenceAdapter,
     adapter_for,
 )
+from src.evaluate import evaluate
 from src.repository import NullAnalysisRepository, SqliteAnalysisRepository
 from src.services import AnalysisService, StrategyComparisonService
 
@@ -150,8 +151,41 @@ class SqliteRepositoryTests(unittest.TestCase):
                 columns = connection.execute("PRAGMA table_info(analysis_events)").fetchall()
             finally:
                 connection.close()
-            self.assertEqual(versions, [("001_analysis_events.sql",)])
+            self.assertEqual(
+                versions,
+                [("001_analysis_events.sql",), ("002_evaluation_runs.sql",)],
+            )
             self.assertNotIn("text", {column[1] for column in columns})
+
+    def test_evaluation_run_and_case_results_are_relational_and_text_free(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "research.sqlite3"
+            repository = SqliteAnalysisRepository(database)
+            result = evaluate(
+                ROOT / "data" / "sample_messages.csv",
+                ROOT / "data" / "heldout_messages.csv",
+                repository=repository,
+                dataset_role="small held-out evaluation",
+            )
+            runs = repository.recent_evaluation_runs()
+            repository.close()
+
+            connection = sqlite3.connect(database)
+            try:
+                case_count = connection.execute(
+                    "SELECT COUNT(*) FROM evaluation_case_results WHERE run_id = ?",
+                    (runs[0]["id"],),
+                ).fetchone()[0]
+                run_columns = {row[1] for row in connection.execute("PRAGMA table_info(evaluation_runs)")}
+                case_columns = {row[1] for row in connection.execute("PRAGMA table_info(evaluation_case_results)")}
+            finally:
+                connection.close()
+
+            self.assertEqual(case_count, result["dataset"]["test_rows"])
+            self.assertEqual(runs[0]["sample_count"], 12)
+            self.assertEqual(runs[0]["dataset_version"], "heldout_messages-v1")
+            self.assertNotIn("text", run_columns)
+            self.assertNotIn("text", case_columns)
 
 
 if __name__ == "__main__":
