@@ -1,7 +1,8 @@
 # Sprint 2 — Architecture and data engineering
 
 **Start:** 7 October 2026  
-**Status:** In progress  
+**End:** 7 October 2026
+**Status:** Complete
 **Branch:** `feat/sprint-2-architecture-data`
 
 ## Sprint goal
@@ -23,7 +24,7 @@ Separate evidence ingestion, detection and persistence behind tested contracts, 
 - [x] Add optional relational persistence for versioned evaluation runs and per-case outcomes without source text.
 - [x] Raise the branch-coverage gate from 60% to 70% after architecture tests lift measured coverage above 72%.
 - [x] Confirm the 70% quality gate on a remote feature-branch CI run.
-- [ ] Record the final sprint review and complete the retrospective.
+- [x] Record the final sprint review and complete the retrospective.
 
 ## Demonstrable increment
 
@@ -43,8 +44,9 @@ The same reviewed message can be represented through text, screenshot-OCR or rec
 - A deployment-mode import test simulates `python src/server.py` module resolution.
 - The complete local suite contains 47 Python tests, and measured branch coverage is 74.1% against a 70% gate.
 - GitHub Actions run [37597825492](https://github.com/ositamichael/Production-project-final-year/actions/runs/37597825492) completed successfully for commit `f06fe54` on the Sprint 2 feature branch.
+- GitHub Actions run [37598387198](https://github.com/ositamichael/Production-project-final-year/actions/runs/37598387198) completed successfully for commit `1dec769`, including the relational evaluation-run migration and 70% coverage gate.
 - Full local suite and remote CI results will be recorded before sprint close.
 
 ## Retrospective
 
-To be completed at sprint close.
+The pre-existing detector was sufficiently isolated to place behind a Strategy without changing measured outputs. Reproducing the exact Render start command found a direct-script import defect that package-based tests had missed, reinforcing the value of production-command checks. Privacy review also found that an unrestricted `source_label` could have persisted caller-provided text; the fixed allow-list now prevents that path. The repository and migration tests provide stronger evidence than merely displaying a database diagram. The next highest-risk item is model robustness rather than application structure, so Sprint 3 will build TrustLab transformations and controlled failure analysis without tuning against the final independent set.
