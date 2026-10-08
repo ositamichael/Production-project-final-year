@@ -217,6 +217,23 @@ dialog.dialog-fallback[open] { position: fixed !important; inset: 50% auto auto 
 .profile-identity span { display: grid; gap: 2px; }
 .profile-identity strong { color: var(--muted); font-size: .57rem; text-transform: uppercase; letter-spacing: .08em; }
 .profile-identity small { overflow-wrap: anywhere; color: var(--ink); font-size: .66rem; }
+.university-context { margin-top: 16px; padding: 16px; border: 1px solid #cfe0f1; border-radius: 14px; background: linear-gradient(145deg, #f8fbff, #eef6ff); }
+.university-context-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.university-context-heading h3 { margin: 2px 0 0; color: var(--navy-900); font-size: 1rem; }
+.fixture-badge { flex: 0 0 auto; padding: 6px 9px; border: 1px solid #f1c977; border-radius: 999px; background: #fff8e8; color: #765315; font-size: .56rem; font-weight: 800; }
+.programme-summary { display: grid; gap: 3px; margin-top: 13px; padding: 11px 12px; border-radius: 10px; background: #fff; box-shadow: 0 5px 14px rgba(20,57,105,.05); }
+.programme-summary strong { color: var(--navy-900); font-size: .75rem; }
+.programme-summary span { color: var(--muted); font-size: .62rem; }
+.academic-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+.academic-columns h4 { margin: 0 0 8px; color: #3b5373; font-size: .66rem; text-transform: uppercase; letter-spacing: .06em; }
+.module-chip-list, .coursemate-list { display: grid; gap: 7px; color: var(--muted); font-size: .63rem; }
+.module-chip { display: block; padding: 8px 9px; border: 1px solid #d9e6f3; border-radius: 8px; background: #fff; color: #294767; line-height: 1.35; }
+.coursemate-item { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 8px; padding: 7px 8px; border: 1px solid #d9e6f3; border-radius: 9px; background: #fff; }
+.coursemate-avatar { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(145deg, #3477ce, #123e7b); color: #fff; font-size: .58rem; font-weight: 850; }
+.coursemate-item > span:last-child { display: grid; gap: 2px; min-width: 0; }
+.coursemate-item strong { overflow: hidden; color: var(--navy-900); font-size: .66rem; text-overflow: ellipsis; white-space: nowrap; }
+.coursemate-item small { color: var(--muted); font-size: .54rem; }
+.academic-notice { margin: 12px 0 0 !important; padding-top: 10px; border-top: 1px solid #d7e4f2; color: #6d7f96 !important; font-size: .56rem !important; line-height: 1.5; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 18px; }
 .dialog-actions .primary-button { width: auto; margin: 0; padding-inline: 18px; }
 
@@ -295,7 +312,7 @@ dialog.dialog-fallback[open] { position: fixed !important; inset: 50% auto auto 
   .notification-panel { top: 82px; right: 10px; width: calc(100vw - 20px); }
   .notification-panel::before { right: 47px; }
   .view-hero, .section-toolbar { align-items: flex-start; flex-direction: column; }.view-hero { padding: 19px; }.view-title { align-items: flex-start; }.metric-row { grid-template-columns: 1fr 1fr; }.feature-grid.three, .feature-grid.four, .service-grid, .message-workspace { grid-template-columns: 1fr; }.thread-panel { max-height: 330px; overflow: auto; }.conversation-panel { min-height: 540px; }.event-card-large { grid-template-columns: 78px 1fr; }.event-visual { min-height: 135px; }.map-workspace { grid-template-columns: 1fr; }.campus-map-large { min-height: 430px; }.opportunity-list-large article { grid-template-columns: auto minmax(0,1fr); }.opportunity-list-large article > button { grid-column: 2; justify-self: start; }.data-badge, .privacy-badge, .primary-compact { align-self: flex-start; }
-  .profile-dialog form { padding: 22px 18px; }.profile-dialog-heading { align-items: flex-start; }.profile-photo-preview { width: 56px; height: 56px; }.profile-fields.two-column, .profile-identity { grid-template-columns: 1fr; }.dialog-actions { flex-direction: column-reverse; }.dialog-actions button { width: 100% !important; }
+  .profile-dialog form { padding: 22px 18px; }.profile-dialog-heading { align-items: flex-start; }.profile-photo-preview { width: 56px; height: 56px; }.profile-fields.two-column, .profile-identity, .academic-columns { grid-template-columns: 1fr; }.university-context-heading { flex-direction: column; gap: 8px; }.dialog-actions { flex-direction: column-reverse; }.dialog-actions button { width: 100% !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {

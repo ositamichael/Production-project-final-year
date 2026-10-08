@@ -36,7 +36,7 @@ management:
 info:
   app:
     name: UniCircle
-    stage: Sprint 2 identity and profile foundation
+    stage: Sprint 3 university integration readiness
     data-status: Prototype fixtures only
 
 unicircle:
