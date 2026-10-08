@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="UniCircle campus connection and services platform prototype">
+  <title>UniCircle — My Campus</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/app.css">
+  <script src="/js/app.js" defer></script>
+</head>
+<body>
+  <svg class="svg-sprite" aria-hidden="true">
+    <symbol id="home" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></symbol>
+    <symbol id="calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></symbol>
+    <symbol id="users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="message" viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/><path d="M8 9h8M8 13h5"/></symbol>
+    <symbol id="events" viewBox="0 0 24 24"><path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z"/><path d="m15 9-2 6-6 2 2-6Z"/></symbol>
+    <symbol id="building" viewBox="0 0 24 24"><path d="m3 10 9-6 9 6"/><path d="M5 10h14v9H5zM3 21h18M8 13v4M12 13v4M16 13v4"/></symbol>
+    <symbol id="briefcase" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2"/></symbol>
+    <symbol id="map-pin" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></symbol>
+    <symbol id="search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+    <symbol id="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.41M17.66 6.34l1.41-1.41"/></symbol>
+    <symbol id="sparkles" viewBox="0 0 24 24"><path d="m12 3-1.2 3.1L8 7.5l2.8 1.4L12 12l1.2-3.1L16 7.5l-2.8-1.4Z"/><path d="m18 13-.8 2.2L15 16l2.2.8L18 19l.8-2.2L21 16l-2.2-.8ZM5 13l-.7 1.8L2.5 15.5l1.8.7L5 18l.7-1.8 1.8-.7-1.8-.7Z"/></symbol>
+    <symbol id="lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></symbol>
+    <symbol id="star" viewBox="0 0 24 24"><path d="m12 2 3 6 6.5 1-4.7 4.6 1.1 6.4-5.9-3.1L6.1 20l1.1-6.4L2.5 9 9 8Z"/></symbol>
+    <symbol id="menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+  </svg>
+  <a class="skip-link" href="#main-content">Skip to dashboard</a>
+  <div class="prototype-banner" role="status">
+    Sprint 1 prototype data — no live university systems are connected yet.
+  </div>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+      <a class="brand" href="/" aria-label="UniCircle home">
+        <span class="brand-mark" aria-hidden="true"><span></span></span>
+        <span>UniCircle</span>
+      </a>
+      <nav class="main-nav">
+        <a class="nav-item active" href="#campus" aria-current="page"><svg class="icon" aria-hidden="true"><use href="#home"/></svg> My Campus</a>
+        <a class="nav-item" href="#schedule"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg> Today</a>
+        <a class="nav-item" href="#circles"><svg class="icon" aria-hidden="true"><use href="#users"/></svg> Campus Circles</a>
+        <a class="nav-item" href="#messages"><svg class="icon" aria-hidden="true"><use href="#message"/></svg> Messages <span class="nav-count">3</span></a>
+        <a class="nav-item" href="#events"><svg class="icon" aria-hidden="true"><use href="#events"/></svg> Events</a>
+        <a class="nav-item" href="#booking"><svg class="icon" aria-hidden="true"><use href="#building"/></svg> Book a Service</a>
+        <a class="nav-item" href="#opportunities"><svg class="icon" aria-hidden="true"><use href="#briefcase"/></svg> Opportunities</a>
+        <a class="nav-item" href="#map"><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg> Campus Map</a>
+        <a class="nav-item" href="#wellbeing"><svg class="icon" aria-hidden="true"><use href="#heart"/></svg> Wellbeing &amp; Support</a>
+        <a class="nav-item" href="#lost-found"><svg class="icon" aria-hidden="true"><use href="#search"/></svg> Lost and Found</a>
+        <a class="nav-item" href="#assistant"><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg> Ask UniCircle</a>
+      </nav>
+      <div class="account-card">
+        <div class="avatar avatar-michael" aria-hidden="true">MC</div>
+        <div><strong>Michael Carter</strong><span>Student prototype</span></div>
+      </div>
+      <div class="verified-card">
+        <svg class="icon lock" aria-hidden="true"><use href="#lock"/></svg>
+        <span><strong>University account</strong><small>SSO integration planned</small></span>
+        <span class="verified-dot" aria-hidden="true">✓</span>
+      </div>
+    </aside>
+
+    <main id="main-content" tabindex="-1">
+      <header class="topbar">
+        <button class="menu-button" id="menuButton" type="button" aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation"><svg class="icon" aria-hidden="true"><use href="#menu"/></svg></button>
+        <div class="welcome">
+          <svg class="icon sun" aria-hidden="true"><use href="#sun"/></svg>
+          <div><h1>Good morning, Michael</h1><p>Here is what is happening on campus today.</p></div>
+        </div>
+        <label class="search-box">
+          <svg class="icon" aria-hidden="true"><use href="#search"/></svg>
+          <span class="sr-only">Search dashboard</span>
+          <input id="globalSearch" type="search" placeholder="Search people, events, services…" autocomplete="off">
+        </label>
+        <button class="icon-button" id="notificationButton" type="button" aria-expanded="false" aria-controls="notificationPanel" aria-label="Notifications, 3 unread">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"/><path d="M10 21h4"/></svg>
+          <span id="notificationBadge">3</span>
+        </button>
+        <button class="profile-button" type="button" aria-label="Open profile"><span class="avatar avatar-michael">MC</span></button>
+      </header>
+
+      <section class="notification-panel" id="notificationPanel" hidden aria-label="Notifications">
+        <div class="notification-heading">
+          <div><span class="eyebrow">MY CAMPUS</span><h2>Notifications</h2></div>
+          <button class="panel-close" id="notificationClose" type="button" aria-label="Close notifications">×</button>
+        </div>
+        <div class="notification-toolbar">
+          <span>3 new updates</span>
+          <button id="markAllRead" type="button">Mark all as read</button>
+        </div>
+        <ol class="notification-list">
+          <li class="unread-notification">
+            <span class="notification-type message-type" aria-hidden="true"><svg class="icon"><use href="#message"/></svg></span>
+            <div><strong>New message from Emily Watson</strong><p>Are you still coming to the library later?</p><time>2 minutes ago</time></div>
+            <span class="notification-unread" aria-label="Unread"></span>
+          </li>
+          <li class="unread-notification">
+            <span class="notification-type booking-type" aria-hidden="true"><svg class="icon"><use href="#calendar"/></svg></span>
+            <div><strong>Group project meeting</strong><p>Library Study Room 3 starts at 11:00.</p><time>18 minutes ago</time></div>
+            <span class="notification-unread" aria-label="Unread"></span>
+          </li>
+          <li class="unread-notification">
+            <span class="notification-type opportunity-type" aria-hidden="true"><svg class="icon"><use href="#star"/></svg></span>
+            <div><strong>Careers fair added</strong><p>The Spring Careers Fair is now in your events.</p><time>1 hour ago</time></div>
+            <span class="notification-unread" aria-label="Unread"></span>
+          </li>
+        </ol>
+        <button class="notification-footer" type="button">View notification centre <span aria-hidden="true">→</span></button>
+        <p class="notification-disclaimer">Demonstration notifications for the Sprint 1 prototype.</p>
+      </section>
+
+      <section class="dashboard-grid" id="campus" aria-label="UniCircle dashboard">
+        <article class="card schedule-card searchable" id="schedule" data-search="schedule lecture project seminar gym">
+          <div class="card-heading"><h2><span class="heading-icon blue"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg></span> Today's Schedule</h2><a href="#schedule-list">View all</a></div>
+          <ol class="timeline" id="schedule-list">
+            <li><time>09:00<small>10:00</small></time><span class="time-dot blue-dot"></span><div><strong>Computer Science Lecture</strong><small>Engineering Building, EB.2.14</small></div><span class="status attended">Attended ✓</span></li>
+            <li><time>11:00<small>12:00</small></time><span class="time-dot orange-dot"></span><div><strong>Group Project Meeting</strong><small>Library, Study Room 3</small></div><span class="status upcoming">Upcoming</span></li>
+            <li><time>14:00<small>15:00</small></time><span class="time-dot orange-dot"></span><div><strong>Data Structures Seminar</strong><small>Engineering Building, EB.1.05</small></div><span class="status upcoming">Upcoming</span></li>
+            <li><time>16:00<small>17:00</small></time><span class="time-dot green-dot"></span><div><strong>Gym Session</strong><small>Sports Centre</small></div><span class="status upcoming">Upcoming</span></li>
+          </ol>
+        </article>
+
+        <article class="card searchable" id="circles" data-search="campus circles computer science society board games sustainable campus">
+          <div class="card-heading"><h2><span class="heading-icon navy"><svg class="icon" aria-hidden="true"><use href="#users"/></svg></span> Campus Circles</h2><a href="#circles">View all</a></div>
+          <ul class="people-list">
+            <li><div class="circle-photo blue-photo">CS</div><div><strong>Computer Science Society</strong><small>1.2k members · 8 new posts</small></div><button class="small-action join-button" type="button">Join</button></li>
+            <li><div class="circle-photo orange-photo">BG</div><div><strong>Board Games Club</strong><small>320 members · 2 new posts</small></div><button class="small-action joined" type="button">Joined</button></li>
+            <li><div class="circle-photo green-photo">SC</div><div><strong>Sustainable Campus</strong><small>540 members · 5 new posts</small></div><button class="small-action join-button" type="button">Join</button></li>
+          </ul>
+        </article>
+
+        <article class="card searchable" id="messages" data-search="messages emily group project tutor">
+          <div class="card-heading"><h2><span class="heading-icon navy"><svg class="icon" aria-hidden="true"><use href="#message"/></svg></span> Messages</h2><a href="#messages">View all</a></div>
+          <ul class="message-list">
+            <li><span class="avatar pink-avatar">EW</span><div><strong>Emily Watson</strong><small>Are you still coming to the library later?</small></div><time>10:24</time><span class="unread">2</span></li>
+            <li><span class="avatar navy-avatar">CS</span><div><strong>CS Group Project</strong><small>James: I uploaded the slides…</small></div><time>09:18</time><span class="unread">1</span></li>
+            <li><span class="avatar green-avatar">DT</span><div><strong>Dr Taylor</strong><small>Your assignment feedback is now available.</small></div><time>Yesterday</time></li>
+          </ul>
+        </article>
+
+        <section class="quick-actions" aria-label="Campus services">
+          <a class="quick-card coral searchable" href="#events" data-search="events campus"><span><svg class="icon" aria-hidden="true"><use href="#events"/></svg></span><strong>Events</strong><small>What's on campus</small></a>
+          <a class="quick-card blue searchable" href="#booking" data-search="book service rooms appointments"><span><svg class="icon" aria-hidden="true"><use href="#building"/></svg></span><strong>Book a Service</strong><small>Rooms, facilities, appointments</small></a>
+          <a class="quick-card orange searchable" href="#opportunities" data-search="opportunities jobs internships volunteering"><span><svg class="icon" aria-hidden="true"><use href="#briefcase"/></svg></span><strong>Opportunities</strong><small>Jobs, internships, volunteering</small></a>
+          <a class="quick-card mint searchable" href="#map" data-search="campus map nearby people"><span><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg></span><strong>Campus Map</strong><small>Explore campus</small></a>
+          <a class="quick-card rose searchable" href="#wellbeing" data-search="wellbeing support help advice"><span><svg class="icon" aria-hidden="true"><use href="#heart"/></svg></span><strong>Wellbeing &amp; Support</strong><small>Get help and advice</small></a>
+          <a class="quick-card peach searchable" href="#lost-found" data-search="lost found report items"><span><svg class="icon" aria-hidden="true"><use href="#search"/></svg></span><strong>Lost and Found</strong><small>Report or browse items</small></a>
+          <a class="quick-card violet searchable" href="#assistant" data-search="ask unicircle help assistant"><span><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><strong>Ask UniCircle</strong><small>Find campus information</small></a>
+        </section>
+
+        <article class="card events-card searchable" id="events" data-search="events careers fair mindfulness international food festival">
+          <div class="card-heading"><h2><span class="heading-icon coral"><svg class="icon" aria-hidden="true"><use href="#events"/></svg></span> Upcoming Events</h2><a href="#events">View all</a></div>
+          <ul class="event-list">
+            <li><time><strong>12</strong><small>MAR</small></time><div class="event-thumb careers">CF</div><div><strong>Spring Careers Fair</strong><small>Wed 12 Mar, 10:00–16:00</small><small>● Main Hall</small></div><span class="tag green-tag">Careers</span></li>
+            <li><time><strong>14</strong><small>MAR</small></time><div class="event-thumb wellbeing">MW</div><div><strong>Mindfulness Workshop</strong><small>Fri 14 Mar, 14:00–15:00</small><small>● Wellbeing Centre</small></div><span class="tag green-tag">Wellbeing</span></li>
+            <li><time><strong>18</strong><small>MAR</small></time><div class="event-thumb social">IF</div><div><strong>International Food Festival</strong><small>Tue 18 Mar, 12:00–16:00</small><small>● Central Plaza</small></div><span class="tag coral-tag">Social</span></li>
+          </ul>
+        </article>
+
+        <article class="card booking-card searchable" id="booking" data-search="book service lecturer appointment room facility">
+          <div class="card-heading"><h2><span class="heading-icon green"><svg class="icon" aria-hidden="true"><use href="#building"/></svg></span> Book a Service</h2><a href="#booking">View all</a></div>
+          <div class="tabs" role="tablist" aria-label="Booking type">
+            <button class="tab active" type="button" role="tab" aria-selected="true">Lecturer Appointment</button>
+            <button class="tab" type="button" role="tab" aria-selected="false">Room / Facility</button>
+          </div>
+          <div class="lecturer-row"><span class="avatar green-avatar">DT</span><div><strong>Dr Taylor</strong><small>Computer Science</small></div><span>›</span></div>
+          <p class="field-label">Select a time</p>
+          <div class="date-strip"><button type="button">Mon<small>10 Mar</small></button><button class="selected" type="button">Tue<small>11 Mar</small></button><button type="button">Wed<small>12 Mar</small></button><button type="button">Thu<small>13 Mar</small></button><button type="button">Fri<small>14 Mar</small></button></div>
+          <div class="time-strip"><button type="button">09:00</button><button type="button">10:00</button><button class="selected" type="button">11:00</button><button type="button">12:00</button><button type="button">14:00</button><button type="button">15:00</button><button type="button">16:00</button></div>
+          <button class="primary-button" id="bookButton" type="button">Book appointment</button>
+          <p class="inline-status" id="bookingStatus" role="status" aria-live="polite"></p>
+        </article>
+
+        <article class="card map-card searchable" id="map" data-search="campus map nearby accepted connections">
+          <div class="card-heading"><h2><span class="heading-icon green"><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg></span> Campus Map</h2><a href="#map">View all</a></div>
+          <div class="privacy-select"><span>Showing:</span><strong>Accepted connections only</strong></div>
+          <div class="map-canvas" role="img" aria-label="Illustrative campus map showing accepted connections only">
+            <span class="road road-a"></span><span class="road road-b"></span><span class="road road-c"></span>
+            <span class="map-pin you">You</span><span class="map-pin person one">SP</span><span class="map-pin person two">JW</span><span class="map-pin place">▣</span>
+          </div>
+          <div class="map-person"><span class="avatar pink-avatar">SP</span><div><strong>Sophie Patel</strong><small>In Library · 50 m</small></div><button class="message-button" type="button" data-person="Sophie Patel">Message</button></div>
+          <small class="privacy-note">Location is illustrative and would be off by default. Sharing requires explicit consent.</small>
+        </article>
+
+        <article class="card assistant-card searchable" id="assistant" data-search="ask unicircle assistant quiet study sports career">
+          <div class="card-heading"><h2><span class="heading-icon violet"><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span> Ask UniCircle</h2></div>
+          <div class="assistant-intro"><span class="avatar assistant-avatar">U</span><p>Hi Michael. I can help you find campus information in this prototype.</p></div>
+          <div class="prompt-list">
+            <button type="button">Find a quiet study space</button>
+            <button type="button">How do I book a sports facility?</button>
+            <button type="button">Tell me about career opportunities</button>
+          </div>
+          <div class="assistant-response" id="assistantResponse" role="status" aria-live="polite">Choose a question or type your own.</div>
+          <form class="assistant-form" id="assistantForm">
+            <label class="sr-only" for="assistantInput">Ask UniCircle a question</label>
+            <input id="assistantInput" type="text" maxlength="250" placeholder="Type your question…">
+            <button type="submit" aria-label="Send question">➜</button>
+          </form>
+          <small class="privacy-note">Prototype guidance only. A deployed service must use approved university information sources.</small>
+        </article>
+
+        <article class="card opportunity-card searchable" id="opportunities" data-search="opportunities student ambassador internship library assistant">
+          <div class="card-heading"><h2><span class="heading-icon green"><svg class="icon" aria-hidden="true"><use href="#briefcase"/></svg></span> Opportunities</h2><a href="#opportunities">View all</a></div>
+          <div class="opportunity-grid"><button type="button"><strong>Student Ambassador</strong><small>Campus Experience Team</small><span>Part-time · On campus</span></button><button type="button"><strong>Software Engineering Internship</strong><small>Tech Solutions</small><span>Internship · Remote</span></button><button type="button"><strong>Library Assistant</strong><small>Learning Resources</small><span>Part-time · On campus</span></button></div>
+        </article>
+      </section>
+
+      <footer><span>UniCircle · Sprint 1 engineering foundation</span><a href="/actuator/health">System health</a></footer>
+    </main>
+  </div>
+
+  <dialog id="messageDialog">
+    <form method="dialog">
+      <button class="dialog-close" aria-label="Close">×</button>
+      <h2>New message</h2>
+      <p id="dialogRecipient"></p>
+      <label>Message<textarea rows="4" maxlength="1000" placeholder="Write a message…"></textarea></label>
+      <p class="privacy-note">Sending is disabled in Sprint 1 until authenticated messaging is implemented.</p>
+      <button class="primary-button" type="button" disabled>Send message</button>
+    </form>
+  </dialog>
+  <div class="search-empty" id="searchEmpty" hidden role="status">No dashboard items match that search.</div>
+</body>
+</html>
