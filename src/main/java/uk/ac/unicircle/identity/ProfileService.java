@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,10 +16,12 @@ class ProfileService {
 
     private final UserAccountRepository accounts;
     private final ProfilePhotoStorage photoStorage;
+    private final CurrentIdentity currentIdentity;
 
-    ProfileService(UserAccountRepository accounts, ProfilePhotoStorage photoStorage) {
+    ProfileService(UserAccountRepository accounts, ProfilePhotoStorage photoStorage, CurrentIdentity currentIdentity) {
         this.accounts = accounts;
         this.photoStorage = photoStorage;
+        this.currentIdentity = currentIdentity;
     }
 
     @Transactional(readOnly = true)
@@ -72,21 +73,11 @@ class ProfileService {
     }
 
     private UserAccount resolveAccount(Authentication authentication) {
-        if (authentication != null && authentication.isAuthenticated()
-                && authentication.getPrincipal() instanceof OidcUser oidcUser) {
-            var issuer = oidcUser.getIdToken().getClaimAsURL("iss");
-            if (issuer != null) {
-                return accounts.findByUniversityOidcIssuerAndExternalSubject(issuer.toString(), authentication.getName())
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                                "The authenticated university account has not been provisioned."));
-            }
-        }
-        return accounts.findByExternalSubject(DEMO_SUBJECT)
+        return accounts.findById(currentIdentity.require(authentication).accountId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "The local demonstration profile is unavailable."));
+                        "The signed-in account is unavailable."));
     }
 
     record ProfilePhoto(byte[] content, String mediaType) {
     }
 }
-

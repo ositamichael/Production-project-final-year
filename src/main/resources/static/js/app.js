@@ -315,6 +315,9 @@ const profileFields = document.querySelector('#profileFields');
 const profileStatus = document.querySelector('#profileStatus');
 const profilePhotoInput = document.querySelector('#profilePhoto');
 const profilePhotoPreview = document.querySelector('#profilePhotoPreview');
+const universityContext = document.querySelector('#universityContext');
+const academicModules = document.querySelector('#academicModules');
+const academicCoursemates = document.querySelector('#academicCoursemates');
 
 function setProfileStatus(message, state = '') {
   profileStatus.textContent = message;
@@ -357,8 +360,74 @@ function populateProfile(profile) {
   updateVisibleIdentity(profile);
 }
 
+function clearUniversityContext() {
+  universityContext.hidden = true;
+  academicModules.replaceChildren();
+  academicCoursemates.replaceChildren();
+}
+
+function connectionLabel(state) {
+  if (state === 'CONNECTED') return 'Connected';
+  if (state === 'PENDING') return 'Request pending';
+  return 'Available to connect';
+}
+
+function renderUniversityContext(context) {
+  document.querySelector('#academicSource').textContent = context.dataSource === 'FICTIONAL_DEVELOPMENT_FIXTURE'
+    ? 'Fictional sandbox'
+    : 'Approved university source';
+  document.querySelector('#academicProgramme').textContent = `${context.student.qualification} ${context.student.programmeTitle}`;
+  document.querySelector('#academicProgrammeMeta').textContent = `${context.student.programmeCode} · Year ${context.student.yearOfStudy}`;
+  document.querySelector('#academicNotice').textContent = context.dataNotice;
+
+  context.modules.forEach((module) => {
+    const item = document.createElement('span');
+    item.className = 'module-chip';
+    item.textContent = `${module.code} · ${module.title}`;
+    academicModules.append(item);
+  });
+
+  context.coursemates.forEach((coursemate) => {
+    const item = document.createElement('article');
+    item.className = 'coursemate-item';
+    const avatar = document.createElement('span');
+    avatar.className = 'coursemate-avatar';
+    avatar.textContent = initialsFor(coursemate.displayName);
+    const details = document.createElement('span');
+    const name = document.createElement('strong');
+    name.textContent = coursemate.displayName;
+    const shared = document.createElement('small');
+    shared.textContent = `${coursemate.sharedModuleCodes.length} shared modules · ${connectionLabel(coursemate.connectionState)}`;
+    details.append(name, shared);
+    item.append(avatar, details);
+    academicCoursemates.append(item);
+  });
+
+  if (!context.modules.length) academicModules.textContent = 'No current modules were supplied.';
+  if (!context.coursemates.length) academicCoursemates.textContent = 'No permitted coursemates were supplied.';
+  universityContext.hidden = false;
+}
+
+async function loadUniversityContext() {
+  clearUniversityContext();
+  try {
+    const response = await fetch('/api/campus/me/context', { headers: { Accept: 'application/json' } });
+    if (!response.ok) throw new Error('Your university academic-data connection is not available yet.');
+    renderUniversityContext(await response.json());
+  } catch (error) {
+    document.querySelector('#academicSource').textContent = 'Source unavailable';
+    document.querySelector('#academicProgramme').textContent = 'University data is not connected';
+    document.querySelector('#academicProgrammeMeta').textContent = 'Your editable UniCircle profile remains available.';
+    document.querySelector('#academicNotice').textContent = error.message;
+    academicModules.textContent = 'No verified module data is available.';
+    academicCoursemates.textContent = 'No verified coursemate data is available.';
+    universityContext.hidden = false;
+  }
+}
+
 async function loadProfile() {
   profileFields.disabled = true;
+  clearUniversityContext();
   setProfileStatus('Checking your secure session…');
   try {
     const response = await fetch('/api/profile/me', { headers: { Accept: 'application/json' } });
@@ -369,6 +438,7 @@ async function loadProfile() {
     if (!response.ok) throw new Error('Your profile is temporarily unavailable.');
     const profile = await response.json();
     populateProfile(profile);
+    await loadUniversityContext();
     setProfileStatus('Your verified profile is ready to edit.', 'success');
   } catch (error) {
     setProfileStatus(error.message || 'Your profile could not be loaded.', 'error');

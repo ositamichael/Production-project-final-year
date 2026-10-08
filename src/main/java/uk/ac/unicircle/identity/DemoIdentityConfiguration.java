@@ -6,6 +6,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 
 @Configuration
 @Profile("!prod")
@@ -15,13 +16,14 @@ class DemoIdentityConfiguration {
     private static final UUID ACCOUNT_ID = UUID.fromString("7ccb9282-ebcb-4ea0-94f1-3af1f84be101");
 
     @Bean
+    @Order(10)
     ApplicationRunner seedLocalProfile(UniversityRepository universities, UserAccountRepository accounts) {
         return arguments -> {
             University university = universities.findById(UNIVERSITY_ID)
                     .orElseGet(() -> universities.save(new University(
                             UNIVERSITY_ID,
                             "demo-university",
-                            "Demonstration University",
+                            "Leeds Beckett–style Fictional Sandbox",
                             "demo.university.example",
                             "https://identity.demo.university.example")));
 

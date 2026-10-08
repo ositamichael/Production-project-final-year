@@ -6,8 +6,8 @@
   <meta name="description" content="UniCircle campus connection and services platform prototype">
   <title>UniCircle — My Campus</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/css/app.css?v=7">
-  <script src="/js/app.js?v=7" defer></script>
+  <link rel="stylesheet" href="/css/app.css?v=8">
+  <script src="/js/app.js?v=8" defer></script>
 </head>
 <body>
   <svg class="svg-sprite" aria-hidden="true">
@@ -53,7 +53,7 @@
   </svg>
   <a class="skip-link" href="#main-content">Skip to dashboard</a>
   <div class="prototype-banner" role="status">
-    Sprint 2 prototype data — no live university systems are connected yet.
+    Sprint 3 fictional sandbox data — no live university systems are connected yet.
   </div>
   <div class="app-shell">
     <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
@@ -330,7 +330,7 @@
         <div class="assistant-workspace"><aside class="content-panel"><h3>Popular topics</h3><div class="topic-list"><button type="button" data-page-question="Find a quiet study space">Quiet study spaces<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button><button type="button" data-page-question="How do I book a sports facility?">Sports facilities<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button><button type="button" data-page-question="Tell me about career opportunities">Career opportunities<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button></div><p class="panel-note">Responses are limited to the demonstrated questions and are not connected to live university systems.</p></aside><article class="assistant-chat"><div class="assistant-chat-heading"><span class="avatar assistant-avatar">U</span><div><h3>UniCircle campus guide</h3><span>Prototype information assistant</span></div></div><div class="assistant-chat-body" id="pageAssistantResponse" role="status" aria-live="polite"><p class="bubble received">Hello Michael. Choose a topic or ask one of the supported demonstration questions.</p></div><form class="composer" id="pageAssistantForm"><label class="sr-only" for="pageAssistantInput">Ask the campus guide</label><input id="pageAssistantInput" type="text" maxlength="250" placeholder="Ask about spaces, facilities or careers"><button type="submit" aria-label="Send question"><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button></form></article></div>
       </section>
 
-      <footer><span>UniCircle · Sprint 2 identity and profile foundation</span><a href="/actuator/health">System health</a></footer>
+      <footer><span>UniCircle · Sprint 3 university integration readiness</span><a href="/actuator/health">System health</a></footer>
     </main>
   </div>
 
@@ -356,6 +356,18 @@
           <input id="profilePhoto" name="photo" type="file" accept="image/png,image/jpeg">
         </label>
         <div class="profile-identity" id="profileIdentity" hidden><span><strong>University</strong><small id="profileUniversity"></small></span><span><strong>Verified email</strong><small id="profileEmail"></small></span></div>
+        <section class="university-context" id="universityContext" hidden aria-labelledby="universityContextTitle">
+          <div class="university-context-heading">
+            <div><span class="eyebrow">UNIVERSITY DATA</span><h3 id="universityContextTitle">Your academic context</h3></div>
+            <span class="fixture-badge" id="academicSource">Fictional sandbox</span>
+          </div>
+          <div class="programme-summary"><strong id="academicProgramme"></strong><span id="academicProgrammeMeta"></span></div>
+          <div class="academic-columns">
+            <div><h4>Current modules</h4><div class="module-chip-list" id="academicModules"></div></div>
+            <div><h4>People on your course</h4><div class="coursemate-list" id="academicCoursemates"></div></div>
+          </div>
+          <p class="academic-notice" id="academicNotice"></p>
+        </section>
         <div class="dialog-actions"><button class="secondary-button" type="button" id="profileCancel">Cancel</button><button class="primary-button" id="profileSave" type="submit">Save profile</button></div>
       </fieldset>
       <p class="privacy-note">Profile changes require an authenticated university session. Photographs are reprocessed to remove embedded metadata before storage.</p>
