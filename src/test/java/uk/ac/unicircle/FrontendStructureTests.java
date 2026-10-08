@@ -63,4 +63,23 @@ class FrontendStructureTests {
             .doesNotContain("class=\"feature-avatar blue-photo\">CS")
             .doesNotContain("class=\"company-mark blue-photo\">UC");
     }
+
+    @Test
+    void profileEditorIsSignInGatedAndSupportsValidatedPhotographs() throws IOException {
+        var resource = getClass().getResourceAsStream("/static/index.html");
+        assertThat(resource).isNotNull();
+
+        var html = new String(resource.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(html)
+            .contains("id=\"profileButton\"")
+            .contains("class=\"account-card\" id=\"sidebarProfileButton\" type=\"button\" data-open-profile")
+            .contains("id=\"universityAccountButton\" type=\"button\" data-open-profile")
+            .contains("data-current-university")
+            .contains("data-current-account-detail")
+            .contains("id=\"profileDialog\"")
+            .contains("id=\"profileForm\"")
+            .contains("accept=\"image/png,image/jpeg\"")
+            .contains("Profile changes require an authenticated university session")
+            .contains("remove embedded metadata");
+    }
 }

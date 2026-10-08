@@ -17,7 +17,7 @@ public class ProductionSecurityConfiguration {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 "/", "/index.html", "/favicon.svg", "/css/**", "/js/**",
-                                "/api/platform/status", "/actuator/health", "/oauth2/**", "/login/**")
+                                "/api/platform/status", "/api/security/csrf", "/actuator/health", "/oauth2/**", "/login/**")
                         .permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(Customizer.withDefaults())
