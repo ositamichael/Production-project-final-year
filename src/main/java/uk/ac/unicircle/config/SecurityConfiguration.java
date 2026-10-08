@@ -16,7 +16,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 "/", "/index.html", "/favicon.svg", "/css/**", "/js/**",
-                                "/api/platform/status", "/actuator/health")
+                                "/api/platform/status", "/api/security/csrf", "/actuator/health")
                         .permitAll()
                         .anyRequest().authenticated())
                 .build();

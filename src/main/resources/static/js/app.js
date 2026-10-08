@@ -8,6 +8,28 @@ const notificationBadge = document.querySelector('#notificationBadge');
 const globalSearch = document.querySelector('#globalSearch');
 const searchEmpty = document.querySelector('#searchEmpty');
 
+function openModal(dialog) {
+  if (dialog.matches('dialog')) {
+    if (typeof dialog.showModal === 'function' && !dialog.open) dialog.showModal();
+    else dialog.setAttribute('open', '');
+  } else {
+    dialog.hidden = false;
+  }
+  dialog.classList.add('dialog-fallback');
+  document.body.classList.add('modal-open');
+}
+
+function closeModal(dialog) {
+  if (dialog.matches('dialog')) {
+    if (typeof dialog.close === 'function') dialog.close();
+    else dialog.removeAttribute('open');
+  } else {
+    dialog.hidden = true;
+  }
+  dialog.classList.remove('dialog-fallback');
+  if (!document.querySelector('dialog[open], .modal-surface:not([hidden])')) document.body.classList.remove('modal-open');
+}
+
 menuButton?.addEventListener('click', () => {
   const open = sidebar.classList.toggle('open');
   menuButton.setAttribute('aria-expanded', String(open));
@@ -287,12 +309,180 @@ document.querySelector('#pageAssistantForm')?.addEventListener('submit', (event)
   answerPageQuestion(input.value);
 });
 
+const profileDialog = document.querySelector('#profileDialog');
+const profileForm = document.querySelector('#profileForm');
+const profileFields = document.querySelector('#profileFields');
+const profileStatus = document.querySelector('#profileStatus');
+const profilePhotoInput = document.querySelector('#profilePhoto');
+const profilePhotoPreview = document.querySelector('#profilePhotoPreview');
+
+function setProfileStatus(message, state = '') {
+  profileStatus.textContent = message;
+  profileStatus.className = `profile-status${state ? ` ${state}` : ''}`;
+}
+
+function initialsFor(name) {
+  return name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'U';
+}
+
+function updateVisibleIdentity(profile) {
+  document.querySelectorAll('[data-current-user-name]').forEach((node) => { node.textContent = profile.displayName; });
+  document.querySelectorAll('[data-current-user-course]').forEach((node) => { node.textContent = profile.courseName || profile.role; });
+  document.querySelectorAll('[data-current-user-first-name]').forEach((node) => {
+    node.textContent = profile.displayName.trim().split(/\s+/)[0] || 'Student';
+  });
+  document.querySelectorAll('[data-current-university]').forEach((node) => { node.textContent = profile.university; });
+  document.querySelectorAll('[data-current-account-detail]').forEach((node) => { node.textContent = profile.email; });
+  document.querySelectorAll('.avatar-michael').forEach((avatar) => {
+    avatar.textContent = initialsFor(profile.displayName);
+    if (profile.hasPhoto) {
+      avatar.style.backgroundImage = `url("${profile.photoUrl}?v=${Date.now()}")`;
+      avatar.style.backgroundSize = 'cover';
+      avatar.style.backgroundPosition = 'center';
+      avatar.textContent = '';
+    }
+  });
+}
+
+function populateProfile(profile) {
+  document.querySelector('#profileDisplayName').value = profile.displayName || '';
+  document.querySelector('#profileCourse').value = profile.courseName || '';
+  document.querySelector('#profileYear').value = profile.yearOfStudy || '';
+  document.querySelector('#profileVisibility').value = profile.visibility;
+  document.querySelector('#profileBiography').value = profile.biography || '';
+  document.querySelector('#profileUniversity').textContent = profile.university;
+  document.querySelector('#profileEmail').textContent = profile.email;
+  document.querySelector('#profileIdentity').hidden = false;
+  profileFields.disabled = false;
+  updateVisibleIdentity(profile);
+}
+
+async function loadProfile() {
+  profileFields.disabled = true;
+  setProfileStatus('Checking your secure session…');
+  try {
+    const response = await fetch('/api/profile/me', { headers: { Accept: 'application/json' } });
+    if (response.status === 401 || response.status === 403) {
+      setProfileStatus('Profile editing is protected. Sign in through an approved university account to view or change these details.', 'error');
+      return;
+    }
+    if (!response.ok) throw new Error('Your profile is temporarily unavailable.');
+    const profile = await response.json();
+    populateProfile(profile);
+    setProfileStatus('Your verified profile is ready to edit.', 'success');
+  } catch (error) {
+    setProfileStatus(error.message || 'Your profile could not be loaded.', 'error');
+  }
+}
+
+async function csrfToken() {
+  const response = await fetch('/api/security/csrf', { headers: { Accept: 'application/json' } });
+  if (!response.ok) throw new Error('The security token could not be prepared. Please try again.');
+  return response.json();
+}
+
+function openProfilePanel() {
+  if (!profileDialog) return;
+  openModal(profileDialog);
+  loadProfile();
+}
+
+document.querySelectorAll('[data-open-profile]').forEach((button) => {
+  button.addEventListener('click', openProfilePanel);
+});
+
+document.querySelector('#profileDialogClose')?.addEventListener('click', () => closeModal(profileDialog));
+document.querySelector('#profileCancel')?.addEventListener('click', () => closeModal(profileDialog));
+
+profilePhotoInput?.addEventListener('change', () => {
+  const file = profilePhotoInput.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) {
+    profilePhotoInput.value = '';
+    setProfileStatus('Choose a photograph smaller than 5 MB.', 'error');
+    return;
+  }
+  if (!['image/png', 'image/jpeg'].includes(file.type)) {
+    profilePhotoInput.value = '';
+    setProfileStatus('Choose a PNG or JPEG photograph.', 'error');
+    return;
+  }
+  const reader = new FileReader();
+  reader.addEventListener('load', () => {
+    profilePhotoPreview.style.backgroundImage = `url("${reader.result}")`;
+    profilePhotoPreview.style.backgroundSize = 'cover';
+    profilePhotoPreview.style.backgroundPosition = 'center';
+    profilePhotoPreview.textContent = '';
+  }, { once: true });
+  reader.addEventListener('error', () => {
+    profilePhotoInput.value = '';
+    setProfileStatus('That photograph could not be previewed.', 'error');
+  }, { once: true });
+  reader.readAsDataURL(file);
+  setProfileStatus('Photograph selected. It will be checked and processed when you save.', 'success');
+});
+
+profileForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (profileFields.disabled || !profileForm.reportValidity()) return;
+  const saveButton = document.querySelector('#profileSave');
+  saveButton.disabled = true;
+  setProfileStatus('Saving your profile securely…');
+  try {
+    const csrf = await csrfToken();
+    const yearValue = document.querySelector('#profileYear').value;
+    const response = await fetch('/api/profile/me', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        [csrf.headerName]: csrf.token
+      },
+      body: JSON.stringify({
+        displayName: document.querySelector('#profileDisplayName').value,
+        biography: document.querySelector('#profileBiography').value,
+        courseName: document.querySelector('#profileCourse').value,
+        yearOfStudy: yearValue ? Number(yearValue) : null,
+        visibility: document.querySelector('#profileVisibility').value
+      })
+    });
+    if (!response.ok) throw new Error('The profile details were not accepted. Check each field and try again.');
+    let profile = await response.json();
+
+    const photo = profilePhotoInput.files[0];
+    if (photo) {
+      const photoData = new FormData();
+      photoData.append('photo', photo);
+      const photoResponse = await fetch('/api/profile/me/photo', {
+        method: 'POST',
+        headers: { Accept: 'application/json', [csrf.headerName]: csrf.token },
+        body: photoData
+      });
+      if (!photoResponse.ok) throw new Error('Your details were saved, but the photograph did not pass the upload checks.');
+      profile = await photoResponse.json();
+      profilePhotoInput.value = '';
+    }
+
+    populateProfile(profile);
+    setProfileStatus('Profile saved successfully.', 'success');
+  } catch (error) {
+    setProfileStatus(error.message || 'Your profile could not be saved.', 'error');
+  } finally {
+    saveButton.disabled = false;
+  }
+});
+
 const messageDialog = document.querySelector('#messageDialog');
 document.querySelectorAll('.message-button').forEach((button) => {
   button.addEventListener('click', () => {
     document.querySelector('#dialogRecipient').textContent = `To: ${button.dataset.person}`;
-    messageDialog.showModal();
+    openModal(messageDialog);
   });
+});
+
+messageDialog?.querySelector('.dialog-close')?.addEventListener('click', (event) => {
+  event.preventDefault();
+  closeModal(messageDialog);
 });
 
 fetch('/api/platform/status')

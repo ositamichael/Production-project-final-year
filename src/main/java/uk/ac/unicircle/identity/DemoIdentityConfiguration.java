@@ -1,0 +1,46 @@
+package uk.ac.unicircle.identity;
+
+import java.util.UUID;
+
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+
+@Configuration
+@Profile("!prod")
+class DemoIdentityConfiguration {
+
+    private static final UUID UNIVERSITY_ID = UUID.fromString("2c952dd9-5276-4e44-bf20-3fe98b345101");
+    private static final UUID ACCOUNT_ID = UUID.fromString("7ccb9282-ebcb-4ea0-94f1-3af1f84be101");
+
+    @Bean
+    ApplicationRunner seedLocalProfile(UniversityRepository universities, UserAccountRepository accounts) {
+        return arguments -> {
+            University university = universities.findById(UNIVERSITY_ID)
+                    .orElseGet(() -> universities.save(new University(
+                            UNIVERSITY_ID,
+                            "demo-university",
+                            "Demonstration University",
+                            "demo.university.example",
+                            "https://identity.demo.university.example")));
+
+            if (accounts.findById(ACCOUNT_ID).isEmpty()) {
+                UserAccount account = new UserAccount(
+                        ACCOUNT_ID,
+                        university,
+                        ProfileService.DEMO_SUBJECT,
+                        "michael.carter@demo.university.example",
+                        "Michael Carter",
+                        UserRole.STUDENT);
+                account.updateProfile(
+                        "Michael Carter",
+                        "Computer Science student interested in software engineering and campus communities.",
+                        "BSc Computer Science",
+                        3,
+                        ProfileVisibility.UNIVERSITY_ONLY);
+                accounts.save(account);
+            }
+        };
+    }
+}
