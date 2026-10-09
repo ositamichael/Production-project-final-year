@@ -6,7 +6,7 @@ This repository is being rebuilt as a Level 6 final-year software engineering pr
 
 ## Current status
 
-Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, and Sprint 6 adds live multi-session communication and safety controls:
+Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, and Sprint 7 adds transactional campus events and service bookings:
 
 - Spring Boot 4.1.1 with Java 21 as the target language level.
 - A responsive desktop, tablet and mobile dashboard prototype.
@@ -20,6 +20,11 @@ Sprint 1 established the testable engineering foundation, Sprint 2 added the acc
 - Account-specific, database-backed notifications and unread counts.
 - Immediate account blocking that removes private messaging permission.
 - Confidential safeguarding reports with validated reasons and an auditable review state.
+- A university-scoped event catalogue with account-specific registration, cancellation, remaining-capacity calculation and schedule integration.
+- Service offerings and bookable time slots for appointments, facilities and campus support.
+- Transactional booking controls that reject duplicate, overlapping and fully occupied requests.
+- Account-specific booking history, cancellation and confirmation notifications.
+- A composed personal schedule that combines registered events with confirmed service bookings.
 - Four separate fictional student sign-ins for demonstrating requests and chat between people.
 - Flyway migrations, PostgreSQL production configuration and an H2 local profile.
 - Health monitoring, modular architecture checks, unit tests and CI.
@@ -32,7 +37,7 @@ Sprint 1 established the testable engineering foundation, Sprint 2 added the acc
 - A dedicated sign-in experience that explicitly prevents the use of Leeds Beckett or Microsoft credentials.
 - API requests return a clear unauthorised response rather than leaking protected profile information or returning a login page.
 
-The dashboard now contains a working local social demonstration, but it is not evidence of a live university integration. Real student identity, timetables, bookings and location require institutional approval, integration contracts, security review and deployment infrastructure. Messages, notifications and reports are stored only in the local development database. Production push notifications, staffed safeguarding operations and retention policies remain future work.
+The dashboard now contains working local social, event-registration and booking demonstrations, but it is not evidence of a live university integration. Real student identity, official timetables, university booking systems and location require institutional approval, integration contracts, security review and deployment infrastructure. Messages, registrations, bookings, notifications and reports are stored only in the local development database. Production push notifications, staffed safeguarding operations and retention policies remain future work.
 
 ## Run in IntelliJ IDEA
 
@@ -80,6 +85,7 @@ UniCircle begins as a modular monolith. This keeps deployment manageable for a f
 - [`docs/sprints/04-demo-sign-in.md`](docs/sprints/04-demo-sign-in.md)
 - [`docs/sprints/05-connections-messaging.md`](docs/sprints/05-connections-messaging.md)
 - [`docs/sprints/06-realtime-safety.md`](docs/sprints/06-realtime-safety.md)
+- [`docs/sprints/07-events-bookings.md`](docs/sprints/07-events-bookings.md)
 
 ## Branching and assessment evidence
 

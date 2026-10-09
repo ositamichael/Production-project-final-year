@@ -38,7 +38,7 @@ class FrontendStructureTests {
         var html = new String(resource.readAllBytes(), StandardCharsets.UTF_8);
         assertThat(html)
             .contains("no live university systems are connected")
-            .contains("No live booking connection")
+            .contains("Transactional sandbox booking")
             .contains("Messages are stored in the local development database")
             .contains("does not request or store device location");
     }
@@ -55,8 +55,9 @@ class FrontendStructureTests {
             .contains("<symbol id=\"bottle\"")
             .contains("<symbol id=\"mindfulness\"")
             .contains("<symbol id=\"graduation\"")
+            .contains("<symbol id=\"presentation\"")
             .contains("<use href=\"#code\"/>")
-            .contains("<use href=\"#presentation\"/>");
+            .contains("<use href=\"#graduation\"/>");
 
         assertThat(html)
             .doesNotContain("class=\"event-thumb careers\">CF")
@@ -137,5 +138,24 @@ class FrontendStructureTests {
             .contains("aisha.khan@students.unicircle.test")
             .contains("James Wilson — new student")
             .contains("Use separate browser sessions to test requests and live chat");
+    }
+
+    @Test
+    void eventsAndServiceBookingsHaveAccountSpecificWorkspaces() throws IOException {
+        var resource = getClass().getResourceAsStream("/static/index.html");
+        assertThat(resource).isNotNull();
+
+        var html = new String(resource.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(html)
+            .contains("id=\"eventCatalogue\"")
+            .contains("id=\"eventFilters\"")
+            .contains("id=\"serviceCatalogue\"")
+            .contains("id=\"bookingActivity\"")
+            .contains("id=\"bookingDateStrip\"")
+            .contains("id=\"bookingTimeStrip\"")
+            .contains("id=\"todayCommitmentList\"")
+            .contains("id=\"todayCampusCommitmentCount\"")
+            .contains("Account-specific registrations")
+            .contains("Transactional sandbox booking");
     }
 }
