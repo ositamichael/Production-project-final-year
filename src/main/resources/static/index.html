@@ -6,8 +6,8 @@
   <meta name="description" content="UniCircle campus connection and services platform prototype">
   <title>UniCircle — My Campus</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/css/app.css?v=11">
-  <script src="/js/app.js?v=11" defer></script>
+  <link rel="stylesheet" href="/css/app.css?v=12">
+  <script src="/js/app.js?v=12" defer></script>
 </head>
 <body>
   <svg class="svg-sprite" aria-hidden="true">
@@ -54,7 +54,7 @@
   </svg>
   <a class="skip-link" href="#main-content">Skip to dashboard</a>
   <div class="prototype-banner" role="status">
-    Sprint 6 fictional sandbox — live multi-session messaging, notifications and safety controls; no live university systems are connected.
+    Sprint 7 fictional sandbox — account-specific events, bookings and schedules; no live university systems are connected.
   </div>
   <div class="app-shell">
     <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
@@ -160,7 +160,7 @@
 
         <article class="card events-card searchable" id="events" data-search="events careers fair mindfulness international food festival">
           <div class="card-heading"><h2><span class="heading-icon coral"><svg class="icon" aria-hidden="true"><use href="#events"/></svg></span> Upcoming Events</h2><a href="#events-page" data-open-page="events">View all</a></div>
-          <ul class="event-list">
+          <ul class="event-list" id="dashboardEventList">
             <li><time><strong>12</strong><small>MAR</small></time><div class="event-thumb careers"><svg class="icon" aria-hidden="true"><use href="#briefcase"/></svg></div><div><strong>Spring Careers Fair</strong><small>Wed 12 Mar, 10:00–16:00</small><small class="meta-with-icon"><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg>Main Hall</small></div><span class="tag green-tag">Careers</span></li>
             <li><time><strong>14</strong><small>MAR</small></time><div class="event-thumb wellbeing"><svg class="icon" aria-hidden="true"><use href="#mindfulness"/></svg></div><div><strong>Mindfulness Workshop</strong><small>Fri 14 Mar, 14:00–15:00</small><small class="meta-with-icon"><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg>Wellbeing Centre</small></div><span class="tag green-tag">Wellbeing</span></li>
             <li><time><strong>18</strong><small>MAR</small></time><div class="event-thumb social"><svg class="icon" aria-hidden="true"><use href="#food"/></svg></div><div><strong>International Food Festival</strong><small>Tue 18 Mar, 12:00–16:00</small><small class="meta-with-icon"><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg>Central Plaza</small></div><span class="tag coral-tag">Social</span></li>
@@ -176,8 +176,8 @@
           <div id="bookingPanel" role="tabpanel" aria-labelledby="lecturerTab">
             <div class="lecturer-row"><span class="avatar green-avatar" id="bookingAvatar">DT</span><div><strong id="bookingName">Dr Taylor</strong><small id="bookingDetail">Computer Science</small></div><svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></div>
             <p class="field-label">Select a time</p>
-            <div class="date-strip"><button type="button" aria-pressed="false">Mon<small>10 Mar</small></button><button class="selected" type="button" aria-pressed="true">Tue<small>11 Mar</small></button><button type="button" aria-pressed="false">Wed<small>12 Mar</small></button><button type="button" aria-pressed="false">Thu<small>13 Mar</small></button><button type="button" aria-pressed="false">Fri<small>14 Mar</small></button></div>
-            <div class="time-strip"><button type="button" aria-pressed="false">09:00</button><button type="button" aria-pressed="false">10:00</button><button class="selected" type="button" aria-pressed="true">11:00</button><button type="button" aria-pressed="false">12:00</button><button type="button" aria-pressed="false">14:00</button><button type="button" aria-pressed="false">15:00</button><button type="button" aria-pressed="false">16:00</button></div>
+            <div class="date-strip" id="bookingDateStrip"><span class="loading-copy">Sign in to load available dates.</span></div>
+            <div class="time-strip" id="bookingTimeStrip"></div>
             <button class="primary-button" id="bookButton" type="button">Book appointment</button>
           </div>
           <p class="inline-status" id="bookingStatus" role="status" aria-live="polite"></p>
@@ -223,7 +223,7 @@
           <span class="data-badge">Prototype timetable data</span>
         </header>
         <div class="metric-row" aria-label="Today summary">
-          <article><strong>4</strong><span>Scheduled activities</span></article><article><strong>1</strong><span>Completed</span></article><article><strong>3</strong><span>Upcoming</span></article><article><strong>17:00</strong><span>Day finishes</span></article>
+          <article><strong id="todayPlannedCount">4</strong><span>Planned activities</span></article><article><strong>1</strong><span>Completed</span></article><article><strong id="todayCampusCommitmentCount">0</strong><span>Registered &amp; booked</span></article><article><strong>17:00</strong><span>Day finishes</span></article>
         </div>
         <div class="content-layout two-one">
           <article class="content-panel">
@@ -240,6 +240,10 @@
             <article class="content-panel soft-panel"><h3>Attendance snapshot</h3><div class="progress-block"><div><strong>92%</strong><span>Current module attendance</span></div><progress value="92" max="100">92%</progress></div><p class="panel-note">Illustrative data only. A deployment would require an approved attendance-system integration.</p></article>
           </aside>
         </div>
+        <article class="content-panel schedule-commitments-panel">
+          <div class="section-heading"><div><span class="eyebrow">YOUR UNICIRCLE SCHEDULE</span><h3>Upcoming campus commitments</h3></div><span class="data-badge">Account-specific</span></div>
+          <div class="schedule-commitments" id="todayCommitmentList" aria-live="polite"><div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg><h3>No additional commitments</h3><p>Events you register for and services you book will appear here automatically.</p></div></div>
+        </article>
       </section>
 
       <section class="page-view page-surface" id="circles-page" data-page="circles" hidden tabindex="-1" aria-labelledby="circlesTitle">
@@ -264,25 +268,15 @@
       </section>
 
       <section class="page-view page-surface" id="events-page" data-page="events" hidden tabindex="-1" aria-labelledby="eventsTitle">
-        <header class="view-hero"><div class="view-title"><span class="view-icon coral"><svg class="icon" aria-hidden="true"><use href="#events"/></svg></span><div><span class="eyebrow">CAMPUS LIFE</span><h2 id="eventsTitle">Events</h2><p>Discover academic, careers, wellbeing and social activities.</p></div></div><button class="primary-compact prototype-action" type="button" data-action="Event proposal saved as a prototype draft">Propose an event</button></header>
-        <div class="section-toolbar"><div class="filter-row" data-filter-target="#events-page .event-card-large"><button class="filter-chip active" type="button" data-filter="all">All events</button><button class="filter-chip" type="button" data-filter="careers">Careers</button><button class="filter-chip" type="button" data-filter="academic">Academic</button><button class="filter-chip" type="button" data-filter="wellbeing">Wellbeing</button><button class="filter-chip" type="button" data-filter="social">Social</button></div><span class="data-badge">4 demonstration events</span></div>
-        <div class="feature-grid three">
-          <article class="event-card-large" data-category="careers"><div class="event-visual careers"><svg class="icon" aria-hidden="true"><use href="#briefcase"/></svg><span>12 MAR</span></div><div><span class="pill success">Careers</span><h3>Spring Careers Fair</h3><p>Meet employers, explore placements and receive CV guidance.</p><ul class="meta-list"><li><svg class="icon" aria-hidden="true"><use href="#clock"/></svg>Wednesday · 10:00–16:00</li><li><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg>Main Hall</li></ul><button class="secondary-button save-toggle" type="button" aria-pressed="false">Save event</button></div></article>
-          <article class="event-card-large" data-category="wellbeing"><div class="event-visual wellbeing"><svg class="icon" aria-hidden="true"><use href="#mindfulness"/></svg><span>14 MAR</span></div><div><span class="pill info">Wellbeing</span><h3>Mindfulness Workshop</h3><p>A guided session focused on practical study-week stress support.</p><ul class="meta-list"><li><svg class="icon" aria-hidden="true"><use href="#clock"/></svg>Friday · 14:00–15:00</li><li><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg>Wellbeing Centre</li></ul><button class="secondary-button save-toggle" type="button" aria-pressed="false">Save event</button></div></article>
-          <article class="event-card-large" data-category="social"><div class="event-visual social"><svg class="icon" aria-hidden="true"><use href="#food"/></svg><span>18 MAR</span></div><div><span class="pill warning">Social</span><h3>International Food Festival</h3><p>Student societies share food, music and cultural activities.</p><ul class="meta-list"><li><svg class="icon" aria-hidden="true"><use href="#clock"/></svg>Tuesday · 12:00–16:00</li><li><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg>Central Plaza</li></ul><button class="secondary-button save-toggle" type="button" aria-pressed="false">Save event</button></div></article>
-          <article class="event-card-large" data-category="academic"><div class="event-visual academic"><svg class="icon" aria-hidden="true"><use href="#presentation"/></svg><span>21 MAR</span></div><div><span class="pill info">Academic</span><h3>Student Research Showcase</h3><p>Final-year students present projects, methods and findings.</p><ul class="meta-list"><li><svg class="icon" aria-hidden="true"><use href="#clock"/></svg>Friday · 11:00–15:00</li><li><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg>Rose Bowl Atrium</li></ul><button class="secondary-button save-toggle" type="button" aria-pressed="false">Save event</button></div></article>
-        </div>
+        <header class="view-hero"><div class="view-title"><span class="view-icon coral"><svg class="icon" aria-hidden="true"><use href="#events"/></svg></span><div><span class="eyebrow">CAMPUS LIFE</span><h2 id="eventsTitle">Events</h2><p>Discover academic, careers, wellbeing and social activities.</p></div></div><span class="data-badge" id="eventCountBadge">Loading events…</span></header>
+        <div class="section-toolbar"><div class="filter-row" id="eventFilters"><button class="filter-chip active" type="button" data-event-category="">All events</button><button class="filter-chip" type="button" data-event-category="CAREERS">Careers</button><button class="filter-chip" type="button" data-event-category="ACADEMIC">Academic</button><button class="filter-chip" type="button" data-event-category="WELLBEING">Wellbeing</button><button class="filter-chip" type="button" data-event-category="SOCIAL">Social</button></div><span class="data-badge">Account-specific registrations</span></div>
+        <div class="feature-grid three" id="eventCatalogue" aria-live="polite"><div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#events"/></svg><h3>Loading campus events</h3><p>Your university event catalogue will appear here.</p></div></div>
       </section>
 
       <section class="page-view page-surface" id="services-page" data-page="services" hidden tabindex="-1" aria-labelledby="servicesTitle">
-        <header class="view-hero"><div class="view-title"><span class="view-icon green"><svg class="icon" aria-hidden="true"><use href="#building"/></svg></span><div><span class="eyebrow">UNIVERSITY SERVICES</span><h2 id="servicesTitle">Book a Service</h2><p>Start a request for appointments, rooms, facilities and campus support.</p></div></div><span class="data-badge">No live booking connection</span></header>
-        <div class="feature-grid four service-grid">
-          <article class="service-tile"><span class="view-icon blue"><svg class="icon" aria-hidden="true"><use href="#graduation"/></svg></span><h3>Lecturer appointment</h3><p>Choose a tutor, date and available appointment type.</p><button class="secondary-button prototype-action" type="button" data-action="Lecturer appointment flow opened in prototype mode">Start booking</button></article>
-          <article class="service-tile"><span class="view-icon green"><svg class="icon" aria-hidden="true"><use href="#room"/></svg></span><h3>Room or facility</h3><p>Request study rooms, sports spaces and approved facilities.</p><button class="secondary-button prototype-action" type="button" data-action="Facility booking flow opened in prototype mode">Find a space</button></article>
-          <article class="service-tile"><span class="view-icon coral"><svg class="icon" aria-hidden="true"><use href="#heart"/></svg></span><h3>Student support</h3><p>Find wellbeing, disability, finance and study services.</p><button class="secondary-button" type="button" data-open-page="wellbeing">View support</button></article>
-          <article class="service-tile"><span class="view-icon violet"><svg class="icon" aria-hidden="true"><use href="#id-badge"/></svg></span><h3>Campus appointment</h3><p>Prepare a request for registry or careers support.</p><button class="secondary-button prototype-action" type="button" data-action="Campus appointment flow opened in prototype mode">Choose service</button></article>
-        </div>
-        <article class="content-panel"><div class="section-heading"><div><span class="eyebrow">YOUR REQUESTS</span><h3>Booking activity</h3></div><span class="pill neutral">Demonstration</span></div><div class="empty-state"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg><h3>No live bookings yet</h3><p>Confirmed requests will appear here after a university booking service is securely integrated.</p></div></article>
+        <header class="view-hero"><div class="view-title"><span class="view-icon green"><svg class="icon" aria-hidden="true"><use href="#building"/></svg></span><div><span class="eyebrow">UNIVERSITY SERVICES</span><h2 id="servicesTitle">Book a Service</h2><p>Choose an available appointment, room or campus-support time.</p></div></div><span class="data-badge">Transactional sandbox booking</span></header>
+        <div class="service-catalogue" id="serviceCatalogue" aria-live="polite"><div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#building"/></svg><h3>Loading available services</h3><p>Approved fictional service slots will appear here.</p></div></div>
+        <article class="content-panel"><div class="section-heading"><div><span class="eyebrow">YOUR REQUESTS</span><h3>Booking activity</h3></div><span class="pill success" id="bookingCountBadge">0 confirmed</span></div><div class="booking-activity" id="bookingActivity"><div class="empty-state"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg><h3>No bookings yet</h3><p>Confirmed service bookings will appear here.</p></div></div></article>
       </section>
 
       <section class="page-view page-surface" id="opportunities-page" data-page="opportunities" hidden tabindex="-1" aria-labelledby="opportunitiesTitle">
@@ -315,7 +309,7 @@
         <div class="assistant-workspace"><aside class="content-panel"><h3>Popular topics</h3><div class="topic-list"><button type="button" data-page-question="Find a quiet study space">Quiet study spaces<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button><button type="button" data-page-question="How do I book a sports facility?">Sports facilities<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button><button type="button" data-page-question="Tell me about career opportunities">Career opportunities<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button></div><p class="panel-note">Responses are limited to the demonstrated questions and are not connected to live university systems.</p></aside><article class="assistant-chat"><div class="assistant-chat-heading"><span class="avatar assistant-avatar">U</span><div><h3>UniCircle campus guide</h3><span>Prototype information assistant</span></div></div><div class="assistant-chat-body" id="pageAssistantResponse" role="status" aria-live="polite"><p class="bubble received">Hello Michael. Choose a topic or ask one of the supported demonstration questions.</p></div><form class="composer" id="pageAssistantForm"><label class="sr-only" for="pageAssistantInput">Ask the campus guide</label><input id="pageAssistantInput" type="text" maxlength="250" placeholder="Ask about spaces, facilities or careers"><button type="submit" aria-label="Send question"><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button></form></article></div>
       </section>
 
-      <footer><span>UniCircle · Sprint 6 realtime communication and safety</span><a href="/actuator/health">System health</a></footer>
+      <footer><span>UniCircle · Sprint 7 campus events and transactional bookings</span><a href="/actuator/health">System health</a></footer>
     </main>
   </div>
 

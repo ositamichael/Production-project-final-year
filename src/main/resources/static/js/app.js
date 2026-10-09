@@ -227,6 +227,21 @@ const bookingName = document.querySelector('#bookingName');
 const bookingDetail = document.querySelector('#bookingDetail');
 const bookingAvatar = document.querySelector('#bookingAvatar');
 const bookButton = document.querySelector('#bookButton');
+const bookingDateStrip = document.querySelector('#bookingDateStrip');
+const bookingTimeStrip = document.querySelector('#bookingTimeStrip');
+const eventCatalogue = document.querySelector('#eventCatalogue');
+const dashboardEventList = document.querySelector('#dashboardEventList');
+const serviceCatalogue = document.querySelector('#serviceCatalogue');
+const bookingActivity = document.querySelector('#bookingActivity');
+const scheduleList = document.querySelector('#schedule-list');
+const todayCommitmentList = document.querySelector('#todayCommitmentList');
+const todayPlannedCount = document.querySelector('#todayPlannedCount');
+const todayCampusCommitmentCount = document.querySelector('#todayCampusCommitmentCount');
+const baseScheduleMarkup = scheduleList?.innerHTML || '';
+let loadedCampusEvents = [];
+let loadedCampusServices = [];
+let selectedBookingSlotId = null;
+let selectedEventCategory = '';
 
 function selectBookingTab(tab) {
   bookingTabs.forEach((other) => {
@@ -240,10 +255,11 @@ function selectBookingTab(tab) {
   bookingPanel.setAttribute('aria-labelledby', tab.id);
   const facilityMode = tab.dataset.mode === 'facility';
   bookingAvatar.textContent = facilityMode ? 'SC' : 'DT';
-  bookingName.textContent = facilityMode ? 'Sports Centre' : 'Dr Taylor';
-  bookingDetail.textContent = facilityMode ? 'Facilities booking' : 'Computer Science';
+  bookingName.textContent = facilityMode ? 'Available facilities' : 'Available appointments';
+  bookingDetail.textContent = 'Choose a verified fictional service slot';
   bookButton.textContent = facilityMode ? 'Book facility' : 'Book appointment';
   document.querySelector('#bookingStatus').textContent = '';
+  renderDashboardBookingWidget();
 }
 
 bookingTabs.forEach((tab, index) => {
@@ -263,30 +279,394 @@ bookingTabs.forEach((tab, index) => {
   });
 });
 
-document.querySelectorAll('.date-strip button').forEach((button) => {
+function shortEventDate(value) {
+  return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short' })
+    .format(new Date(value)).toUpperCase();
+}
+
+function fullCampusDate(value) {
+  return new Intl.DateTimeFormat('en-GB', {
+    weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+  }).format(new Date(value));
+}
+
+function campusTime(value) {
+  return new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit' }).format(new Date(value));
+}
+
+function campusDayKey(value) {
+  const date = new Date(value);
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
+function eventPresentation(category) {
+  const presentations = {
+    CAREERS: ['careers', 'briefcase', 'success'],
+    WELLBEING: ['wellbeing', 'mindfulness', 'info'],
+    SOCIAL: ['social', 'food', 'warning'],
+    ACADEMIC: ['academic', 'presentation', 'info']
+  };
+  return presentations[category] || presentations.ACADEMIC;
+}
+
+function renderDashboardEvents() {
+  if (!dashboardEventList) return;
+  dashboardEventList.replaceChildren();
+  loadedCampusEvents.slice(0, 3).forEach((event) => {
+    const [visualClass, iconName] = eventPresentation(event.category);
+    const item = document.createElement('li');
+    const date = document.createElement('time');
+    const parsed = new Date(event.startsAt);
+    date.innerHTML = `<strong>${parsed.getDate()}</strong><small>${parsed.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}</small>`;
+    const visual = document.createElement('div');
+    visual.className = `event-thumb ${visualClass}`;
+    visual.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#${iconName}"/></svg>`;
+    const copy = document.createElement('div');
+    const title = document.createElement('strong');
+    title.textContent = event.title;
+    const when = document.createElement('small');
+    when.textContent = `${fullCampusDate(event.startsAt)}–${campusTime(event.endsAt)}`;
+    const venue = document.createElement('small');
+    venue.className = 'meta-with-icon';
+    venue.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg>';
+    venue.append(document.createTextNode(event.venue));
+    copy.append(title, when, venue);
+    const tag = document.createElement('span');
+    tag.className = 'tag green-tag';
+    tag.textContent = event.registered ? 'Registered' : event.category.toLowerCase();
+    item.append(date, visual, copy, tag);
+    dashboardEventList.append(item);
+  });
+}
+
+function renderCampusEvents() {
+  if (!eventCatalogue) return;
+  eventCatalogue.replaceChildren();
+  const visibleEvents = selectedEventCategory
+    ? loadedCampusEvents.filter((event) => event.category === selectedEventCategory)
+    : loadedCampusEvents;
+  document.querySelector('#eventCountBadge').textContent = selectedEventCategory
+    ? `${visibleEvents.length} matching event${visibleEvents.length === 1 ? '' : 's'}`
+    : `${visibleEvents.length} available events`;
+  visibleEvents.forEach((event) => {
+    const [visualClass, iconName, pillClass] = eventPresentation(event.category);
+    const card = document.createElement('article');
+    card.className = 'event-card-large';
+    card.dataset.category = event.category.toLowerCase();
+    const visual = document.createElement('div');
+    visual.className = `event-visual ${visualClass}`;
+    visual.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#${iconName}"/></svg><span>${shortEventDate(event.startsAt)}</span>`;
+    const details = document.createElement('div');
+    const pill = document.createElement('span');
+    pill.className = `pill ${pillClass}`;
+    pill.textContent = event.category.charAt(0) + event.category.slice(1).toLowerCase();
+    const title = document.createElement('h3');
+    title.textContent = event.title;
+    const summary = document.createElement('p');
+    summary.textContent = event.summary;
+    const meta = document.createElement('ul');
+    meta.className = 'meta-list';
+    meta.innerHTML = `<li><svg class="icon" aria-hidden="true"><use href="#clock"/></svg>${fullCampusDate(event.startsAt)}–${campusTime(event.endsAt)}</li><li><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg></li>`;
+    meta.lastElementChild.append(document.createTextNode(event.venue));
+    const places = document.createElement('p');
+    places.className = 'availability-copy';
+    places.textContent = `${event.placesRemaining} of ${event.capacity} places remaining`;
+    const action = document.createElement('button');
+    action.className = event.registered ? 'secondary-button registered-action' : 'primary-compact';
+    action.type = 'button';
+    action.textContent = event.registered ? 'Cancel registration' : 'Register';
+    action.disabled = !event.registered && event.placesRemaining === 0;
+    action.addEventListener('click', async () => {
+      action.disabled = true;
+      try {
+        const operation = event.registered ? 'cancel' : 'register';
+        await socialPost(`/api/campus-life/events/${event.id}/${operation}`);
+        showToast(event.registered ? 'Your event registration has been cancelled.' : `${event.title} is now in your schedule.`);
+        await Promise.all([loadCampusEvents(), loadCampusSchedule(), loadNotifications()]);
+      } catch (error) {
+        showToast(error.message);
+      } finally {
+        action.disabled = false;
+      }
+    });
+    details.append(pill, title, summary, meta, places, action);
+    card.append(visual, details);
+    eventCatalogue.append(card);
+  });
+}
+
+async function loadCampusEvents() {
+  if (!eventCatalogue) return;
+  try {
+    const response = await fetch('/api/campus-life/events', {
+      headers: { Accept: 'application/json' }
+    });
+    if (response.status === 401 || response.status === 403) {
+      eventCatalogue.innerHTML = '<div class="empty-state compact"><h3>Sign in to view campus events</h3><p>Events are matched to your verified university account.</p></div>';
+      return;
+    }
+    if (!response.ok) throw new Error();
+    loadedCampusEvents = await response.json();
+    renderCampusEvents();
+    renderDashboardEvents();
+  } catch {
+    eventCatalogue.innerHTML = '<div class="empty-state compact"><h3>Events are temporarily unavailable</h3><p>Please try again shortly.</p></div>';
+  }
+}
+
+document.querySelectorAll('[data-event-category]').forEach((button) => {
   button.addEventListener('click', () => {
-    document.querySelectorAll('.date-strip button').forEach((other) => other.classList.remove('selected'));
-    document.querySelectorAll('.date-strip button').forEach((other) => other.setAttribute('aria-pressed', 'false'));
-    button.classList.add('selected');
-    button.setAttribute('aria-pressed', 'true');
+    document.querySelectorAll('[data-event-category]').forEach((other) => other.classList.remove('active'));
+    button.classList.add('active');
+    selectedEventCategory = button.dataset.eventCategory;
+    renderCampusEvents();
   });
 });
 
-document.querySelectorAll('.time-strip button').forEach((button) => {
-  button.addEventListener('click', () => {
-    document.querySelectorAll('.time-strip button').forEach((other) => other.classList.remove('selected'));
-    document.querySelectorAll('.time-strip button').forEach((other) => other.setAttribute('aria-pressed', 'false'));
-    button.classList.add('selected');
-    button.setAttribute('aria-pressed', 'true');
+function serviceIcon(type) {
+  if (type === 'FACILITY') return ['room', 'green'];
+  if (type === 'CAMPUS') return ['id-badge', 'violet'];
+  return ['graduation', 'blue'];
+}
+
+function renderServiceCatalogue() {
+  if (!serviceCatalogue) return;
+  serviceCatalogue.replaceChildren();
+  loadedCampusServices.forEach((service) => {
+    const [iconName, colour] = serviceIcon(service.type);
+    const card = document.createElement('article');
+    card.className = 'service-booking-card';
+    const header = document.createElement('header');
+    header.innerHTML = `<span class="view-icon ${colour}"><svg class="icon" aria-hidden="true"><use href="#${iconName}"/></svg></span>`;
+    const heading = document.createElement('div');
+    const title = document.createElement('h3');
+    title.textContent = service.title;
+    const provider = document.createElement('p');
+    provider.textContent = `${service.providerName} · ${service.location}`;
+    heading.append(title, provider);
+    header.append(heading);
+    const description = document.createElement('p');
+    description.textContent = service.description;
+    const slots = document.createElement('div');
+    slots.className = 'service-slot-list';
+    service.slots.forEach((slot) => {
+      const row = document.createElement('div');
+      row.className = 'service-slot';
+      const copy = document.createElement('div');
+      const when = document.createElement('strong');
+      when.textContent = `${fullCampusDate(slot.startsAt)}–${campusTime(slot.endsAt)}`;
+      const remaining = document.createElement('span');
+      remaining.textContent = `${slot.placesRemaining} place${slot.placesRemaining === 1 ? '' : 's'} available`;
+      copy.append(when, remaining);
+      const action = document.createElement('button');
+      action.className = slot.booked ? 'secondary-button registered-action' : 'secondary-button';
+      action.type = 'button';
+      action.textContent = slot.booked ? 'Booked' : 'Book';
+      action.disabled = slot.booked || slot.placesRemaining === 0;
+      action.addEventListener('click', () => bookServiceSlot(slot.id, service.title, action));
+      row.append(copy, action);
+      slots.append(row);
+    });
+    card.append(header, description, slots);
+    serviceCatalogue.append(card);
   });
-});
+}
+
+function renderDashboardBookingWidget() {
+  if (!bookingDateStrip || !bookingTimeStrip) return;
+  const mode = document.querySelector('.tabs .tab[aria-selected="true"]')?.dataset.mode || 'appointment';
+  const type = mode === 'facility' ? 'FACILITY' : 'APPOINTMENT';
+  const service = loadedCampusServices.find((item) => item.type === type);
+  bookingDateStrip.replaceChildren();
+  bookingTimeStrip.replaceChildren();
+  selectedBookingSlotId = null;
+  if (!service || !service.slots.length) {
+    bookingDateStrip.innerHTML = '<span class="loading-copy">No available times.</span>';
+    bookButton.disabled = true;
+    return;
+  }
+  bookingName.textContent = service.providerName;
+  bookingDetail.textContent = `${service.title} · ${service.location}`;
+  const dates = [...new Map(service.slots.map((slot) => [campusDayKey(slot.startsAt), slot])).values()];
+  const selectDate = (key, dateButton) => {
+    bookingDateStrip.querySelectorAll('button').forEach((button) => {
+      button.classList.toggle('selected', button === dateButton);
+      button.setAttribute('aria-pressed', String(button === dateButton));
+    });
+    bookingTimeStrip.replaceChildren();
+    service.slots.filter((slot) => campusDayKey(slot.startsAt) === key).forEach((slot, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = campusTime(slot.startsAt);
+      button.disabled = slot.booked || slot.placesRemaining === 0;
+      button.setAttribute('aria-pressed', 'false');
+      button.addEventListener('click', () => {
+        bookingTimeStrip.querySelectorAll('button').forEach((other) => {
+          other.classList.toggle('selected', other === button);
+          other.setAttribute('aria-pressed', String(other === button));
+        });
+        selectedBookingSlotId = slot.id;
+        bookButton.disabled = false;
+      });
+      bookingTimeStrip.append(button);
+      if (index === 0 && !button.disabled) button.click();
+    });
+  };
+  dates.forEach((slot, index) => {
+    const date = new Date(slot.startsAt);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.innerHTML = `${date.toLocaleString('en-GB', { weekday: 'short' })}<small>${date.getDate()} ${date.toLocaleString('en-GB', { month: 'short' })}</small>`;
+    button.setAttribute('aria-pressed', 'false');
+    button.addEventListener('click', () => selectDate(campusDayKey(slot.startsAt), button));
+    bookingDateStrip.append(button);
+    if (index === 0) button.click();
+  });
+}
+
+async function bookServiceSlot(slotId, serviceTitle, button) {
+  button.disabled = true;
+  try {
+    await socialPost(`/api/campus-life/service-slots/${slotId}/book`);
+    showToast(`${serviceTitle} has been confirmed and added to your schedule.`);
+    await Promise.all([loadCampusServices(), loadCampusBookings(), loadCampusSchedule(), loadNotifications()]);
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function loadCampusServices() {
+  if (!serviceCatalogue) return;
+  try {
+    const response = await fetch('/api/campus-life/services', { headers: { Accept: 'application/json' } });
+    if (response.status === 401 || response.status === 403) {
+      serviceCatalogue.innerHTML = '<div class="empty-state compact"><h3>Sign in to book a service</h3><p>Availability is account-specific.</p></div>';
+      return;
+    }
+    if (!response.ok) throw new Error();
+    loadedCampusServices = await response.json();
+    renderServiceCatalogue();
+    renderDashboardBookingWidget();
+  } catch {
+    serviceCatalogue.innerHTML = '<div class="empty-state compact"><h3>Services are temporarily unavailable</h3><p>Please try again shortly.</p></div>';
+  }
+}
+
+function renderCampusBookings(bookings) {
+  if (!bookingActivity) return;
+  const confirmed = bookings.filter((booking) => booking.status === 'CONFIRMED');
+  document.querySelector('#bookingCountBadge').textContent = `${confirmed.length} confirmed`;
+  bookingActivity.replaceChildren();
+  if (!confirmed.length) {
+    bookingActivity.innerHTML = '<div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg><h3>No bookings yet</h3><p>Confirmed service bookings will appear here.</p></div>';
+    return;
+  }
+  confirmed.forEach((booking) => {
+    const item = document.createElement('article');
+    item.className = 'booking-record';
+    const icon = document.createElement('span');
+    icon.className = 'view-icon green';
+    icon.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#check"/></svg>';
+    const copy = document.createElement('div');
+    const title = document.createElement('h4');
+    title.textContent = booking.serviceTitle;
+    const details = document.createElement('p');
+    details.textContent = `${booking.providerName} · ${fullCampusDate(booking.startsAt)} · ${booking.location}`;
+    copy.append(title, details);
+    const cancel = document.createElement('button');
+    cancel.className = 'secondary-button';
+    cancel.type = 'button';
+    cancel.textContent = 'Cancel booking';
+    cancel.addEventListener('click', async () => {
+      cancel.disabled = true;
+      try {
+        await socialPost(`/api/campus-life/bookings/${booking.bookingId}/cancel`);
+        showToast('Your service booking has been cancelled.');
+        await Promise.all([loadCampusServices(), loadCampusBookings(), loadCampusSchedule()]);
+      } catch (error) {
+        showToast(error.message);
+      } finally {
+        cancel.disabled = false;
+      }
+    });
+    item.append(icon, copy, cancel);
+    bookingActivity.append(item);
+  });
+}
+
+async function loadCampusBookings() {
+  if (!bookingActivity) return;
+  try {
+    const response = await fetch('/api/campus-life/bookings', { headers: { Accept: 'application/json' } });
+    if (!response.ok) return;
+    renderCampusBookings(await response.json());
+  } catch {
+    bookingActivity.innerHTML = '<div class="empty-state compact"><h3>Booking activity is temporarily unavailable</h3></div>';
+  }
+}
+
+async function loadCampusSchedule() {
+  if (!scheduleList && !todayCommitmentList) return;
+  try {
+    const response = await fetch('/api/campus-life/schedule', { headers: { Accept: 'application/json' } });
+    if (!response.ok) return;
+    const activity = await response.json();
+    if (scheduleList) scheduleList.innerHTML = baseScheduleMarkup;
+    if (todayCommitmentList) todayCommitmentList.replaceChildren();
+    if (todayPlannedCount) todayPlannedCount.textContent = String(4 + activity.length);
+    if (todayCampusCommitmentCount) todayCampusCommitmentCount.textContent = String(activity.length);
+    activity.forEach((item) => {
+      if (scheduleList) {
+        const row = document.createElement('li');
+        const time = document.createElement('time');
+        time.innerHTML = `${campusTime(item.startsAt)}<small>${campusTime(item.endsAt)}</small>`;
+        const dot = document.createElement('span');
+        dot.className = `time-dot ${item.resourceType === 'EVENT' ? 'orange-dot' : 'green-dot'}`;
+        const copy = document.createElement('div');
+        const title = document.createElement('strong');
+        title.textContent = item.title;
+        const location = document.createElement('small');
+        location.textContent = item.location;
+        copy.append(title, location);
+        const status = document.createElement('span');
+        status.className = 'status attended';
+        status.textContent = item.resourceType === 'EVENT' ? 'Registered' : 'Confirmed';
+        row.append(time, dot, copy, status);
+        scheduleList.append(row);
+      }
+      if (todayCommitmentList) {
+        const card = document.createElement('article');
+        card.className = 'booking-record schedule-commitment';
+        const icon = document.createElement('span');
+        icon.className = `view-icon ${item.resourceType === 'EVENT' ? 'orange' : 'green'}`;
+        icon.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#${item.resourceType === 'EVENT' ? 'events' : 'calendar'}"/></svg>`;
+        const copy = document.createElement('div');
+        const title = document.createElement('h4');
+        title.textContent = item.title;
+        const details = document.createElement('p');
+        details.textContent = `${fullCampusDate(item.startsAt)}–${campusTime(item.endsAt)} · ${item.location}`;
+        copy.append(title, details);
+        const status = document.createElement('span');
+        status.className = `pill ${item.resourceType === 'EVENT' ? 'warning' : 'success'}`;
+        status.textContent = item.resourceType === 'EVENT' ? 'Registered event' : 'Confirmed booking';
+        card.append(icon, copy, status);
+        todayCommitmentList.append(card);
+      }
+    });
+    if (todayCommitmentList && !activity.length) {
+      todayCommitmentList.innerHTML = '<div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg><h3>No additional commitments</h3><p>Events you register for and services you book will appear here automatically.</p></div>';
+    }
+  } catch {
+    if (scheduleList) scheduleList.innerHTML = baseScheduleMarkup;
+    if (todayCommitmentList) todayCommitmentList.innerHTML = '<div class="empty-state compact"><h3>Your UniCircle schedule is temporarily unavailable</h3><p>Please try again shortly.</p></div>';
+  }
+}
 
 bookButton?.addEventListener('click', () => {
-  const mode = document.querySelector('.tabs .tab[aria-selected="true"]').dataset.mode;
-  const date = document.querySelector('.date-strip .selected').textContent.replace(/\s+/g, ' ').trim();
-  const time = document.querySelector('.time-strip .selected').textContent.trim();
-  const selection = mode === 'facility' ? 'facility request' : 'appointment request';
-  document.querySelector('#bookingStatus').textContent = `Prototype ${selection} saved locally for ${date} at ${time}. No live booking was created.`;
+  if (!selectedBookingSlotId) return;
+  void bookServiceSlot(selectedBookingSlotId, bookingName.textContent, bookButton);
 });
 
 const assistantAnswers = new Map([
@@ -398,7 +778,14 @@ function populateProfile(profile) {
   showSignedInActions();
   updateVisibleIdentity(profile);
   connectSocialRealtime();
-  void Promise.all([loadNotifications(), refreshConversationSummary()]);
+  void Promise.all([
+    loadNotifications(),
+    refreshConversationSummary(),
+    loadCampusEvents(),
+    loadCampusServices(),
+    loadCampusBookings(),
+    loadCampusSchedule()
+  ]);
 }
 
 function clearUniversityContext() {
@@ -515,7 +902,8 @@ async function socialPost(url, body) {
     if (response.status === 409) throw new Error('This request has already been handled or is no longer available.');
     throw new Error('The request could not be completed. Please refresh and try again.');
   }
-  return response.json();
+  const responseBody = await response.text();
+  return responseBody ? JSON.parse(responseBody) : null;
 }
 
 function connectionButton(label, className, handler, disabled = false) {
@@ -741,6 +1129,8 @@ function updateNotificationBadge(unread) {
 function notificationVisual(type) {
   if (type === 'MESSAGE') return ['message', 'message-type'];
   if (type === 'SAFETY') return ['shield', 'opportunity-type'];
+  if (type === 'EVENT') return ['events', 'opportunity-type'];
+  if (type === 'BOOKING') return ['calendar', 'booking-type'];
   return ['users', 'booking-type'];
 }
 
