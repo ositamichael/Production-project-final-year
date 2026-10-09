@@ -174,4 +174,23 @@ class FrontendStructureTests {
             .contains("Verified publisher")
             .contains("it does not submit an application to an employer");
     }
+
+    @Test
+    void lostAndFoundSeparatesPublicReportsFromPrivateOwnershipEvidence() throws IOException {
+        var resource = getClass().getResourceAsStream("/static/index.html");
+        assertThat(resource).isNotNull();
+
+        var html = new String(resource.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(html)
+            .contains("id=\"lostFoundCatalogue\"")
+            .contains("id=\"lostFoundReportDialog\"")
+            .contains("id=\"lostFoundDetailDialog\"")
+            .contains("id=\"lostFoundPrivateDetails\"")
+            .contains("id=\"lostFoundClaimForm\"")
+            .contains("id=\"lostFoundPhoto\"")
+            .contains("Submit for moderation")
+            .contains("Ownership evidence is never published")
+            .contains("Photographs are reprocessed to remove embedded metadata")
+            .doesNotContain("Lost-item report opened in prototype mode");
+    }
 }

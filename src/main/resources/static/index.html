@@ -6,8 +6,8 @@
   <meta name="description" content="UniCircle campus connection and services platform prototype">
   <title>UniCircle — My Campus</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/css/app.css?v=13">
-  <script src="/js/app.js?v=13" defer></script>
+  <link rel="stylesheet" href="/css/app.css?v=14">
+  <script src="/js/app.js?v=14" defer></script>
 </head>
 <body>
   <svg class="svg-sprite" aria-hidden="true">
@@ -54,7 +54,7 @@
   </svg>
   <a class="skip-link" href="#main-content">Skip to dashboard</a>
   <div class="prototype-banner" role="status">
-    Sprint 8 fictional sandbox — moderated opportunities and personal application tracking; no live university systems are connected.
+    Sprint 9 fictional sandbox — moderated lost-and-found reports and private ownership claims; no live university systems are connected.
   </div>
   <div class="app-shell">
     <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
@@ -298,10 +298,11 @@
       </section>
 
       <section class="page-view page-surface" id="lost-found-page" data-page="lost-found" hidden tabindex="-1" aria-labelledby="lostFoundTitle">
-        <header class="view-hero"><div class="view-title"><span class="view-icon orange"><svg class="icon" aria-hidden="true"><use href="#search"/></svg></span><div><span class="eyebrow">CAMPUS HELP</span><h2 id="lostFoundTitle">Lost and Found</h2><p>Search demonstration reports or prepare a new lost-item report.</p></div></div><button class="primary-compact prototype-action" type="button" data-action="Lost-item report opened in prototype mode">Report an item</button></header>
-        <div class="section-toolbar"><label class="mini-search wide"><svg class="icon" aria-hidden="true"><use href="#search"/></svg><span class="sr-only">Search lost and found items</span><input class="page-search" data-search-items="#lost-found-page .found-card" type="search" placeholder="Search by item, colour or campus location"></label><div class="filter-row"><button class="filter-chip active" type="button">Recently found</button><button class="filter-chip prototype-action" type="button" data-action="Your reports require an authenticated account">My reports</button></div></div>
-        <div class="feature-grid three"><article class="found-card"><div class="found-visual navy-photo"><svg class="icon" aria-hidden="true"><use href="#laptop"/></svg></div><span class="pill success">Found</span><h3>Black laptop sleeve</h3><p>Library, second floor · Reported today</p><button class="secondary-button prototype-action" type="button" data-action="Item details opened in prototype mode">View details</button></article><article class="found-card"><div class="found-visual blue-photo"><svg class="icon" aria-hidden="true"><use href="#key"/></svg></div><span class="pill success">Found</span><h3>Blue key lanyard</h3><p>Student Hub · Reported yesterday</p><button class="secondary-button prototype-action" type="button" data-action="Item details opened in prototype mode">View details</button></article><article class="found-card"><div class="found-visual orange-photo"><svg class="icon" aria-hidden="true"><use href="#bottle"/></svg></div><span class="pill neutral">With security</span><h3>Reusable water bottle</h3><p>Sports Centre · Reported 2 days ago</p><button class="secondary-button prototype-action" type="button" data-action="Item details opened in prototype mode">View details</button></article></div>
-        <p class="panel-note">Reports are fictional. A deployed service must prevent publication of sensitive ownership evidence and provide a secure collection process.</p>
+        <header class="view-hero"><div class="view-title"><span class="view-icon orange"><svg class="icon" aria-hidden="true"><use href="#search"/></svg></span><div><span class="eyebrow">CAMPUS HELP</span><h2 id="lostFoundTitle">Lost and Found</h2><p>Report an item, search moderated campus notices and prove ownership privately.</p></div></div><button class="primary-compact" id="lostFoundReportButton" type="button"><svg class="icon" aria-hidden="true"><use href="#camera"/></svg> Report an item</button></header>
+        <div class="section-toolbar lost-found-toolbar"><label class="mini-search wide"><svg class="icon" aria-hidden="true"><use href="#search"/></svg><span class="sr-only">Search lost and found items</span><input id="lostFoundSearch" type="search" maxlength="100" placeholder="Search by item, colour or campus location"></label><label class="compact-select"><span class="sr-only">Filter item category</span><select id="lostFoundCategoryFilter"><option value="">All categories</option><option value="ELECTRONICS">Electronics</option><option value="KEYS">Keys</option><option value="BAGS">Bags</option><option value="CLOTHING">Clothing</option><option value="DOCUMENTS">Documents</option><option value="ACCESSORIES">Accessories</option><option value="OTHER">Other</option></select></label><div class="filter-row" id="lostFoundFilters"><button class="filter-chip active" type="button" data-lost-found-type="">All reports</button><button class="filter-chip" type="button" data-lost-found-type="FOUND">Found</button><button class="filter-chip" type="button" data-lost-found-type="LOST">Lost</button><button class="filter-chip" type="button" data-lost-found-view="mine">My reports</button><button class="filter-chip" type="button" data-lost-found-view="claims">My claims</button></div></div>
+        <div class="lost-found-summary"><span class="data-badge" id="lostFoundCountBadge">Loading moderated reports…</span><span><svg class="icon" aria-hidden="true"><use href="#shield"/></svg> Ownership evidence is never published</span></div>
+        <div class="lost-found-grid" id="lostFoundCatalogue" aria-live="polite"><div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#search"/></svg><h3>Loading lost-and-found reports</h3><p>Approved reports from your university will appear here.</p></div></div>
+        <p class="panel-note">All displayed reports and claims are fictional development records. New reports require moderation; secure collection must be completed through authorised university staff.</p>
       </section>
 
       <section class="page-view page-surface" id="assistant-page" data-page="assistant" hidden tabindex="-1" aria-labelledby="assistantTitle">
@@ -309,7 +310,7 @@
         <div class="assistant-workspace"><aside class="content-panel"><h3>Popular topics</h3><div class="topic-list"><button type="button" data-page-question="Find a quiet study space">Quiet study spaces<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button><button type="button" data-page-question="How do I book a sports facility?">Sports facilities<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button><button type="button" data-page-question="Tell me about career opportunities">Career opportunities<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button></div><p class="panel-note">Responses are limited to the demonstrated questions and are not connected to live university systems.</p></aside><article class="assistant-chat"><div class="assistant-chat-heading"><span class="avatar assistant-avatar">U</span><div><h3>UniCircle campus guide</h3><span>Prototype information assistant</span></div></div><div class="assistant-chat-body" id="pageAssistantResponse" role="status" aria-live="polite"><p class="bubble received">Hello Michael. Choose a topic or ask one of the supported demonstration questions.</p></div><form class="composer" id="pageAssistantForm"><label class="sr-only" for="pageAssistantInput">Ask the campus guide</label><input id="pageAssistantInput" type="text" maxlength="250" placeholder="Ask about spaces, facilities or careers"><button type="submit" aria-label="Send question"><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button></form></article></div>
       </section>
 
-      <footer><span>UniCircle · Sprint 8 verified opportunities and application tracking</span><a href="/actuator/health">System health</a></footer>
+      <footer><span>UniCircle · Sprint 9 moderated lost and found</span><a href="/actuator/health">System health</a></footer>
     </main>
   </div>
 
@@ -385,6 +386,35 @@
       <div class="opportunity-detail-grid"><article><span class="eyebrow">ABOUT THE ROLE</span><p id="opportunityDescription"></p><h3>Skills</h3><div class="module-chip-list" id="opportunitySkills"></div></article><article><h3>Key details</h3><dl class="opportunity-facts"><div><dt>Location</dt><dd id="opportunityLocation"></dd></div><div><dt>Working pattern</dt><dd id="opportunityHours"></dd></div><div><dt>Compensation</dt><dd id="opportunityCompensation"></dd></div><div><dt>Closing date</dt><dd id="opportunityDeadline"></dd></div></dl><h3>Eligibility</h3><p id="opportunityEligibility"></p></article></div>
       <div class="opportunity-tracker-controls"><label for="opportunityTrackingStatus">Your application stage<select id="opportunityTrackingStatus"><option value="PLANNING">Planning</option><option value="APPLIED">Applied</option><option value="INTERVIEW">Interview</option><option value="OFFER">Offer</option><option value="CLOSED">Closed</option></select></label><button class="secondary-button" id="opportunitySaveButton" type="button">Save opportunity</button><button class="primary-button" id="opportunityTrackButton" type="button">Update tracker</button></div>
       <p class="privacy-note">Tracking is private to this fictional account. Applying must take place through a separately verified university or employer route.</p>
+    </div>
+  </section>
+  <section id="lostFoundReportDialog" class="profile-dialog modal-surface lost-found-dialog" role="dialog" aria-modal="true" aria-labelledby="lostFoundReportTitle" hidden>
+    <form id="lostFoundReportForm" class="directory-surface">
+      <button class="dialog-close" type="button" id="lostFoundReportClose" aria-label="Close item report"><svg class="icon" aria-hidden="true"><use href="#close"/></svg></button>
+      <div class="directory-heading"><span class="view-icon orange"><svg class="icon" aria-hidden="true"><use href="#camera"/></svg></span><div><span class="eyebrow">SECURE CAMPUS REPORT</span><h2 id="lostFoundReportTitle">Report a lost or found item</h2><p>Public information is separated from private ownership evidence.</p></div></div>
+      <div class="lost-found-form-grid">
+        <label>Report type<select id="lostFoundReportType" required><option value="FOUND">I found an item</option><option value="LOST">I lost an item</option></select></label>
+        <label>Category<select id="lostFoundReportCategory" required><option value="ELECTRONICS">Electronics</option><option value="KEYS">Keys</option><option value="BAGS">Bags</option><option value="CLOTHING">Clothing</option><option value="DOCUMENTS">Documents</option><option value="ACCESSORIES">Accessories</option><option value="OTHER">Other</option></select></label>
+        <label>Item name<input id="lostFoundItemName" type="text" maxlength="160" required placeholder="e.g. Black laptop sleeve"></label>
+        <label>Colour<input id="lostFoundColour" type="text" maxlength="80" placeholder="e.g. Black"></label>
+        <label>Last seen or found location<input id="lostFoundLocation" type="text" maxlength="180" required placeholder="Building and area"></label>
+        <label>Date<input id="lostFoundOccurredOn" type="date" required></label>
+        <label class="full-width">Public description<textarea id="lostFoundPublicDescription" maxlength="800" rows="3" required placeholder="Describe the item without revealing the secret detail only its owner should know."></textarea></label>
+        <label class="full-width private-field"><span>Private identifying detail</span><textarea id="lostFoundPrivateDetails" maxlength="1000" rows="3" required placeholder="A serial detail, mark or contents. This is stored privately and never shown on the public card."></textarea><small>Visible only to authorised review staff in a deployed service.</small></label>
+        <label id="lostFoundCustodyLabel">Where is the found item?<select id="lostFoundCustody"><option value="WITH_REPORTER">With me</option><option value="CAMPUS_SECURITY">Campus security</option><option value="SERVICE_DESK">University service desk</option></select></label>
+        <label class="photo-upload lost-found-photo" for="lostFoundPhoto"><span class="photo-upload-icon"><svg class="icon" aria-hidden="true"><use href="#camera"/></svg></span><span><strong>Optional item photograph</strong><small>PNG or JPEG · 240–4096 px · maximum 5 MB</small></span><input id="lostFoundPhoto" type="file" accept="image/png,image/jpeg"></label>
+      </div>
+      <div class="dialog-actions"><button class="secondary-button" type="button" id="lostFoundReportCancel">Cancel</button><button class="primary-button" id="lostFoundReportSubmit" type="submit">Submit for moderation</button></div>
+      <p class="privacy-note">Do not include bank details, passwords, identity-document numbers or sensitive personal information. Photographs are reprocessed to remove embedded metadata.</p>
+    </form>
+  </section>
+  <section id="lostFoundDetailDialog" class="profile-dialog modal-surface lost-found-dialog" role="dialog" aria-modal="true" aria-labelledby="lostFoundDetailTitle" hidden>
+    <div class="directory-surface">
+      <button class="dialog-close" type="button" id="lostFoundDetailClose" aria-label="Close item details"><svg class="icon" aria-hidden="true"><use href="#close"/></svg></button>
+      <div class="lost-found-detail-heading"><div class="lost-found-detail-photo" id="lostFoundDetailPhoto"><svg class="icon" aria-hidden="true"><use href="#search"/></svg></div><div><span class="eyebrow" id="lostFoundDetailType">MODERATED REPORT</span><h2 id="lostFoundDetailTitle">Item details</h2><p id="lostFoundDetailDescription"></p><div class="opportunity-badges"><span class="pill info" id="lostFoundDetailCategory"></span><span class="pill success" id="lostFoundDetailStatus"></span></div></div></div>
+      <div class="lost-found-detail-grid"><article><h3>Report information</h3><dl class="opportunity-facts"><div><dt>Colour</dt><dd id="lostFoundDetailColour"></dd></div><div><dt>Location</dt><dd id="lostFoundDetailLocation"></dd></div><div><dt>Date</dt><dd id="lostFoundDetailDate"></dd></div><div><dt>Custody</dt><dd id="lostFoundDetailCustody"></dd></div></dl></article><article class="secure-claim-panel" id="lostFoundClaimPanel"><span class="eyebrow">PRIVATE OWNERSHIP CHECK</span><h3>Is this yours?</h3><p>Describe a detail that was deliberately omitted from the public report. It is stored privately for authorised review.</p><form id="lostFoundClaimForm"><label for="lostFoundClaimEvidence">Private evidence</label><textarea id="lostFoundClaimEvidence" minlength="20" maxlength="1000" rows="4" required placeholder="Describe a mark, serial detail or contents only the owner should know."></textarea><button class="primary-button" type="submit">Submit private claim</button></form><p class="claim-status" id="lostFoundClaimStatus"></p></article></div>
+      <div class="dialog-actions"><button class="danger-button" id="lostFoundWithdrawButton" type="button" hidden>Withdraw my report</button><button class="secondary-button" id="lostFoundDetailDone" type="button">Done</button></div>
+      <p class="privacy-note">Never arrange a private handover with a stranger. Collection should use campus security or an approved university service desk.</p>
     </div>
   </section>
   <div class="search-empty" id="searchEmpty" hidden role="status">No dashboard items match that search.</div>

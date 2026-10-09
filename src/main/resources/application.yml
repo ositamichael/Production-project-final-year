@@ -36,7 +36,7 @@ management:
 info:
   app:
     name: UniCircle
-    stage: Sprint 8 verified opportunities and personal application tracking
+    stage: Sprint 9 moderated lost and found
     data-status: Prototype fixtures only
 
 unicircle:
@@ -45,3 +45,4 @@ unicircle:
     password: ${UNICIRCLE_DEMO_PASSWORD:CampusDemo!2026}
   storage:
     profile-photos-dir: ${UNICIRCLE_PROFILE_PHOTOS_DIR:${java.io.tmpdir}/unicircle-profile-photos}
+    lost-found-photos-dir: ${UNICIRCLE_LOST_FOUND_PHOTOS_DIR:${java.io.tmpdir}/unicircle-lost-found-photos}
