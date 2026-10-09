@@ -1,6 +1,7 @@
 package uk.ac.unicircle.campus;
 
 import java.util.List;
+import java.util.UUID;
 
 record UniversityContextResponse(
         String dataSource,
@@ -26,10 +27,13 @@ record UniversityContextResponse(
     }
 
     record CoursemateSummary(
+            UUID accountId,
             String displayName,
             String programmeTitle,
             int yearOfStudy,
             String connectionState,
+            UUID connectionId,
+            String connectionDirection,
             List<String> sharedModuleCodes) {
     }
 }

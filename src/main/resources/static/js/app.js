@@ -64,6 +64,7 @@ function showPage(pageName, { updateHistory = true, focus = true } = {}) {
   }
   window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   if (focus && nextPage !== document.querySelector('#campus')) nextPage.focus({ preventScroll: true });
+  if (nextPage.dataset.page === 'messages') void loadMessagingWorkspace();
 }
 
 pageLinks.forEach((item) => {
@@ -186,6 +187,21 @@ function showPrototypeToast(message) {
     document.body.append(toast);
   }
   toast.textContent = `${message}. No live university action was completed.`;
+  toast.hidden = false;
+  clearTimeout(prototypeToastTimer);
+  prototypeToastTimer = setTimeout(() => { toast.hidden = true; }, 4500);
+}
+
+function showToast(message) {
+  let toast = document.querySelector('.prototype-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.className = 'prototype-toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    document.body.append(toast);
+  }
+  toast.textContent = message;
   toast.hidden = false;
   clearTimeout(prototypeToastTimer);
   prototypeToastTimer = setTimeout(() => { toast.hidden = true; }, 4500);
@@ -412,7 +428,10 @@ function renderUniversityContext(context) {
     const shared = document.createElement('small');
     shared.textContent = `${coursemate.sharedModuleCodes.length} shared modules · ${connectionLabel(coursemate.connectionState)}`;
     details.append(name, shared);
-    item.append(avatar, details);
+    const actions = document.createElement('span');
+    actions.className = 'coursemate-actions';
+    appendConnectionActions(actions, coursemate);
+    item.append(avatar, details, actions);
     academicCoursemates.append(item);
   });
 
@@ -464,6 +483,86 @@ async function csrfToken() {
   const response = await fetch('/api/security/csrf', { headers: { Accept: 'application/json' } });
   if (!response.ok) throw new Error('The security token could not be prepared. Please try again.');
   return response.json();
+}
+
+async function socialPost(url, body) {
+  const csrf = await csrfToken();
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      [csrf.headerName]: csrf.token,
+      ...(body === undefined ? {} : { 'Content-Type': 'application/json' })
+    },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) })
+  });
+  if (!response.ok) {
+    if (response.status === 401) throw new Error('Sign in to use student connections and messages.');
+    if (response.status === 403) throw new Error('This action is not allowed until both students are connected.');
+    if (response.status === 409) throw new Error('This request has already been handled or is no longer available.');
+    throw new Error('The request could not be completed. Please refresh and try again.');
+  }
+  return response.json();
+}
+
+function connectionButton(label, className, handler, disabled = false) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = `connection-action ${className}`.trim();
+  button.textContent = label;
+  button.disabled = disabled;
+  if (handler) button.addEventListener('click', handler);
+  return button;
+}
+
+async function runConnectionAction(button, action, successMessage) {
+  button.disabled = true;
+  const original = button.textContent;
+  button.textContent = 'Working…';
+  try {
+    await action();
+    showToast(successMessage);
+    await Promise.all([loadUniversityContext(), loadStudentDirectory()]);
+  } catch (error) {
+    showToast(error.message || 'The connection could not be updated.');
+    button.disabled = false;
+    button.textContent = original;
+  }
+}
+
+function appendConnectionActions(container, person) {
+  if (person.connectionState === 'CONNECTED' || person.connectionStatus === 'ACCEPTED') {
+    container.append(connectionButton('Message', 'primary', () => startConversation(person.accountId)));
+    return;
+  }
+  const pending = person.connectionState === 'PENDING' || person.connectionStatus === 'PENDING';
+  if (pending && person.connectionDirection === 'INCOMING') {
+    const accept = connectionButton('Accept', 'primary');
+    accept.addEventListener('click', () => runConnectionAction(
+      accept,
+      () => socialPost(`/api/social/connections/${person.connectionId}/accept`),
+      `You and ${person.displayName} are now connected.`
+    ));
+    const decline = connectionButton('Decline', 'danger');
+    decline.addEventListener('click', () => runConnectionAction(
+      decline,
+      () => socialPost(`/api/social/connections/${person.connectionId}/decline`),
+      'Connection request declined.'
+    ));
+    container.append(accept, decline);
+    return;
+  }
+  if (pending) {
+    container.append(connectionButton('Pending', '', null, true));
+    return;
+  }
+  const connect = connectionButton('Connect', 'primary');
+  connect.addEventListener('click', () => runConnectionAction(
+    connect,
+    () => socialPost(`/api/social/connections/${person.accountId}`),
+    `Connection request sent to ${person.displayName}.`
+  ));
+  container.append(connect);
 }
 
 function openProfilePanel() {
@@ -578,17 +677,250 @@ profileForm?.addEventListener('submit', async (event) => {
   }
 });
 
-const messageDialog = document.querySelector('#messageDialog');
-document.querySelectorAll('.message-button').forEach((button) => {
-  button.addEventListener('click', () => {
-    document.querySelector('#dialogRecipient').textContent = `To: ${button.dataset.person}`;
-    openModal(messageDialog);
+const conversationList = document.querySelector('#conversationList');
+const conversationListStatus = document.querySelector('#conversationListStatus');
+const conversationSearch = document.querySelector('#conversationSearch');
+const conversationMessages = document.querySelector('#conversationMessages');
+const conversationName = document.querySelector('#conversationName');
+const conversationAvatar = document.querySelector('#conversationAvatar');
+const conversationTrust = document.querySelector('#conversationTrust');
+const messageComposer = document.querySelector('#messageComposer');
+const messageInput = document.querySelector('#messageInput');
+const messageSend = document.querySelector('#messageSend');
+const studentDirectoryDialog = document.querySelector('#studentDirectoryDialog');
+const studentDirectoryList = document.querySelector('#studentDirectoryList');
+const studentDirectorySearch = document.querySelector('#studentDirectorySearch');
+let loadedConversations = [];
+let activeConversationId = null;
+let directoryTimer;
+
+function formatMessageTime(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const today = new Date();
+  return date.toDateString() === today.toDateString()
+    ? new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit' }).format(date)
+    : new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(date);
+}
+
+function recentlyJoined(value) {
+  const joined = new Date(value);
+  return !Number.isNaN(joined.getTime()) && Date.now() - joined.getTime() <= 30 * 24 * 60 * 60 * 1000;
+}
+
+function emptyConversation(message = 'Select a conversation or find a student and connect.') {
+  conversationMessages.replaceChildren();
+  const empty = document.createElement('div');
+  empty.className = 'conversation-empty';
+  const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  icon.classList.add('icon');
+  const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+  use.setAttribute('href', '#message');
+  icon.append(use);
+  const heading = document.createElement('strong');
+  heading.textContent = 'Your private messages appear here';
+  const detail = document.createElement('span');
+  detail.textContent = message;
+  empty.append(icon, heading, detail);
+  conversationMessages.append(empty);
+  messageInput.disabled = true;
+  messageSend.disabled = true;
+}
+
+function renderConversationList() {
+  const query = conversationSearch.value.trim().toLowerCase();
+  conversationList.replaceChildren();
+  const visible = loadedConversations.filter((conversation) =>
+    !query || conversation.participantDisplayName.toLowerCase().includes(query)
+      || conversation.lastMessage.toLowerCase().includes(query));
+  visible.forEach((conversation) => {
+    const item = document.createElement('li');
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `thread-button${conversation.conversationId === activeConversationId ? ' active' : ''}`;
+    button.dataset.conversationId = conversation.conversationId;
+    const avatar = document.createElement('span');
+    avatar.className = 'avatar navy-avatar';
+    avatar.textContent = conversation.participantInitials;
+    const details = document.createElement('div');
+    const name = document.createElement('strong');
+    name.textContent = conversation.participantDisplayName;
+    const preview = document.createElement('span');
+    preview.textContent = conversation.lastMessage;
+    details.append(name, preview);
+    const time = document.createElement('time');
+    time.dateTime = conversation.lastMessageAt || '';
+    time.textContent = formatMessageTime(conversation.lastMessageAt);
+    button.append(avatar, details, time);
+    button.addEventListener('click', () => selectConversation(conversation.conversationId));
+    item.append(button);
+    conversationList.append(item);
   });
+  conversationListStatus.textContent = visible.length ? '' : query
+    ? 'No conversations match your search.'
+    : 'No conversations yet. Find a student and send a connection request.';
+}
+
+async function loadMessagingWorkspace(preferredConversationId = null) {
+  if (!conversationList) return;
+  conversationListStatus.textContent = 'Loading your private conversations…';
+  try {
+    const response = await fetch('/api/social/conversations', { headers: { Accept: 'application/json' } });
+    if (response.status === 401 || response.status === 403) {
+      loadedConversations = [];
+      renderConversationList();
+      conversationListStatus.textContent = 'Sign in to load your private conversations.';
+      emptyConversation('Sign in to use consent-based student messaging.');
+      return;
+    }
+    if (!response.ok) throw new Error('Conversations are temporarily unavailable.');
+    loadedConversations = await response.json();
+    const preferred = preferredConversationId || activeConversationId;
+    const selected = loadedConversations.find((item) => item.conversationId === preferred)
+      || loadedConversations[0];
+    activeConversationId = selected?.conversationId || null;
+    renderConversationList();
+    if (selected) await selectConversation(selected.conversationId);
+    else emptyConversation();
+  } catch (error) {
+    conversationListStatus.textContent = error.message;
+    emptyConversation('Please refresh the page and try again.');
+  }
+}
+
+async function selectConversation(conversationId) {
+  activeConversationId = conversationId;
+  renderConversationList();
+  conversationMessages.replaceChildren();
+  const loading = document.createElement('div');
+  loading.className = 'directory-empty';
+  loading.textContent = 'Loading messages…';
+  conversationMessages.append(loading);
+  try {
+    const response = await fetch(`/api/social/conversations/${conversationId}/messages`, {
+      headers: { Accept: 'application/json' }
+    });
+    if (!response.ok) throw new Error('This conversation could not be opened.');
+    const result = await response.json();
+    conversationName.textContent = result.conversation.participantDisplayName;
+    conversationAvatar.textContent = result.conversation.participantInitials;
+    conversationTrust.innerHTML = '<i class="online-dot"></i> Accepted connection · private conversation';
+    conversationMessages.replaceChildren();
+    if (!result.messages.length) {
+      emptyConversation('You are connected. Send the first message.');
+    } else {
+      result.messages.forEach((message) => {
+        const bubble = document.createElement('p');
+        bubble.className = `bubble ${message.sentByCurrentAccount ? 'sent' : 'received'}`;
+        bubble.textContent = message.body;
+        const metadata = document.createElement('span');
+        metadata.className = 'message-meta';
+        metadata.textContent = `${message.sentByCurrentAccount ? 'You' : message.senderDisplayName} · ${formatMessageTime(message.sentAt)}`;
+        bubble.append(metadata);
+        conversationMessages.append(bubble);
+      });
+    }
+    messageInput.disabled = false;
+    messageSend.disabled = false;
+    messageInput.placeholder = `Message ${result.conversation.participantDisplayName}`;
+    conversationMessages.scrollTop = conversationMessages.scrollHeight;
+  } catch (error) {
+    emptyConversation(error.message);
+  }
+}
+
+messageComposer?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const body = messageInput.value.trim();
+  if (!activeConversationId || !body) return;
+  messageInput.disabled = true;
+  messageSend.disabled = true;
+  try {
+    await socialPost(`/api/social/conversations/${activeConversationId}/messages`, { body });
+    messageInput.value = '';
+    await loadMessagingWorkspace(activeConversationId);
+    messageInput.focus();
+  } catch (error) {
+    showToast(error.message);
+    messageInput.disabled = false;
+    messageSend.disabled = false;
+  }
 });
 
-messageDialog?.querySelector('.dialog-close')?.addEventListener('click', (event) => {
-  event.preventDefault();
-  closeModal(messageDialog);
+conversationSearch?.addEventListener('input', renderConversationList);
+
+async function startConversation(accountId) {
+  try {
+    const conversation = await socialPost(`/api/social/conversations/direct/${accountId}`);
+    if (!studentDirectoryDialog.hidden) closeModal(studentDirectoryDialog);
+    if (!profileDialog.hidden) closeModal(profileDialog);
+    showPage('messages');
+    await loadMessagingWorkspace(conversation.conversationId);
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
+async function loadStudentDirectory() {
+  if (!studentDirectoryList || studentDirectoryDialog.hidden) return;
+  studentDirectoryList.innerHTML = '<div class="directory-empty">Loading verified student profiles…</div>';
+  try {
+    const query = encodeURIComponent(studentDirectorySearch.value.trim());
+    const response = await fetch(`/api/social/directory?query=${query}`, { headers: { Accept: 'application/json' } });
+    if (response.status === 401 || response.status === 403) {
+      studentDirectoryList.innerHTML = '<div class="directory-empty">Sign in to browse students from your university.</div>';
+      return;
+    }
+    if (!response.ok) throw new Error('The student directory is temporarily unavailable.');
+    const students = await response.json();
+    studentDirectoryList.replaceChildren();
+    students.forEach((student) => {
+      const person = document.createElement('article');
+      person.className = 'directory-person';
+      const avatar = document.createElement('span');
+      avatar.className = 'avatar navy-avatar';
+      avatar.textContent = initialsFor(student.displayName);
+      const details = document.createElement('span');
+      details.className = 'directory-person-details';
+      const name = document.createElement('strong');
+      name.textContent = student.displayName;
+      const course = document.createElement('span');
+      course.textContent = student.courseName || 'University student';
+      const meta = document.createElement('small');
+      const status = recentlyJoined(student.joinedAt) ? 'New to UniCircle' : 'Verified fictional student';
+      meta.textContent = student.yearOfStudy ? `Year ${student.yearOfStudy} · ${status}` : status;
+      details.append(name, course, meta);
+      const actions = document.createElement('span');
+      actions.className = 'coursemate-actions';
+      appendConnectionActions(actions, student);
+      person.append(avatar, details, actions);
+      studentDirectoryList.append(person);
+    });
+    if (!students.length) studentDirectoryList.innerHTML = '<div class="directory-empty">No permitted student profiles match this search.</div>';
+  } catch (error) {
+    studentDirectoryList.innerHTML = `<div class="directory-empty">${error.message}</div>`;
+  }
+}
+
+document.querySelector('#studentDirectoryButton')?.addEventListener('click', () => {
+  openModal(studentDirectoryDialog);
+  studentDirectorySearch.value = '';
+  void loadStudentDirectory();
+});
+document.querySelector('#studentDirectoryClose')?.addEventListener('click', () => closeModal(studentDirectoryDialog));
+studentDirectorySearch?.addEventListener('input', () => {
+  clearTimeout(directoryTimer);
+  directoryTimer = setTimeout(loadStudentDirectory, 220);
+});
+
+document.querySelectorAll('.message-button').forEach((button) => {
+  button.addEventListener('click', () => {
+    showPage('messages');
+    openModal(studentDirectoryDialog);
+    studentDirectorySearch.value = button.dataset.person || '';
+    void loadStudentDirectory();
+  });
 });
 
 fetch('/api/platform/status')

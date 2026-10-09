@@ -58,32 +58,33 @@ class DemoUniversityContextGateway implements UniversityContextGateway {
 
         List<String> sharedModuleCodes = modules.stream().map(ModuleSummary::code).toList();
         List<CoursemateSummary> coursemates = jdbc.query("""
-                SELECT ua.display_name, ap.title, e.year_of_study,
+                SELECT ua.id, ua.display_name, ap.title, e.year_of_study,
                        CASE
-                         WHEN EXISTS (
-                           SELECT 1 FROM connections c
-                           WHERE c.university_id = e.university_id AND c.status = 'ACCEPTED'
-                             AND ((c.requester_id = ? AND c.addressee_id = ua.id)
-                               OR (c.requester_id = ua.id AND c.addressee_id = ?))
-                         ) THEN 'CONNECTED'
-                         WHEN EXISTS (
-                           SELECT 1 FROM connections c
-                           WHERE c.university_id = e.university_id AND c.status = 'PENDING'
-                             AND ((c.requester_id = ? AND c.addressee_id = ua.id)
-                               OR (c.requester_id = ua.id AND c.addressee_id = ?))
-                         ) THEN 'PENDING'
+                         WHEN c.status = 'ACCEPTED' THEN 'CONNECTED'
+                         WHEN c.status = 'PENDING' THEN 'PENDING'
                          ELSE 'AVAILABLE_TO_CONNECT'
-                       END AS connection_state
+                       END AS connection_state,
+                       c.id,
+                       CASE
+                         WHEN c.id IS NULL THEN 'NONE'
+                         WHEN c.requester_id = ? THEN 'OUTGOING'
+                         ELSE 'INCOMING'
+                       END AS connection_direction
                 FROM enrolments e
                 JOIN user_accounts ua ON ua.id = e.user_id AND ua.university_id = e.university_id
                 JOIN academic_programmes ap ON ap.id = e.programme_id
+                LEFT JOIN connections c
+                  ON c.university_id = e.university_id
+                 AND ((c.requester_id = ? AND c.addressee_id = ua.id)
+                   OR (c.requester_id = ua.id AND c.addressee_id = ?))
+                 AND c.status IN ('PENDING', 'ACCEPTED')
                 WHERE e.university_id = ? AND e.programme_id = ? AND e.status = 'ACTIVE'
                   AND e.user_id <> ? AND ua.profile_visibility <> 'PRIVATE'
                 ORDER BY ua.display_name
                 """, (result, row) -> new CoursemateSummary(
-                        result.getString(1), result.getString(2), result.getInt(3),
-                        result.getString(4), sharedModuleCodes),
-                accountId, accountId, accountId, accountId, universityId, student.programmeId(), accountId);
+                        result.getObject(1, UUID.class), result.getString(2), result.getString(3), result.getInt(4),
+                        result.getString(5), result.getObject(6, UUID.class), result.getString(7), sharedModuleCodes),
+                accountId, accountId, accountId, universityId, student.programmeId(), accountId);
 
         return new UniversityContextResponse(
                 SOURCE,

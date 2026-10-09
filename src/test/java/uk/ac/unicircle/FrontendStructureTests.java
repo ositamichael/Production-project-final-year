@@ -39,7 +39,7 @@ class FrontendStructureTests {
         assertThat(html)
             .contains("no live university systems are connected")
             .contains("No live booking connection")
-            .contains("No message is sent or stored")
+            .contains("Messages are stored in the local development database")
             .contains("does not request or store device location");
     }
 
@@ -103,5 +103,21 @@ class FrontendStructureTests {
             .contains("does not contact Leeds Beckett, Microsoft, or Authenticator")
             .contains("action=\"/login\"")
             .contains("id=\"csrfField\"");
+    }
+
+    @Test
+    void messagingWorkspaceSupportsConsentBasedStudentDiscovery() throws IOException {
+        var resource = getClass().getResourceAsStream("/static/index.html");
+        assertThat(resource).isNotNull();
+
+        var html = new String(resource.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(html)
+            .contains("id=\"studentDirectoryButton\"")
+            .contains("id=\"studentDirectoryDialog\"")
+            .contains("id=\"studentDirectoryList\"")
+            .contains("id=\"conversationList\"")
+            .contains("id=\"conversationMessages\"")
+            .contains("id=\"messageComposer\"")
+            .contains("Messaging activates after a request is accepted");
     }
 }
