@@ -318,10 +318,22 @@ const profilePhotoPreview = document.querySelector('#profilePhotoPreview');
 const universityContext = document.querySelector('#universityContext');
 const academicModules = document.querySelector('#academicModules');
 const academicCoursemates = document.querySelector('#academicCoursemates');
+const profileSignIn = document.querySelector('#profileSignIn');
+const profileSignOut = document.querySelector('#profileSignOut');
 
 function setProfileStatus(message, state = '') {
   profileStatus.textContent = message;
   profileStatus.className = `profile-status${state ? ` ${state}` : ''}`;
+}
+
+function showSignedOutActions() {
+  profileSignIn.hidden = false;
+  profileSignOut.hidden = true;
+}
+
+function showSignedInActions() {
+  profileSignIn.hidden = true;
+  profileSignOut.hidden = false;
 }
 
 function initialsFor(name) {
@@ -357,6 +369,7 @@ function populateProfile(profile) {
   document.querySelector('#profileEmail').textContent = profile.email;
   document.querySelector('#profileIdentity').hidden = false;
   profileFields.disabled = false;
+  showSignedInActions();
   updateVisibleIdentity(profile);
 }
 
@@ -432,7 +445,8 @@ async function loadProfile() {
   try {
     const response = await fetch('/api/profile/me', { headers: { Accept: 'application/json' } });
     if (response.status === 401 || response.status === 403) {
-      setProfileStatus('Profile editing is protected. Sign in through an approved university account to view or change these details.', 'error');
+      showSignedOutActions();
+      setProfileStatus('This profile is protected. Sign in with the fictional student account to test the complete experience safely.', 'error');
       return;
     }
     if (!response.ok) throw new Error('Your profile is temporarily unavailable.');
@@ -441,6 +455,7 @@ async function loadProfile() {
     await loadUniversityContext();
     setProfileStatus('Your verified profile is ready to edit.', 'success');
   } catch (error) {
+    showSignedOutActions();
     setProfileStatus(error.message || 'Your profile could not be loaded.', 'error');
   }
 }
@@ -463,6 +478,27 @@ document.querySelectorAll('[data-open-profile]').forEach((button) => {
 
 document.querySelector('#profileDialogClose')?.addEventListener('click', () => closeModal(profileDialog));
 document.querySelector('#profileCancel')?.addEventListener('click', () => closeModal(profileDialog));
+
+profileSignOut?.addEventListener('click', async () => {
+  profileSignOut.disabled = true;
+  setProfileStatus('Signing out securely…');
+  try {
+    const csrf = await csrfToken();
+    const form = document.createElement('form');
+    form.method = 'post';
+    form.action = '/logout';
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = csrf.parameterName;
+    csrfInput.value = csrf.token;
+    form.append(csrfInput);
+    document.body.append(form);
+    form.submit();
+  } catch (error) {
+    profileSignOut.disabled = false;
+    setProfileStatus(error.message || 'Sign out could not be completed.', 'error');
+  }
+});
 
 profilePhotoInput?.addEventListener('change', () => {
   const file = profilePhotoInput.files[0];
@@ -565,3 +601,21 @@ fetch('/api/platform/status')
 
 const initialPage = hashToPage.get(location.hash.slice(1)) ?? 'campus';
 showPage(initialPage, { updateHistory: false, focus: false });
+
+async function restoreSessionIdentity() {
+  try {
+    const response = await fetch('/api/profile/me', { headers: { Accept: 'application/json' } });
+    if (!response.ok) return;
+    populateProfile(await response.json());
+  } catch {
+    // The public preview remains usable when no authenticated session exists.
+  }
+}
+
+const journeyParams = new URLSearchParams(location.search);
+if (journeyParams.has('signed-in')) {
+  openProfilePanel();
+  history.replaceState(null, '', `${location.pathname}${location.hash || '#campus'}`);
+} else {
+  restoreSessionIdentity();
+}

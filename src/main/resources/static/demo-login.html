@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="UniCircle fictional sandbox sign-in">
+  <title>Sign in — UniCircle Sandbox</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/auth.css?v=1">
+  <script src="/js/auth.js?v=1" defer></script>
+</head>
+<body>
+  <main class="auth-shell">
+    <section class="auth-story" aria-labelledby="storyTitle">
+      <a class="auth-brand" href="/" aria-label="Return to UniCircle">
+        <span class="brand-mark" aria-hidden="true"><span></span></span>
+        <span>UniCircle</span>
+      </a>
+      <div class="story-content">
+        <span class="environment-label">FICTIONAL DEVELOPMENT SANDBOX</span>
+        <h1 id="storyTitle">Your campus, connected around you.</h1>
+        <p>Enter the protected demonstration as a fictional Computer Science student and explore the authenticated profile, modules and course community.</p>
+        <ul class="trust-list">
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg><span>Real Spring Security session</span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg><span>Protected student information</span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg><span>Clearly separated from live university systems</span></li>
+        </ul>
+      </div>
+      <p class="story-footnote">Sprint 4 · Authenticated demonstration journey</p>
+    </section>
+
+    <section class="auth-form-panel" aria-labelledby="signInTitle">
+      <div class="auth-form-wrap">
+        <div class="shield" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 2.8 8.1 7 10 4.2-1.9 7-5.4 7-10V6Z"/><path d="m9 12 2 2 4-5"/></svg>
+        </div>
+        <span class="section-label">SECURE DEMONSTRATION ACCESS</span>
+        <h2 id="signInTitle">Sign in to UniCircle</h2>
+        <p class="form-intro">Use only the fictional account below. Never enter your Leeds Beckett password or an Authenticator code on this page.</p>
+
+        <div class="auth-message" id="authMessage" role="status" aria-live="polite">Preparing secure sign-in…</div>
+
+        <form action="/login" method="post" id="demoLoginForm">
+          <input type="hidden" id="csrfField">
+          <label for="username">Fictional university email</label>
+          <div class="input-control">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
+            <input id="username" name="username" type="email" value="student@demo.unicircle.test" autocomplete="username" required readonly>
+          </div>
+          <label for="password">Demonstration password</label>
+          <div class="input-control">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+            <input id="password" name="password" type="password" autocomplete="current-password" required autofocus>
+            <button class="reveal-password" id="revealPassword" type="button" aria-label="Show password">Show</button>
+          </div>
+          <button class="sign-in-button" id="signInButton" type="submit" disabled>Enter fictional campus</button>
+        </form>
+
+        <button class="fill-account" id="fillDemoAccount" type="button">Fill the fictional password</button>
+        <div class="demo-account">
+          <span class="student-avatar" aria-hidden="true">MC</span>
+          <span><strong>Michael Carter</strong><small>Fictional BSc Computer Science · Year 3</small></span>
+          <span class="demo-badge">DEMO</span>
+        </div>
+        <div class="separation-notice">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+          <p>This sandbox does not contact Leeds Beckett, Microsoft, or Authenticator. The future production button will redirect to the university’s official sign-in page.</p>
+        </div>
+        <a class="back-link" href="/">Return to campus preview</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

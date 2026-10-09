@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -20,6 +21,7 @@ class CurrentIdentityService implements CurrentIdentity {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SignedInAccount require(Authentication authentication) {
         UserAccount account;
         if (authentication != null && authentication.isAuthenticated()

@@ -48,7 +48,7 @@ class ProfileControllerTests {
     @Test
     void profileCannotBeReadWithoutAuthentication() throws Exception {
         mockMvc.perform(get("/api/profile/me"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

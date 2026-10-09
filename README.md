@@ -6,7 +6,7 @@ This repository is being rebuilt as a Level 6 final-year software engineering pr
 
 ## Current status
 
-Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, and Sprint 3 establishes the university-integration boundary:
+Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, and Sprint 4 adds a complete authenticated demonstration journey:
 
 - Spring Boot 4.1.1 with Java 21 as the target language level.
 - A responsive desktop, tablet and mobile dashboard prototype.
@@ -20,6 +20,9 @@ Sprint 1 established the testable engineering foundation, Sprint 2 added the acc
 - Validated PNG/JPEG profile-photograph processing that strips embedded metadata before local development storage.
 - A protected academic-context API for programmes, modules and privacy-filtered coursemates.
 - Fictional university fixtures that are visibly separated from future approved institutional data.
+- A development-only fictional student sign-in with a real Spring Security session and secure logout.
+- A dedicated sign-in experience that explicitly prevents the use of Leeds Beckett or Microsoft credentials.
+- API requests return a clear unauthorised response rather than leaking protected profile information or returning a login page.
 
 The dashboard is a working interface prototype, not evidence of a live university integration. Real student identity, timetables, bookings, location and messaging require institutional approval, integration contracts, security review and deployment infrastructure.
 
@@ -30,6 +33,11 @@ The dashboard is a working interface prototype, not evidence of a live universit
 3. Allow IntelliJ to import the Maven project.
 4. Run `UniCircleApplication`.
 5. Open `http://localhost:8080`.
+6. Open the profile and choose **Sign in to fictional sandbox**. The local-only test account is:
+   - Email: `student@demo.unicircle.test`
+   - Password: `CampusDemo!2026`
+
+These credentials are deliberately fictional and exist only in the non-production profile. They can be overridden with `UNICIRCLE_DEMO_USERNAME` and `UNICIRCLE_DEMO_PASSWORD`. Never use a real university password or Authenticator code in this form.
 
 No local PostgreSQL installation is required for the default profile. It uses an in-memory H2 database configured to behave like PostgreSQL for early development. Production uses PostgreSQL and environment variables documented in `.env.example`.
 
@@ -59,6 +67,7 @@ UniCircle begins as a modular monolith. This keeps deployment manageable for a f
 - [`docs/sprints/01-foundation.md`](docs/sprints/01-foundation.md)
 - [`docs/sprints/02-identity-profile.md`](docs/sprints/02-identity-profile.md)
 - [`docs/sprints/03-university-context.md`](docs/sprints/03-university-context.md)
+- [`docs/sprints/04-demo-sign-in.md`](docs/sprints/04-demo-sign-in.md)
 
 ## Branching and assessment evidence
 

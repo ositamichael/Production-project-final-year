@@ -36,9 +36,12 @@ management:
 info:
   app:
     name: UniCircle
-    stage: Sprint 3 university integration readiness
+    stage: Sprint 4 authenticated demonstration journey
     data-status: Prototype fixtures only
 
 unicircle:
+  demo:
+    username: ${UNICIRCLE_DEMO_USERNAME:student@demo.unicircle.test}
+    password: ${UNICIRCLE_DEMO_PASSWORD:CampusDemo!2026}
   storage:
     profile-photos-dir: ${UNICIRCLE_PROFILE_PHOTOS_DIR:${java.io.tmpdir}/unicircle-profile-photos}
