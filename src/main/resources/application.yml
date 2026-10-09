@@ -36,7 +36,7 @@ management:
 info:
   app:
     name: UniCircle
-    stage: Sprint 7 campus events, service bookings and personal schedules
+    stage: Sprint 8 verified opportunities and personal application tracking
     data-status: Prototype fixtures only
 
 unicircle:
