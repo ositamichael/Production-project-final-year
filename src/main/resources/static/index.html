@@ -6,8 +6,8 @@
   <meta name="description" content="UniCircle campus connection and services platform prototype">
   <title>UniCircle — My Campus</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/css/app.css?v=14">
-  <script src="/js/app.js?v=14" defer></script>
+  <link rel="stylesheet" href="/css/app.css?v=15">
+  <script src="/js/app.js?v=15" defer></script>
 </head>
 <body>
   <svg class="svg-sprite" aria-hidden="true">
@@ -54,7 +54,7 @@
   </svg>
   <a class="skip-link" href="#main-content">Skip to dashboard</a>
   <div class="prototype-banner" role="status">
-    Sprint 9 fictional sandbox — moderated lost-and-found reports and private ownership claims; no live university systems are connected.
+    Sprint 10 fictional sandbox — staff review of lost-and-found reports; no live university systems are connected.
   </div>
   <div class="app-shell">
     <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
@@ -73,6 +73,7 @@
         <a class="nav-item" href="#map-page" data-page-link="map"><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg> Campus Map</a>
         <a class="nav-item" href="#wellbeing-page" data-page-link="wellbeing"><svg class="icon" aria-hidden="true"><use href="#heart"/></svg> Wellbeing &amp; Support</a>
         <a class="nav-item" href="#lost-found-page" data-page-link="lost-found"><svg class="icon" aria-hidden="true"><use href="#search"/></svg> Lost and Found</a>
+        <a class="nav-item" href="#lost-found-review-page" data-page-link="lost-found-review" id="staffReviewNav" hidden><svg class="icon" aria-hidden="true"><use href="#shield"/></svg> Review queue</a>
         <a class="nav-item" href="#assistant-page" data-page-link="assistant"><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg> Ask UniCircle</a>
       </nav>
       <button class="account-card" id="sidebarProfileButton" type="button" data-open-profile aria-label="Open your profile">
@@ -305,12 +306,19 @@
         <p class="panel-note">All displayed reports and claims are fictional development records. New reports require moderation; secure collection must be completed through authorised university staff.</p>
       </section>
 
+      <section class="page-view page-surface" id="lost-found-review-page" data-page="lost-found-review" hidden tabindex="-1" aria-labelledby="staffReviewTitle">
+        <header class="view-hero"><div class="view-title"><span class="view-icon green"><svg class="icon" aria-hidden="true"><use href="#shield"/></svg></span><div><span class="eyebrow">AUTHORISED REVIEW</span><h2 id="staffReviewTitle">Lost and Found review</h2><p>Check a report's public wording and photograph before it appears in the university catalogue.</p></div></div><div class="staff-review-tools"><span class="data-badge" id="staffReviewCount">Staff access required</span><button class="secondary-button" type="button" id="staffReviewRefresh">Refresh queue</button></div></header>
+        <article class="safety-banner staff-review-notice"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><div><strong>Private review workspace</strong><p>Identifying details are visible only to authorised reviewers. Do not publish them, contact a claimant directly, or treat an online claim as proof of ownership.</p></div></article>
+        <div class="staff-review-list" id="staffReviewList" aria-live="polite"><div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#shield"/></svg><h3>Sign in as a fictional reviewer</h3><p>Pending reports are visible only to authorised staff in this demonstration.</p></div></div>
+        <p class="panel-note">Approval publishes only the report's public fields. Rejections remain private to the reporter. Every decision is recorded in an audit trail.</p>
+      </section>
+
       <section class="page-view page-surface" id="assistant-page" data-page="assistant" hidden tabindex="-1" aria-labelledby="assistantTitle">
         <header class="view-hero"><div class="view-title"><span class="view-icon violet"><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><div><span class="eyebrow">CAMPUS GUIDE</span><h2 id="assistantTitle">Ask UniCircle</h2><p>Find approved campus information and the correct university service.</p></div></div><span class="data-badge">Limited prototype guide</span></header>
         <div class="assistant-workspace"><aside class="content-panel"><h3>Popular topics</h3><div class="topic-list"><button type="button" data-page-question="Find a quiet study space">Quiet study spaces<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button><button type="button" data-page-question="How do I book a sports facility?">Sports facilities<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button><button type="button" data-page-question="Tell me about career opportunities">Career opportunities<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button></div><p class="panel-note">Responses are limited to the demonstrated questions and are not connected to live university systems.</p></aside><article class="assistant-chat"><div class="assistant-chat-heading"><span class="avatar assistant-avatar">U</span><div><h3>UniCircle campus guide</h3><span>Prototype information assistant</span></div></div><div class="assistant-chat-body" id="pageAssistantResponse" role="status" aria-live="polite"><p class="bubble received">Hello Michael. Choose a topic or ask one of the supported demonstration questions.</p></div><form class="composer" id="pageAssistantForm"><label class="sr-only" for="pageAssistantInput">Ask the campus guide</label><input id="pageAssistantInput" type="text" maxlength="250" placeholder="Ask about spaces, facilities or careers"><button type="submit" aria-label="Send question"><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button></form></article></div>
       </section>
 
-      <footer><span>UniCircle · Sprint 9 moderated lost and found</span><a href="/actuator/health">System health</a></footer>
+      <footer><span>UniCircle · Sprint 10 staff review</span><a href="/actuator/health">System health</a></footer>
     </main>
   </div>
 
@@ -412,10 +420,21 @@
     <div class="directory-surface">
       <button class="dialog-close" type="button" id="lostFoundDetailClose" aria-label="Close item details"><svg class="icon" aria-hidden="true"><use href="#close"/></svg></button>
       <div class="lost-found-detail-heading"><div class="lost-found-detail-photo" id="lostFoundDetailPhoto"><svg class="icon" aria-hidden="true"><use href="#search"/></svg></div><div><span class="eyebrow" id="lostFoundDetailType">MODERATED REPORT</span><h2 id="lostFoundDetailTitle">Item details</h2><p id="lostFoundDetailDescription"></p><div class="opportunity-badges"><span class="pill info" id="lostFoundDetailCategory"></span><span class="pill success" id="lostFoundDetailStatus"></span></div></div></div>
-      <div class="lost-found-detail-grid"><article><h3>Report information</h3><dl class="opportunity-facts"><div><dt>Colour</dt><dd id="lostFoundDetailColour"></dd></div><div><dt>Location</dt><dd id="lostFoundDetailLocation"></dd></div><div><dt>Date</dt><dd id="lostFoundDetailDate"></dd></div><div><dt>Custody</dt><dd id="lostFoundDetailCustody"></dd></div></dl></article><article class="secure-claim-panel" id="lostFoundClaimPanel"><span class="eyebrow">PRIVATE OWNERSHIP CHECK</span><h3>Is this yours?</h3><p>Describe a detail that was deliberately omitted from the public report. It is stored privately for authorised review.</p><form id="lostFoundClaimForm"><label for="lostFoundClaimEvidence">Private evidence</label><textarea id="lostFoundClaimEvidence" minlength="20" maxlength="1000" rows="4" required placeholder="Describe a mark, serial detail or contents only the owner should know."></textarea><button class="primary-button" type="submit">Submit private claim</button></form><p class="claim-status" id="lostFoundClaimStatus"></p></article></div>
+      <div class="lost-found-detail-grid"><article><h3>Report information</h3><dl class="opportunity-facts"><div><dt>Colour</dt><dd id="lostFoundDetailColour"></dd></div><div><dt>Location</dt><dd id="lostFoundDetailLocation"></dd></div><div><dt>Date</dt><dd id="lostFoundDetailDate"></dd></div><div><dt>Custody</dt><dd id="lostFoundDetailCustody"></dd></div></dl><div class="review-feedback" id="lostFoundReviewNote" hidden><strong>Private review note</strong><p id="lostFoundReviewNoteText"></p></div></article><article class="secure-claim-panel" id="lostFoundClaimPanel"><span class="eyebrow">PRIVATE OWNERSHIP CHECK</span><h3>Is this yours?</h3><p>Describe a detail that was deliberately omitted from the public report. It is stored privately for authorised review.</p><form id="lostFoundClaimForm"><label for="lostFoundClaimEvidence">Private evidence</label><textarea id="lostFoundClaimEvidence" minlength="20" maxlength="1000" rows="4" required placeholder="Describe a mark, serial detail or contents only the owner should know."></textarea><button class="primary-button" type="submit">Submit private claim</button></form><p class="claim-status" id="lostFoundClaimStatus"></p></article></div>
       <div class="dialog-actions"><button class="danger-button" id="lostFoundWithdrawButton" type="button" hidden>Withdraw my report</button><button class="secondary-button" id="lostFoundDetailDone" type="button">Done</button></div>
       <p class="privacy-note">Never arrange a private handover with a stranger. Collection should use campus security or an approved university service desk.</p>
     </div>
+  </section>
+  <section id="staffReviewDialog" class="profile-dialog modal-surface lost-found-dialog" role="dialog" aria-modal="true" aria-labelledby="staffReviewDialogTitle" hidden>
+    <form id="staffReviewForm" class="directory-surface">
+      <button class="dialog-close" type="button" id="staffReviewClose" aria-label="Close staff review"><svg class="icon" aria-hidden="true"><use href="#close"/></svg></button>
+      <div class="directory-heading"><span class="view-icon green"><svg class="icon" aria-hidden="true"><use href="#shield"/></svg></span><div><span class="eyebrow">PENDING STAFF DECISION</span><h2 id="staffReviewDialogTitle">Review item report</h2><p id="staffReviewReporter"></p></div></div>
+      <div class="staff-review-detail"><div class="staff-review-photo" id="staffReviewPhoto"><svg class="icon" aria-hidden="true"><use href="#camera"/></svg></div><div><h3>Public catalogue text</h3><p id="staffReviewPublic"></p><h3>Private identifying detail</h3><p class="staff-private-detail" id="staffReviewPrivate"></p><p id="staffReviewLocation"></p></div></div>
+      <fieldset class="staff-review-decision"><legend>Decision</legend><label><input type="radio" name="staffDecision" value="APPROVED" required> Approve for the university catalogue</label><label><input type="radio" name="staffDecision" value="REJECTED" required> Reject and return a private note</label></fieldset>
+      <label class="staff-review-reason" for="staffReviewReason">Review reason<textarea id="staffReviewReason" minlength="20" maxlength="500" rows="3" required placeholder="Record why this report should be published or returned for changes."></textarea></label>
+      <div class="dialog-actions"><button class="secondary-button" type="button" id="staffReviewCancel">Cancel</button><button class="primary-button" type="submit" id="staffReviewSubmit">Confirm decision</button></div>
+      <p class="privacy-note">This is a fictional staff account. Report decisions are audited; claim verification and physical handover require a separate authorised process.</p>
+    </form>
   </section>
   <div class="search-empty" id="searchEmpty" hidden role="status">No dashboard items match that search.</div>
 </body>

@@ -14,6 +14,7 @@ class DemoIdentityConfiguration {
 
     private static final UUID UNIVERSITY_ID = UUID.fromString("2c952dd9-5276-4e44-bf20-3fe98b345101");
     private static final UUID ACCOUNT_ID = UUID.fromString("7ccb9282-ebcb-4ea0-94f1-3af1f84be101");
+    private static final UUID STAFF_ID = UUID.fromString("7ccb9282-ebcb-4ea0-94f1-3af1f84be105");
 
     @Bean
     @Order(10)
@@ -42,6 +43,22 @@ class DemoIdentityConfiguration {
                         3,
                         ProfileVisibility.UNIVERSITY_ONLY);
                 accounts.save(account);
+            }
+            if (accounts.findById(STAFF_ID).isEmpty()) {
+                UserAccount reviewer = new UserAccount(
+                        STAFF_ID,
+                        university,
+                        "fictional-lost-property-reviewer",
+                        "reviewer@demo.university.example",
+                        "Alex Morgan",
+                        UserRole.STAFF);
+                reviewer.updateProfile(
+                        "Alex Morgan",
+                        "Fictional campus service-desk reviewer for safe workflow demonstrations.",
+                        "Campus service desk",
+                        null,
+                        ProfileVisibility.PRIVATE);
+                accounts.save(reviewer);
             }
         };
     }

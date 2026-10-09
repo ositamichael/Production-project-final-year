@@ -63,6 +63,8 @@ public class SecurityConfiguration {
                 .password(passwordEncoder.encode(password)).roles("STUDENT").build();
         var sophie = User.withUsername("sophie.patel@students.unicircle.test")
                 .password(passwordEncoder.encode(password)).roles("STUDENT").build();
-        return new InMemoryUserDetailsManager(demoStudent, michael, aisha, james, sophie);
+        var reviewer = User.withUsername("reviewer@demo.university.example")
+                .password(passwordEncoder.encode(password)).roles("STAFF").build();
+        return new InMemoryUserDetailsManager(demoStudent, michael, aisha, james, sophie, reviewer);
     }
 }

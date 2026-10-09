@@ -25,6 +25,7 @@ final class LostFoundResponses {
             String photoUrl,
             boolean mine,
             String myClaimStatus,
+            String myReviewNote,
             Instant createdAt) {
     }
 

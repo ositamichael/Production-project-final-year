@@ -19,14 +19,14 @@
       <div class="story-content">
         <span class="environment-label">FICTIONAL DEVELOPMENT SANDBOX</span>
         <h1 id="storyTitle">Your campus, connected around you.</h1>
-        <p>Enter the protected demonstration as a fictional Computer Science student and explore the authenticated profile, modules and course community.</p>
+        <p>Enter the protected demonstration as a fictional student or service-desk reviewer and explore the relevant campus workspace.</p>
         <ul class="trust-list">
           <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg><span>Real Spring Security session</span></li>
           <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg><span>Protected student information</span></li>
           <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg><span>Clearly separated from live university systems</span></li>
         </ul>
       </div>
-      <p class="story-footnote">Sprint 9 · Moderated Lost and Found with private ownership claims</p>
+      <p class="story-footnote">Sprint 10 · Moderated Lost and Found with staff review</p>
     </section>
 
     <section class="auth-form-panel" aria-labelledby="signInTitle">
@@ -42,7 +42,7 @@
 
         <form action="/login" method="post" id="demoLoginForm">
           <input type="hidden" id="csrfField">
-          <label for="username">Choose a fictional student</label>
+          <label for="username">Choose a fictional account</label>
           <div class="input-control">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
             <select id="username" name="username" autocomplete="username" required>
@@ -50,6 +50,7 @@
               <option value="aisha.khan@students.unicircle.test">Aisha Khan — connected with Michael</option>
               <option value="james.wilson@students.unicircle.test">James Wilson — new student</option>
               <option value="sophie.patel@students.unicircle.test">Sophie Patel — request sent to Michael</option>
+              <option value="reviewer@demo.university.example">Alex Morgan — fictional service-desk reviewer</option>
             </select>
           </div>
           <label for="password">Demonstration password</label>
@@ -64,7 +65,7 @@
         <button class="fill-account" id="fillDemoAccount" type="button">Fill the fictional password</button>
         <div class="demo-account">
           <span class="student-avatar" aria-hidden="true">MC</span>
-          <span><strong>Four fictional student accounts</strong><small>Use separate browser sessions to test requests and live chat</small></span>
+          <span><strong>Four students and one staff reviewer</strong><small>Use separate browser sessions to test reports, review decisions and live chat</small></span>
           <span class="demo-badge">DEMO</span>
         </div>
         <div class="separation-notice">

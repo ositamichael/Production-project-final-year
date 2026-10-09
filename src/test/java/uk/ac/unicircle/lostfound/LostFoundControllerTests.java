@@ -101,22 +101,31 @@ class LostFoundControllerTests {
 
     @Test
     void photographsAreNotPublicAfterTheirReportIsWithdrawn() throws Exception {
+        UUID reportId = responseId(mockMvc.perform(post("/api/lost-found")
+                        .with(user("student")).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(reportJson()))
+                .andExpect(status().isCreated()).andReturn());
         BufferedImage image = new BufferedImage(300, 300, BufferedImage.TYPE_INT_RGB);
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         ImageIO.write(image, "png", output);
         MockMultipartFile photo = new MockMultipartFile("photo", "item.png", "image/png", output.toByteArray());
 
-        mockMvc.perform(multipart("/api/lost-found/{reportId}/photo", MICHAEL_SLEEVE)
+        mockMvc.perform(multipart("/api/lost-found/{reportId}/photo", reportId)
                         .file(photo).with(user("student")).with(csrf()))
                 .andExpect(status().isOk());
-        mockMvc.perform(get("/api/lost-found/{reportId}/photo", MICHAEL_SLEEVE)
+        mockMvc.perform(post("/api/lost-found/staff/reports/{reportId}/decision", reportId)
+                        .with(user("reviewer@demo.university.example")).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"decision\":\"APPROVED\",\"reason\":\"Public wording and photograph are suitable for the catalogue.\"}"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/lost-found/{reportId}/photo", reportId)
                         .with(user("aisha.khan@students.unicircle.test")))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/api/lost-found/{reportId}/withdraw", MICHAEL_SLEEVE)
+        mockMvc.perform(post("/api/lost-found/{reportId}/withdraw", reportId)
                         .with(user("student")).with(csrf()))
                 .andExpect(status().isOk());
-        mockMvc.perform(get("/api/lost-found/{reportId}/photo", MICHAEL_SLEEVE)
+        mockMvc.perform(get("/api/lost-found/{reportId}/photo", reportId)
                         .with(user("aisha.khan@students.unicircle.test")))
                 .andExpect(status().isNotFound());
     }

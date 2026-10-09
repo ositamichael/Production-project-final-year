@@ -6,7 +6,7 @@ This repository is being rebuilt as a Level 6 final-year software engineering pr
 
 ## Current status
 
-Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, Sprint 7 added transactional campus events and service bookings, Sprint 8 added moderated opportunities and personal application tracking, and Sprint 9 adds a secure lost-and-found workflow:
+Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, Sprint 7 added transactional campus events and service bookings, Sprint 8 added moderated opportunities and personal application tracking, Sprint 9 added secure lost-and-found reporting, and Sprint 10 adds a fictional staff review workflow:
 
 - Spring Boot 4.1.1 with Java 21 as the target language level.
 - A responsive desktop, tablet and mobile dashboard prototype.
@@ -34,6 +34,7 @@ Sprint 1 established the testable engineering foundation, Sprint 2 added the acc
 - Private identifying details and ownership evidence that never appear in public catalogue responses.
 - Account-specific report history, private claim tracking, withdrawal and reporter notifications.
 - Validated PNG/JPEG item photographs that are re-encoded to strip embedded metadata.
+- A fictional service-desk reviewer with a staff-only queue, audited approve/reject decisions and private reporter feedback.
 - Four separate fictional student sign-ins for demonstrating requests and chat between people.
 - Flyway migrations, PostgreSQL production configuration and an H2 local profile.
 - Health monitoring, modular architecture checks, unit tests and CI.
@@ -46,7 +47,7 @@ Sprint 1 established the testable engineering foundation, Sprint 2 added the acc
 - A dedicated sign-in experience that explicitly prevents the use of Leeds Beckett or Microsoft credentials.
 - API requests return a clear unauthorised response rather than leaking protected profile information or returning a login page.
 
-The dashboard now contains working local social, event-registration, booking, opportunity-tracking and lost-and-found demonstrations, but it is not evidence of a live university integration. Real student identity, official timetables, university booking systems, employer vacancy feeds, staffed lost-property services and location require institutional approval, integration contracts, security review and deployment infrastructure. Messages, registrations, bookings, saved listings, tracker stages, notifications, item reports and claims are stored only in the local development environment. Production push notifications, staffed moderation and safeguarding operations, secure media storage and retention policies remain future work.
+The dashboard now contains working local social, event-registration, booking, opportunity-tracking, lost-and-found and fictional staff-review demonstrations, but it is not evidence of a live university integration. Real student identity, official timetables, university booking systems, employer vacancy feeds, staffed lost-property services and location require institutional approval, integration contracts, security review and deployment infrastructure. Messages, registrations, bookings, saved listings, tracker stages, notifications, item reports and claims are stored only in the local development environment. Production push notifications, institutionally governed staff moderation and safeguarding operations, secure media storage and retention policies remain future work.
 
 ## Run in IntelliJ IDEA
 
@@ -59,7 +60,7 @@ The dashboard now contains working local social, event-registration, booking, op
    - Email: `student@demo.unicircle.test`
    - Password: `CampusDemo!2026`
 
-The sign-in page also offers fictional Aisha, James and Sophie accounts using the same development-only password. Use separate browser profiles or a private window to demonstrate connection decisions and live messaging between two people.
+The sign-in page also offers fictional Aisha, James and Sophie student accounts and fictional service-desk reviewer Alex Morgan using the same development-only password. Use separate browser profiles or a private window to demonstrate connection decisions, live messaging and staff review.
 
 These credentials are deliberately fictional and exist only in the non-production profile. They can be overridden with `UNICIRCLE_DEMO_USERNAME` and `UNICIRCLE_DEMO_PASSWORD`. Never use a real university password or Authenticator code in this form.
 
@@ -97,6 +98,7 @@ UniCircle begins as a modular monolith. This keeps deployment manageable for a f
 - [`docs/sprints/07-events-bookings.md`](docs/sprints/07-events-bookings.md)
 - [`docs/sprints/08-opportunities.md`](docs/sprints/08-opportunities.md)
 - [`docs/sprints/09-lost-found.md`](docs/sprints/09-lost-found.md)
+- [`docs/sprints/10-lost-found-staff-review.md`](docs/sprints/10-lost-found-staff-review.md)
 
 ## Branching and assessment evidence
 

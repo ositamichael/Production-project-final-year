@@ -137,7 +137,7 @@ class FrontendStructureTests {
             .contains("Michael Carter — connected with Aisha")
             .contains("aisha.khan@students.unicircle.test")
             .contains("James Wilson — new student")
-            .contains("Use separate browser sessions to test requests and live chat");
+            .contains("Use separate browser sessions to test reports, review decisions and live chat");
     }
 
     @Test
@@ -192,5 +192,24 @@ class FrontendStructureTests {
             .contains("Ownership evidence is never published")
             .contains("Photographs are reprocessed to remove embedded metadata")
             .doesNotContain("Lost-item report opened in prototype mode");
+    }
+
+    @Test
+    void staffReviewHasASeparateWorkspaceAndTwoStepDecision() throws IOException {
+        var html = new String(getClass().getResourceAsStream("/static/index.html").readAllBytes(), StandardCharsets.UTF_8);
+        var script = new String(getClass().getResourceAsStream("/static/js/app.js").readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(html)
+            .contains("data-page-link=\"lost-found-review\"")
+            .contains("data-page=\"lost-found-review\"")
+            .contains("id=\"staffReviewList\"")
+            .contains("id=\"staffReviewDialog\"")
+            .contains("name=\"staffDecision\"")
+            .contains("id=\"staffReviewReason\"");
+        assertThat(script)
+            .contains("['STAFF', 'ADMIN'].includes(profile.role)")
+            .contains("/api/lost-found/staff/reports/")
+            .contains("staffReviewNav.hidden = !staffReviewAccess")
+            .contains("REJECTED: 'NOT PUBLISHED'")
+            .contains("detailStatus.textContent = report.moderationStatus === 'APPROVED'");
     }
 }
