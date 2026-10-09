@@ -241,6 +241,11 @@ const opportunityCatalogue = document.querySelector('#opportunityCatalogue');
 const dashboardOpportunityList = document.querySelector('#dashboardOpportunityList');
 const opportunitySearch = document.querySelector('#opportunitySearch');
 const opportunityDialog = document.querySelector('#opportunityDialog');
+const lostFoundCatalogue = document.querySelector('#lostFoundCatalogue');
+const lostFoundSearch = document.querySelector('#lostFoundSearch');
+const lostFoundCategoryFilter = document.querySelector('#lostFoundCategoryFilter');
+const lostFoundReportDialog = document.querySelector('#lostFoundReportDialog');
+const lostFoundDetailDialog = document.querySelector('#lostFoundDetailDialog');
 const baseScheduleMarkup = scheduleList?.innerHTML || '';
 let loadedCampusEvents = [];
 let loadedCampusServices = [];
@@ -251,6 +256,12 @@ let trackedOpportunities = [];
 let selectedOpportunityType = '';
 let showingOpportunityTracker = false;
 let activeOpportunityId = null;
+let loadedLostFoundReports = [];
+let myLostFoundReports = [];
+let myLostFoundClaims = [];
+let selectedLostFoundType = '';
+let lostFoundView = 'catalogue';
+let activeLostFoundReportId = null;
 
 function selectBookingTab(tab) {
   bookingTabs.forEach((other) => {
@@ -892,6 +903,335 @@ document.querySelector('#opportunityTrackButton')?.addEventListener('click', asy
   }
 });
 
+function lostFoundPresentation(category) {
+  if (category === 'ELECTRONICS') return ['laptop', 'navy-photo'];
+  if (category === 'KEYS') return ['key', 'blue-photo'];
+  if (category === 'BAGS') return ['briefcase', 'violet-photo'];
+  if (category === 'DOCUMENTS') return ['id-badge', 'green-photo'];
+  if (category === 'ACCESSORIES') return ['bottle', 'orange-photo'];
+  if (category === 'CLOTHING') return ['users', 'coral-photo'];
+  return ['search', 'blue-photo'];
+}
+
+function lostFoundDate(value) {
+  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    .format(new Date(`${value}T12:00:00`));
+}
+
+function lostFoundReportById(id) {
+  return loadedLostFoundReports.find((report) => report.id === id)
+    || myLostFoundReports.find((report) => report.id === id);
+}
+
+function visibleLostFoundReports() {
+  const source = lostFoundView === 'mine' ? myLostFoundReports : loadedLostFoundReports;
+  const query = lostFoundSearch?.value.trim().toLowerCase() || '';
+  const category = lostFoundCategoryFilter?.value || '';
+  return source.filter((report) => {
+    const haystack = [report.itemName, report.colour, report.publicDescription, report.lastSeenLocation]
+      .filter(Boolean).join(' ').toLowerCase();
+    return (!selectedLostFoundType || report.reportType === selectedLostFoundType)
+      && (!category || report.category === category)
+      && (!query || haystack.includes(query));
+  });
+}
+
+function createLostFoundVisual(report) {
+  const [iconName, colour] = lostFoundPresentation(report.category);
+  const visual = document.createElement('div');
+  visual.className = `found-visual ${colour}`;
+  if (report.hasPhoto) {
+    const image = document.createElement('img');
+    image.src = report.photoUrl;
+    image.alt = '';
+    image.loading = 'lazy';
+    visual.append(image);
+  } else {
+    visual.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#${iconName}"/></svg>`;
+  }
+  return visual;
+}
+
+function renderLostFoundClaims() {
+  lostFoundCatalogue.replaceChildren();
+  document.querySelector('#lostFoundCountBadge').textContent = `${myLostFoundClaims.length} private claim${myLostFoundClaims.length === 1 ? '' : 's'}`;
+  myLostFoundClaims.forEach((claim) => {
+    const card = document.createElement('article');
+    card.className = 'lost-found-card claim-record';
+    const visual = document.createElement('span');
+    visual.className = 'found-visual green-photo';
+    visual.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#shield"/></svg>';
+    const details = document.createElement('div');
+    const badge = document.createElement('span');
+    badge.className = 'pill success';
+    badge.textContent = readableOpportunityValue(claim.claimStatus);
+    const title = document.createElement('h3');
+    title.textContent = claim.itemName;
+    const copy = document.createElement('p');
+    copy.textContent = `Private claim submitted ${new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' }).format(new Date(claim.createdAt))}.`;
+    const note = document.createElement('small');
+    note.textContent = 'Your evidence is not displayed publicly.';
+    details.append(badge, title, copy, note);
+    card.append(visual, details);
+    lostFoundCatalogue.append(card);
+  });
+  if (!myLostFoundClaims.length) {
+    lostFoundCatalogue.innerHTML = '<div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#shield"/></svg><h3>No ownership claims</h3><p>Claims you submit for found items will appear privately here.</p></div>';
+  }
+}
+
+function renderLostFoundReports() {
+  if (!lostFoundCatalogue) return;
+  if (lostFoundView === 'claims') {
+    renderLostFoundClaims();
+    return;
+  }
+  const reports = visibleLostFoundReports();
+  lostFoundCatalogue.replaceChildren();
+  const label = lostFoundView === 'mine' ? 'your report' : 'moderated report';
+  document.querySelector('#lostFoundCountBadge').textContent = `${reports.length} ${label}${reports.length === 1 ? '' : 's'}`;
+  reports.forEach((report) => {
+    const card = document.createElement('article');
+    card.className = 'lost-found-card';
+    card.dataset.reportId = report.id;
+    const visual = createLostFoundVisual(report);
+    const details = document.createElement('div');
+    const badges = document.createElement('span');
+    badges.className = 'opportunity-badges';
+    const type = document.createElement('span');
+    type.className = report.reportType === 'FOUND' ? 'pill success' : 'pill warning';
+    type.textContent = readableOpportunityValue(report.reportType);
+    const category = document.createElement('span');
+    category.className = 'pill info';
+    category.textContent = readableOpportunityValue(report.category);
+    badges.append(type, category);
+    if (report.mine && report.moderationStatus !== 'APPROVED') {
+      const moderation = document.createElement('span');
+      moderation.className = 'pill neutral';
+      moderation.textContent = `${readableOpportunityValue(report.moderationStatus)} moderation`;
+      badges.append(moderation);
+    }
+    const title = document.createElement('h3');
+    title.textContent = report.itemName;
+    const description = document.createElement('p');
+    description.textContent = report.publicDescription;
+    const meta = document.createElement('span');
+    meta.className = 'opportunity-meta';
+    meta.textContent = `${report.lastSeenLocation} · ${lostFoundDate(report.occurredOn)}`;
+    const custody = document.createElement('small');
+    custody.textContent = report.reportType === 'FOUND'
+      ? `Custody: ${readableOpportunityValue(report.custodyStatus)}`
+      : 'Location shared without publishing private ownership details';
+    details.append(badges, title, description, meta, custody);
+    const actions = document.createElement('span');
+    actions.className = 'opportunity-actions';
+    if (report.myClaimStatus) {
+      const claim = document.createElement('span');
+      claim.className = 'pill success';
+      claim.textContent = `Claim ${readableOpportunityValue(report.myClaimStatus)}`;
+      actions.append(claim);
+    }
+    const view = document.createElement('button');
+    view.type = 'button';
+    view.className = 'secondary-button';
+    view.textContent = 'View secure details';
+    view.addEventListener('click', () => openLostFoundDetails(report.id));
+    actions.append(view);
+    card.append(visual, details, actions);
+    lostFoundCatalogue.append(card);
+  });
+  if (!reports.length) {
+    lostFoundCatalogue.innerHTML = '<div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#search"/></svg><h3>No matching reports</h3><p>Try another search or filter. New student reports remain private until moderation.</p></div>';
+  }
+}
+
+async function loadLostFound() {
+  if (!lostFoundCatalogue) return;
+  try {
+    const [catalogueResponse, mineResponse, claimsResponse] = await Promise.all([
+      fetch('/api/lost-found', { headers: { Accept: 'application/json' } }),
+      fetch('/api/lost-found/mine', { headers: { Accept: 'application/json' } }),
+      fetch('/api/lost-found/claims', { headers: { Accept: 'application/json' } })
+    ]);
+    if ([catalogueResponse.status, mineResponse.status, claimsResponse.status].some((status) => status === 401 || status === 403)) {
+      lostFoundCatalogue.innerHTML = '<div class="empty-state compact"><h3>Sign in to use Lost and Found</h3><p>Reports and private claims are scoped to your university account.</p></div>';
+      return;
+    }
+    if (!catalogueResponse.ok || !mineResponse.ok || !claimsResponse.ok) throw new Error();
+    loadedLostFoundReports = await catalogueResponse.json();
+    myLostFoundReports = await mineResponse.json();
+    myLostFoundClaims = await claimsResponse.json();
+    renderLostFoundReports();
+  } catch {
+    lostFoundCatalogue.innerHTML = '<div class="empty-state compact"><h3>Lost and Found is temporarily unavailable</h3><p>Please try again shortly.</p></div>';
+  }
+}
+
+function openLostFoundDetails(id) {
+  const report = lostFoundReportById(id);
+  if (!report) return;
+  activeLostFoundReportId = id;
+  document.querySelector('#lostFoundDetailType').textContent = `${readableOpportunityValue(report.reportType)} ITEM · ${report.moderationStatus === 'APPROVED' ? 'MODERATED' : 'AWAITING MODERATION'}`;
+  document.querySelector('#lostFoundDetailTitle').textContent = report.itemName;
+  document.querySelector('#lostFoundDetailDescription').textContent = report.publicDescription;
+  document.querySelector('#lostFoundDetailCategory').textContent = readableOpportunityValue(report.category);
+  document.querySelector('#lostFoundDetailStatus').textContent = readableOpportunityValue(report.reportStatus);
+  document.querySelector('#lostFoundDetailColour').textContent = report.colour || 'Not stated';
+  document.querySelector('#lostFoundDetailLocation').textContent = report.lastSeenLocation;
+  document.querySelector('#lostFoundDetailDate').textContent = lostFoundDate(report.occurredOn);
+  document.querySelector('#lostFoundDetailCustody').textContent = report.reportType === 'FOUND'
+    ? readableOpportunityValue(report.custodyStatus) : 'Not applicable';
+  const photo = document.querySelector('#lostFoundDetailPhoto');
+  photo.replaceChildren();
+  if (report.hasPhoto) {
+    const image = document.createElement('img');
+    image.src = report.photoUrl;
+    image.alt = `Photograph provided with the ${report.itemName} report`;
+    photo.append(image);
+  } else {
+    const [iconName] = lostFoundPresentation(report.category);
+    photo.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#${iconName}"/></svg>`;
+  }
+  const claimPanel = document.querySelector('#lostFoundClaimPanel');
+  const canClaim = report.reportType === 'FOUND' && !report.mine && report.reportStatus === 'OPEN';
+  claimPanel.hidden = !canClaim;
+  const claimForm = document.querySelector('#lostFoundClaimForm');
+  claimForm.hidden = Boolean(report.myClaimStatus);
+  const claimStatus = document.querySelector('#lostFoundClaimStatus');
+  claimStatus.textContent = report.myClaimStatus
+    ? `Your private claim is ${readableOpportunityValue(report.myClaimStatus).toLowerCase()}.`
+    : '';
+  document.querySelector('#lostFoundClaimEvidence').value = '';
+  const withdraw = document.querySelector('#lostFoundWithdrawButton');
+  withdraw.hidden = !report.mine || ['RETURNED', 'WITHDRAWN'].includes(report.reportStatus);
+  openModal(lostFoundDetailDialog);
+}
+
+function configureLostFoundCustody() {
+  const type = document.querySelector('#lostFoundReportType').value;
+  const label = document.querySelector('#lostFoundCustodyLabel');
+  const select = document.querySelector('#lostFoundCustody');
+  label.hidden = type === 'LOST';
+  select.disabled = type === 'LOST';
+  if (type === 'LOST') select.value = 'WITH_REPORTER';
+}
+
+document.querySelector('#lostFoundReportButton')?.addEventListener('click', () => {
+  const form = document.querySelector('#lostFoundReportForm');
+  form.reset();
+  document.querySelector('#lostFoundOccurredOn').value = new Date().toISOString().slice(0, 10);
+  document.querySelector('#lostFoundOccurredOn').max = new Date().toISOString().slice(0, 10);
+  configureLostFoundCustody();
+  openModal(lostFoundReportDialog);
+});
+document.querySelector('#lostFoundReportType')?.addEventListener('change', configureLostFoundCustody);
+document.querySelector('#lostFoundReportClose')?.addEventListener('click', () => closeModal(lostFoundReportDialog));
+document.querySelector('#lostFoundReportCancel')?.addEventListener('click', () => closeModal(lostFoundReportDialog));
+document.querySelector('#lostFoundDetailClose')?.addEventListener('click', () => closeModal(lostFoundDetailDialog));
+document.querySelector('#lostFoundDetailDone')?.addEventListener('click', () => closeModal(lostFoundDetailDialog));
+
+document.querySelectorAll('[data-lost-found-type]').forEach((button) => {
+  button.addEventListener('click', () => {
+    lostFoundView = 'catalogue';
+    selectedLostFoundType = button.dataset.lostFoundType;
+    renderLostFoundReports();
+  });
+});
+document.querySelector('[data-lost-found-view="mine"]')?.addEventListener('click', () => {
+  lostFoundView = 'mine';
+  selectedLostFoundType = '';
+  renderLostFoundReports();
+});
+document.querySelector('[data-lost-found-view="claims"]')?.addEventListener('click', () => {
+  lostFoundView = 'claims';
+  selectedLostFoundType = '';
+  renderLostFoundReports();
+});
+lostFoundSearch?.addEventListener('input', renderLostFoundReports);
+lostFoundCategoryFilter?.addEventListener('change', renderLostFoundReports);
+
+document.querySelector('#lostFoundReportForm')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = document.querySelector('#lostFoundReportSubmit');
+  const photo = document.querySelector('#lostFoundPhoto').files[0];
+  if (photo && (!['image/png', 'image/jpeg'].includes(photo.type) || photo.size > 5 * 1024 * 1024)) {
+    showToast('Choose a PNG or JPEG photograph no larger than 5 MB.');
+    return;
+  }
+  button.disabled = true;
+  button.textContent = 'Submitting…';
+  const type = document.querySelector('#lostFoundReportType').value;
+  try {
+    const report = await socialPost('/api/lost-found', {
+      reportType: type,
+      category: document.querySelector('#lostFoundReportCategory').value,
+      itemName: document.querySelector('#lostFoundItemName').value.trim(),
+      colour: document.querySelector('#lostFoundColour').value.trim(),
+      publicDescription: document.querySelector('#lostFoundPublicDescription').value.trim(),
+      privateIdentifyingDetails: document.querySelector('#lostFoundPrivateDetails').value.trim(),
+      lastSeenLocation: document.querySelector('#lostFoundLocation').value.trim(),
+      occurredOn: document.querySelector('#lostFoundOccurredOn').value,
+      custodyStatus: type === 'LOST' ? 'NOT_APPLICABLE' : document.querySelector('#lostFoundCustody').value
+    });
+    let photoWarning = '';
+    if (photo) {
+      try {
+        await securePhotoUpload(`/api/lost-found/${report.id}/photo`, photo);
+      } catch (error) {
+        photoWarning = ` The optional photograph was not added: ${error.message}`;
+      }
+    }
+    closeModal(lostFoundReportDialog);
+    lostFoundView = 'mine';
+    selectedLostFoundType = '';
+    lostFoundSearch.value = '';
+    lostFoundCategoryFilter.value = '';
+    document.querySelectorAll('#lostFoundFilters .filter-chip').forEach((item) => item.classList.remove('active'));
+    document.querySelector('[data-lost-found-view="mine"]').classList.add('active');
+    await loadLostFound();
+    showToast(`Your report was saved privately and submitted for moderation.${photoWarning}`);
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Submit for moderation';
+  }
+});
+
+document.querySelector('#lostFoundClaimForm')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!activeLostFoundReportId) return;
+  const button = event.currentTarget.querySelector('button');
+  button.disabled = true;
+  try {
+    await socialPost(`/api/lost-found/${activeLostFoundReportId}/claims`, {
+      privateOwnershipEvidence: document.querySelector('#lostFoundClaimEvidence').value.trim()
+    });
+    await loadLostFound();
+    openLostFoundDetails(activeLostFoundReportId);
+    showToast('Your ownership evidence was submitted privately.');
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    button.disabled = false;
+  }
+});
+
+document.querySelector('#lostFoundWithdrawButton')?.addEventListener('click', async (event) => {
+  if (!activeLostFoundReportId) return;
+  event.currentTarget.disabled = true;
+  try {
+    await socialPost(`/api/lost-found/${activeLostFoundReportId}/withdraw`);
+    closeModal(lostFoundDetailDialog);
+    await loadLostFound();
+    showToast('Your report was withdrawn and removed from the public catalogue.');
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    event.currentTarget.disabled = false;
+  }
+});
+
 bookButton?.addEventListener('click', () => {
   if (!selectedBookingSlotId) return;
   void bookServiceSlot(selectedBookingSlotId, bookingName.textContent, bookButton);
@@ -1013,7 +1353,8 @@ function populateProfile(profile) {
     loadCampusServices(),
     loadCampusBookings(),
     loadCampusSchedule(),
-    loadOpportunities()
+    loadOpportunities(),
+    loadLostFound()
   ]);
 }
 
@@ -1126,13 +1467,31 @@ async function socialPost(url, body) {
     ...(body === undefined ? {} : { body: JSON.stringify(body) })
   });
   if (!response.ok) {
-    if (response.status === 401) throw new Error('Sign in to use student connections and messages.');
-    if (response.status === 403) throw new Error('This action is not allowed until both students are connected.');
+    if (response.status === 400) throw new Error('Check the information supplied and try again.');
+    if (response.status === 401) throw new Error('Sign in to continue.');
+    if (response.status === 403) throw new Error('This action is not permitted for your account.');
     if (response.status === 409) throw new Error('This request has already been handled or is no longer available.');
     throw new Error('The request could not be completed. Please refresh and try again.');
   }
   const responseBody = await response.text();
   return responseBody ? JSON.parse(responseBody) : null;
+}
+
+async function securePhotoUpload(url, photo) {
+  const csrf = await csrfToken();
+  const form = new FormData();
+  form.append('photo', photo);
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { Accept: 'application/json', [csrf.headerName]: csrf.token },
+    body: form
+  });
+  if (!response.ok) {
+    if (response.status === 400) throw new Error('Use a PNG or JPEG photograph between 240 and 4096 pixels, no larger than 5 MB.');
+    if (response.status === 401 || response.status === 403) throw new Error('Sign in to upload an item photograph.');
+    throw new Error('The photograph could not be uploaded safely.');
+  }
+  return response.json();
 }
 
 function connectionButton(label, className, handler, disabled = false) {
