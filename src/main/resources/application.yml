@@ -36,7 +36,7 @@ management:
 info:
   app:
     name: UniCircle
-    stage: Sprint 9 moderated lost and found
+    stage: Sprint 10 staff review of lost and found
     data-status: Prototype fixtures only
 
 unicircle:

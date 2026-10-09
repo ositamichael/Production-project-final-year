@@ -65,7 +65,7 @@ class LostFoundService {
                   AND (? = '' OR LOWER(report.item_name) LIKE ? OR LOWER(report.colour) LIKE ?
                        OR LOWER(report.public_description) LIKE ? OR LOWER(report.last_seen_location) LIKE ?)
                 ORDER BY report.occurred_on DESC, report.created_at DESC
-                """, (row, number) -> response(row), current.accountId(), current.accountId(),
+                """, (row, number) -> response(row), current.accountId(), current.accountId(), current.accountId(),
                 current.universityId(), cleanType, cleanType, cleanCategory, cleanCategory,
                 cleanQuery, contains, contains, contains, contains);
     }
@@ -76,7 +76,7 @@ class LostFoundService {
         return jdbc.query(baseQuery() + """
                 WHERE report.university_id = ? AND report.reporter_id = ?
                 ORDER BY report.created_at DESC
-                """, (row, number) -> response(row), current.accountId(), current.accountId(),
+                """, (row, number) -> response(row), current.accountId(), current.accountId(), current.accountId(),
                 current.universityId(), current.accountId());
     }
 
@@ -131,6 +131,7 @@ class LostFoundService {
                     UPDATE lost_found_reports
                     SET photo_storage_key = ?, photo_media_type = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE id = ? AND university_id = ? AND reporter_id = ?
+                      AND report_status = 'OPEN' AND moderation_status = 'PENDING'
                     """, stored.key(), stored.mediaType(), reportId, current.universityId(), current.accountId());
             if (changed != 1) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "This report is unavailable.");
             try {
@@ -239,7 +240,8 @@ class LostFoundService {
     private String requireOwnedReport(SignedInAccount current, UUID reportId) {
         List<String> keys = jdbc.query("""
                 SELECT photo_storage_key FROM lost_found_reports
-                WHERE id = ? AND university_id = ? AND reporter_id = ? AND report_status = 'OPEN'
+                WHERE id = ? AND university_id = ? AND reporter_id = ?
+                  AND report_status = 'OPEN' AND moderation_status = 'PENDING'
                 """, (row, number) -> row.getString(1), reportId, current.universityId(), current.accountId());
         if (keys.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "This report is unavailable.");
         return keys.getFirst();
@@ -250,7 +252,7 @@ class LostFoundService {
         List<ReportResponse> reports = jdbc.query(baseQuery() + """
                 WHERE report.id = ? AND report.university_id = ?
                   AND (report.reporter_id = ? OR report.moderation_status = 'APPROVED')
-                """ + moderation, (row, number) -> response(row), current.accountId(), current.accountId(),
+                """ + moderation, (row, number) -> response(row), current.accountId(), current.accountId(), current.accountId(),
                 reportId, current.universityId(), current.accountId());
         if (reports.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "This report is unavailable.");
         return reports.getFirst();
@@ -263,7 +265,8 @@ class LostFoundService {
                        report.custody_status, report.report_status, report.moderation_status,
                        report.photo_storage_key, report.created_at,
                        CASE WHEN report.reporter_id = ? THEN TRUE ELSE FALSE END,
-                       claim.claim_status
+                       claim.claim_status,
+                       CASE WHEN report.reporter_id = ? THEN report.review_note ELSE NULL END
                 FROM lost_found_reports report
                 LEFT JOIN lost_found_claims claim
                   ON claim.report_id = report.id AND claim.claimant_id = ?
@@ -278,7 +281,7 @@ class LostFoundService {
                 row.getString(6), row.getString(7), row.getObject(8, LocalDate.class),
                 row.getString(9), row.getString(10), row.getString(11), hasPhoto,
                 hasPhoto ? "/api/lost-found/" + id + "/photo" : null,
-                row.getBoolean(14), row.getString(15),
+                row.getBoolean(14), row.getString(15), row.getString(16),
                 row.getObject(13, java.time.OffsetDateTime.class).toInstant());
     }
 

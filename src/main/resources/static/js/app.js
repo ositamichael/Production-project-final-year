@@ -44,7 +44,8 @@ const hashToPage = new Map([
   ['campus', 'campus'], ['today', 'today'], ['schedule', 'today'],
   ['circles-page', 'circles'], ['messages-page', 'messages'], ['events-page', 'events'],
   ['services-page', 'services'], ['opportunities-page', 'opportunities'], ['map-page', 'map'],
-  ['wellbeing-page', 'wellbeing'], ['lost-found-page', 'lost-found'], ['assistant-page', 'assistant']
+  ['wellbeing-page', 'wellbeing'], ['lost-found-page', 'lost-found'],
+  ['lost-found-review-page', 'lost-found-review'], ['assistant-page', 'assistant']
 ]);
 
 function showPage(pageName, { updateHistory = true, focus = true } = {}) {
@@ -68,6 +69,7 @@ function showPage(pageName, { updateHistory = true, focus = true } = {}) {
   window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   if (focus && nextPage !== document.querySelector('#campus')) nextPage.focus({ preventScroll: true });
   if (nextPage.dataset.page === 'messages') void loadMessagingWorkspace();
+  if (nextPage.dataset.page === 'lost-found-review' && staffReviewAccess) void loadStaffReview();
 }
 
 pageLinks.forEach((item) => {
@@ -246,6 +248,9 @@ const lostFoundSearch = document.querySelector('#lostFoundSearch');
 const lostFoundCategoryFilter = document.querySelector('#lostFoundCategoryFilter');
 const lostFoundReportDialog = document.querySelector('#lostFoundReportDialog');
 const lostFoundDetailDialog = document.querySelector('#lostFoundDetailDialog');
+const staffReviewNav = document.querySelector('#staffReviewNav');
+const staffReviewDialog = document.querySelector('#staffReviewDialog');
+const staffReviewList = document.querySelector('#staffReviewList');
 const baseScheduleMarkup = scheduleList?.innerHTML || '';
 let loadedCampusEvents = [];
 let loadedCampusServices = [];
@@ -262,6 +267,9 @@ let myLostFoundClaims = [];
 let selectedLostFoundType = '';
 let lostFoundView = 'catalogue';
 let activeLostFoundReportId = null;
+let staffReviewAccess = false;
+let staffPendingReports = [];
+let activeStaffReportId = null;
 
 function selectBookingTab(tab) {
   bookingTabs.forEach((other) => {
@@ -1071,11 +1079,20 @@ function openLostFoundDetails(id) {
   const report = lostFoundReportById(id);
   if (!report) return;
   activeLostFoundReportId = id;
-  document.querySelector('#lostFoundDetailType').textContent = `${readableOpportunityValue(report.reportType)} ITEM · ${report.moderationStatus === 'APPROVED' ? 'MODERATED' : 'AWAITING MODERATION'}`;
+  const moderationLabel = {
+    APPROVED: 'MODERATED',
+    PENDING: 'AWAITING MODERATION',
+    REJECTED: 'NOT PUBLISHED'
+  }[report.moderationStatus] || 'REVIEW STATUS UNAVAILABLE';
+  document.querySelector('#lostFoundDetailType').textContent = `${readableOpportunityValue(report.reportType)} ITEM · ${moderationLabel}`;
   document.querySelector('#lostFoundDetailTitle').textContent = report.itemName;
   document.querySelector('#lostFoundDetailDescription').textContent = report.publicDescription;
   document.querySelector('#lostFoundDetailCategory').textContent = readableOpportunityValue(report.category);
-  document.querySelector('#lostFoundDetailStatus').textContent = readableOpportunityValue(report.reportStatus);
+  const detailStatus = document.querySelector('#lostFoundDetailStatus');
+  detailStatus.textContent = report.moderationStatus === 'APPROVED'
+    ? readableOpportunityValue(report.reportStatus)
+    : readableOpportunityValue(report.moderationStatus);
+  detailStatus.className = report.moderationStatus === 'APPROVED' ? 'pill success' : 'pill warning';
   document.querySelector('#lostFoundDetailColour').textContent = report.colour || 'Not stated';
   document.querySelector('#lostFoundDetailLocation').textContent = report.lastSeenLocation;
   document.querySelector('#lostFoundDetailDate').textContent = lostFoundDate(report.occurredOn);
@@ -1102,6 +1119,9 @@ function openLostFoundDetails(id) {
     ? `Your private claim is ${readableOpportunityValue(report.myClaimStatus).toLowerCase()}.`
     : '';
   document.querySelector('#lostFoundClaimEvidence').value = '';
+  const reviewNote = document.querySelector('#lostFoundReviewNote');
+  reviewNote.hidden = !report.mine || !report.myReviewNote;
+  document.querySelector('#lostFoundReviewNoteText').textContent = report.myReviewNote || '';
   const withdraw = document.querySelector('#lostFoundWithdrawButton');
   withdraw.hidden = !report.mine || ['RETURNED', 'WITHDRAWN'].includes(report.reportStatus);
   openModal(lostFoundDetailDialog);
@@ -1232,6 +1252,107 @@ document.querySelector('#lostFoundWithdrawButton')?.addEventListener('click', as
   }
 });
 
+function renderStaffReview() {
+  if (!staffReviewList) return;
+  staffReviewList.replaceChildren();
+  document.querySelector('#staffReviewCount').textContent = `${staffPendingReports.length} awaiting review`;
+  if (!staffPendingReports.length) {
+    staffReviewList.innerHTML = '<div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#check"/></svg><h3>Review queue is clear</h3><p>New reports will appear here after a student submits them.</p></div>';
+    return;
+  }
+  staffPendingReports.forEach((report) => {
+    const card = document.createElement('article');
+    card.className = 'staff-review-card';
+    const icon = document.createElement('span');
+    icon.className = 'view-icon green';
+    icon.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#shield"/></svg>';
+    const summary = document.createElement('div');
+    summary.className = 'staff-review-summary';
+    const eyebrow = document.createElement('span');
+    eyebrow.className = 'eyebrow';
+    eyebrow.textContent = `${readableOpportunityValue(report.reportType)} · ${readableOpportunityValue(report.category)}`;
+    const title = document.createElement('h3');
+    title.textContent = report.itemName;
+    const details = document.createElement('p');
+    details.textContent = `${report.reporterName} · ${report.lastSeenLocation} · ${lostFoundDate(report.occurredOn)}`;
+    const copy = document.createElement('small');
+    copy.textContent = report.publicDescription;
+    summary.append(eyebrow, title, details, copy);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'secondary-button';
+    button.textContent = 'Review securely';
+    button.addEventListener('click', () => openStaffReview(report.id));
+    card.append(icon, summary, button);
+    staffReviewList.append(card);
+  });
+}
+
+async function loadStaffReview() {
+  if (!staffReviewAccess || !staffReviewList) return;
+  try {
+    const response = await fetch('/api/lost-found/staff/reports', { headers: { Accept: 'application/json' } });
+    if (!response.ok) throw new Error();
+    staffPendingReports = await response.json();
+    renderStaffReview();
+  } catch {
+    staffReviewList.innerHTML = '<div class="empty-state compact"><h3>Review queue unavailable</h3><p>Refresh or sign in with the fictional staff account.</p></div>';
+  }
+}
+
+function openStaffReview(id) {
+  const report = staffPendingReports.find((item) => item.id === id);
+  if (!report) return;
+  activeStaffReportId = id;
+  document.querySelector('#staffReviewForm').reset();
+  document.querySelector('#staffReviewDialogTitle').textContent = report.itemName;
+  document.querySelector('#staffReviewReporter').textContent = `Reported by ${report.reporterName} · ${readableOpportunityValue(report.reportType)} item`;
+  document.querySelector('#staffReviewPublic').textContent = report.publicDescription;
+  document.querySelector('#staffReviewPrivate').textContent = report.privateIdentifyingDetails;
+  document.querySelector('#staffReviewLocation').textContent = `${report.lastSeenLocation} · ${lostFoundDate(report.occurredOn)} · Custody: ${readableOpportunityValue(report.custodyStatus)}`;
+  const visual = document.querySelector('#staffReviewPhoto');
+  visual.replaceChildren();
+  if (report.hasPhoto) {
+    const image = document.createElement('img');
+    image.src = report.photoUrl;
+    image.alt = `Private item photograph for ${report.itemName}`;
+    visual.append(image);
+  } else {
+    visual.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#camera"/></svg>';
+  }
+  openModal(staffReviewDialog);
+}
+
+document.querySelector('#staffReviewClose')?.addEventListener('click', () => closeModal(staffReviewDialog));
+document.querySelector('#staffReviewCancel')?.addEventListener('click', () => closeModal(staffReviewDialog));
+document.querySelector('#staffReviewRefresh')?.addEventListener('click', () => {
+  if (staffReviewAccess) void loadStaffReview();
+});
+document.querySelector('#staffReviewForm')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!activeStaffReportId || !staffReviewAccess) return;
+  const button = document.querySelector('#staffReviewSubmit');
+  const choice = document.querySelector('input[name="staffDecision"]:checked');
+  if (!choice) return;
+  button.disabled = true;
+  button.textContent = 'Recording decision…';
+  try {
+    const decision = choice.value;
+    await socialPost(`/api/lost-found/staff/reports/${activeStaffReportId}/decision`, {
+      decision,
+      reason: document.querySelector('#staffReviewReason').value.trim()
+    });
+    closeModal(staffReviewDialog);
+    await Promise.all([loadStaffReview(), loadLostFound()]);
+    showToast(decision === 'APPROVED' ? 'Report approved and published.' : 'Report rejected; the reporter has a private review note.');
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Confirm decision';
+  }
+});
+
 bookButton?.addEventListener('click', () => {
   if (!selectedBookingSlotId) return;
   void bookServiceSlot(selectedBookingSlotId, bookingName.textContent, bookButton);
@@ -1303,6 +1424,8 @@ function setProfileStatus(message, state = '') {
 function showSignedOutActions() {
   profileSignIn.hidden = false;
   profileSignOut.hidden = true;
+  staffReviewAccess = false;
+  staffReviewNav.hidden = true;
 }
 
 function showSignedInActions() {
@@ -1334,6 +1457,8 @@ function updateVisibleIdentity(profile) {
 }
 
 function populateProfile(profile) {
+  staffReviewAccess = ['STAFF', 'ADMIN'].includes(profile.role);
+  staffReviewNav.hidden = !staffReviewAccess;
   document.querySelector('#profileDisplayName').value = profile.displayName || '';
   document.querySelector('#profileCourse').value = profile.courseName || '';
   document.querySelector('#profileYear').value = profile.yearOfStudy || '';
@@ -1354,7 +1479,8 @@ function populateProfile(profile) {
     loadCampusBookings(),
     loadCampusSchedule(),
     loadOpportunities(),
-    loadLostFound()
+    loadLostFound(),
+    ...(staffReviewAccess ? [loadStaffReview()] : [])
   ]);
 }
 
