@@ -6,8 +6,8 @@
   <meta name="description" content="UniCircle campus connection and services platform prototype">
   <title>UniCircle — My Campus</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/css/app.css?v=9">
-  <script src="/js/app.js?v=9" defer></script>
+  <link rel="stylesheet" href="/css/app.css?v=10">
+  <script src="/js/app.js?v=10" defer></script>
 </head>
 <body>
   <svg class="svg-sprite" aria-hidden="true">
@@ -53,7 +53,7 @@
   </svg>
   <a class="skip-link" href="#main-content">Skip to dashboard</a>
   <div class="prototype-banner" role="status">
-    Sprint 4 fictional sandbox — sign in with the demonstration account; no live university systems are connected.
+    Sprint 5 fictional sandbox — consent-based connections and stored private messaging; no live university systems are connected.
   </div>
   <div class="app-shell">
     <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
@@ -271,10 +271,10 @@
       </section>
 
       <section class="page-view page-surface" id="messages-page" data-page="messages" hidden tabindex="-1" aria-labelledby="messagesTitle">
-        <header class="view-hero"><div class="view-title"><span class="view-icon navy"><svg class="icon" aria-hidden="true"><use href="#message"/></svg></span><div><span class="eyebrow">CONVERSATIONS</span><h2 id="messagesTitle">Messages</h2><p>Private conversations with accepted UniCircle connections.</p></div></div><button class="primary-compact prototype-action" type="button" data-action="New messaging requires authenticated user accounts">New message</button></header>
+        <header class="view-hero"><div class="view-title"><span class="view-icon navy"><svg class="icon" aria-hidden="true"><use href="#message"/></svg></span><div><span class="eyebrow">CONVERSATIONS</span><h2 id="messagesTitle">Messages</h2><p>Private conversations with accepted UniCircle connections.</p></div></div><button class="primary-compact" id="studentDirectoryButton" type="button"><svg class="icon" aria-hidden="true"><use href="#users"/></svg> Find students</button></header>
         <div class="message-workspace">
-          <aside class="thread-panel"><label class="mini-search"><svg class="icon" aria-hidden="true"><use href="#search"/></svg><span class="sr-only">Search messages</span><input type="search" placeholder="Search messages"></label><ul class="thread-list"><li class="active"><span class="avatar pink-avatar">EW</span><div><strong>Emily Watson</strong><span>Are you still coming to the library later?</span></div><time>10:24</time></li><li><span class="avatar navy-avatar">CS</span><div><strong>CS Group Project</strong><span>James uploaded the slides.</span></div><time>09:18</time></li><li><span class="avatar green-avatar">DT</span><div><strong>Dr Taylor</strong><span>Your feedback is available.</span></div><time>Yesterday</time></li></ul></aside>
-          <article class="conversation-panel"><header><span class="avatar pink-avatar">EW</span><div><h3>Emily Watson</h3><span><i class="online-dot"></i> Accepted connection</span></div></header><div class="conversation-body"><time>Today</time><p class="bubble received">Hi Michael, are you still coming to the library later?</p><p class="bubble sent">Yes, I will be there after the seminar.</p><p class="bubble received">Perfect. I have reserved a table near the study rooms.</p></div><form class="composer"><label class="sr-only" for="messagePrototypeInput">Write a message</label><input id="messagePrototypeInput" type="text" placeholder="Messaging activates after secure authentication" disabled><button type="button" disabled aria-label="Send message"><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button></form><p class="panel-note">Conversation content is fictional prototype data. No message is sent or stored.</p></article>
+          <aside class="thread-panel"><label class="mini-search"><svg class="icon" aria-hidden="true"><use href="#search"/></svg><span class="sr-only">Search messages</span><input id="conversationSearch" type="search" placeholder="Search conversations"></label><div class="messages-state" id="conversationListStatus" role="status">Sign in to load your private conversations.</div><ul class="thread-list" id="conversationList"></ul></aside>
+          <article class="conversation-panel"><header><span class="avatar navy-avatar" id="conversationAvatar">UC</span><div><h3 id="conversationName">Choose a conversation</h3><span id="conversationTrust"><i class="online-dot"></i> Accepted connections only</span></div></header><div class="conversation-body" id="conversationMessages" aria-live="polite"><div class="conversation-empty"><svg class="icon" aria-hidden="true"><use href="#message"/></svg><strong>Your private messages appear here</strong><span>Select a conversation or find a student and connect.</span></div></div><form class="composer" id="messageComposer"><label class="sr-only" for="messageInput">Write a message</label><input id="messageInput" type="text" maxlength="4000" autocomplete="off" placeholder="Select a conversation to write a message" disabled><button id="messageSend" type="submit" disabled aria-label="Send message"><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button></form><p class="panel-note" id="messagePrivacyNote">Messages are stored in the local development database. All displayed people and conversations are fictional test records.</p></article>
         </div>
       </section>
 
@@ -330,7 +330,7 @@
         <div class="assistant-workspace"><aside class="content-panel"><h3>Popular topics</h3><div class="topic-list"><button type="button" data-page-question="Find a quiet study space">Quiet study spaces<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button><button type="button" data-page-question="How do I book a sports facility?">Sports facilities<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button><button type="button" data-page-question="Tell me about career opportunities">Career opportunities<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button></div><p class="panel-note">Responses are limited to the demonstrated questions and are not connected to live university systems.</p></aside><article class="assistant-chat"><div class="assistant-chat-heading"><span class="avatar assistant-avatar">U</span><div><h3>UniCircle campus guide</h3><span>Prototype information assistant</span></div></div><div class="assistant-chat-body" id="pageAssistantResponse" role="status" aria-live="polite"><p class="bubble received">Hello Michael. Choose a topic or ask one of the supported demonstration questions.</p></div><form class="composer" id="pageAssistantForm"><label class="sr-only" for="pageAssistantInput">Ask the campus guide</label><input id="pageAssistantInput" type="text" maxlength="250" placeholder="Ask about spaces, facilities or careers"><button type="submit" aria-label="Send question"><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button></form></article></div>
       </section>
 
-      <footer><span>UniCircle · Sprint 4 authenticated demonstration journey</span><a href="/actuator/health">System health</a></footer>
+      <footer><span>UniCircle · Sprint 5 consent-based social foundation</span><a href="/actuator/health">System health</a></footer>
     </main>
   </div>
 
@@ -378,16 +378,15 @@
     </form>
   </section>
 
-  <dialog id="messageDialog">
-    <form method="dialog">
-      <button class="dialog-close" aria-label="Close"><svg class="icon" aria-hidden="true"><use href="#close"/></svg></button>
-      <h2>New message</h2>
-      <p id="dialogRecipient"></p>
-      <label>Message<textarea rows="4" maxlength="1000" placeholder="Write a message…"></textarea></label>
-      <p class="privacy-note">Sending is disabled in Sprint 1 until authenticated messaging is implemented.</p>
-      <button class="primary-button" type="button" disabled>Send message</button>
-    </form>
-  </dialog>
+  <section id="studentDirectoryDialog" class="profile-dialog modal-surface directory-dialog" role="dialog" aria-modal="true" aria-labelledby="studentDirectoryTitle" hidden>
+    <div class="directory-surface">
+      <button class="dialog-close" type="button" id="studentDirectoryClose" aria-label="Close student directory"><svg class="icon" aria-hidden="true"><use href="#close"/></svg></button>
+      <div class="directory-heading"><span class="view-icon navy"><svg class="icon" aria-hidden="true"><use href="#users"/></svg></span><div><span class="eyebrow">VERIFIED CAMPUS DIRECTORY</span><h2 id="studentDirectoryTitle">Find students</h2><p>Discover new and existing students from your university, then request permission to connect.</p></div></div>
+      <label class="mini-search wide"><svg class="icon" aria-hidden="true"><use href="#search"/></svg><span class="sr-only">Search students by name or course</span><input id="studentDirectorySearch" type="search" maxlength="80" placeholder="Search by name or course"></label>
+      <div class="directory-notice"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><span>Only profiles permitted by the student’s privacy setting are shown. Messaging activates after a request is accepted.</span></div>
+      <div class="student-directory-list" id="studentDirectoryList" aria-live="polite"></div>
+    </div>
+  </section>
   <div class="search-empty" id="searchEmpty" hidden role="status">No dashboard items match that search.</div>
 </body>
 </html>

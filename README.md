@@ -6,13 +6,16 @@ This repository is being rebuilt as a Level 6 final-year software engineering pr
 
 ## Current status
 
-Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, and Sprint 4 adds a complete authenticated demonstration journey:
+Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, and Sprint 5 adds the first real social workflow:
 
 - Spring Boot 4.1.1 with Java 21 as the target language level.
 - A responsive desktop, tablet and mobile dashboard prototype.
 - Spring Security with production OIDC configuration for university single sign-on.
 - A multi-university relational schema using explicit `university_id` boundaries.
-- Foundations for consent-based connections and human-to-human conversations.
+- A searchable same-university student directory for new and existing permitted profiles.
+- Persisted connection requests with recipient-only accept and decline decisions.
+- Human-to-human private messaging that activates only after connection consent.
+- Persisted direct conversations and messages with server-enforced membership checks.
 - Flyway migrations, PostgreSQL production configuration and an H2 local profile.
 - Health monitoring, modular architecture checks, unit tests and CI.
 - Honest prototype labels wherever live university data is not yet connected.
@@ -24,7 +27,7 @@ Sprint 1 established the testable engineering foundation, Sprint 2 added the acc
 - A dedicated sign-in experience that explicitly prevents the use of Leeds Beckett or Microsoft credentials.
 - API requests return a clear unauthorised response rather than leaking protected profile information or returning a login page.
 
-The dashboard is a working interface prototype, not evidence of a live university integration. Real student identity, timetables, bookings, location and messaging require institutional approval, integration contracts, security review and deployment infrastructure.
+The dashboard now contains a working local social demonstration, but it is not evidence of a live university integration. Real student identity, timetables, bookings and location require institutional approval, integration contracts, security review and deployment infrastructure. The current messages are stored only in the local development database; WebSocket delivery, moderation controls and production notifications remain future work.
 
 ## Run in IntelliJ IDEA
 
@@ -68,6 +71,7 @@ UniCircle begins as a modular monolith. This keeps deployment manageable for a f
 - [`docs/sprints/02-identity-profile.md`](docs/sprints/02-identity-profile.md)
 - [`docs/sprints/03-university-context.md`](docs/sprints/03-university-context.md)
 - [`docs/sprints/04-demo-sign-in.md`](docs/sprints/04-demo-sign-in.md)
+- [`docs/sprints/05-connections-messaging.md`](docs/sprints/05-connections-messaging.md)
 
 ## Branching and assessment evidence
 

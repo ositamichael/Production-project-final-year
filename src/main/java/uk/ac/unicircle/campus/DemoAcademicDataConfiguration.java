@@ -1,6 +1,8 @@
 package uk.ac.unicircle.campus;
 
 import java.sql.Date;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -34,6 +36,9 @@ class DemoAcademicDataConfiguration {
                     "james.wilson@students.unicircle.test", "James Wilson");
             insertStudent(jdbc, "7ccb9282-ebcb-4ea0-94f1-3af1f84be104", "fictional-sophie",
                     "sophie.patel@students.unicircle.test", "Sophie Patel");
+            setFictionalJoinDate(jdbc, "7ccb9282-ebcb-4ea0-94f1-3af1f84be102", 180);
+            setFictionalJoinDate(jdbc, "7ccb9282-ebcb-4ea0-94f1-3af1f84be103", 2);
+            setFictionalJoinDate(jdbc, "7ccb9282-ebcb-4ea0-94f1-3af1f84be104", 90);
 
             insertEnrolment(jdbc, MICHAEL_ID, "5dda1c87-cc59-4ac3-9168-079b7806a101");
             insertEnrolment(jdbc, UUID.fromString("7ccb9282-ebcb-4ea0-94f1-3af1f84be102"), "5dda1c87-cc59-4ac3-9168-079b7806a102");
@@ -99,16 +104,28 @@ class DemoAcademicDataConfiguration {
         }
     }
 
+    private void setFictionalJoinDate(JdbcTemplate jdbc, String idValue, long daysAgo) {
+        jdbc.update("UPDATE user_accounts SET created_at = ? WHERE id = ?",
+                Timestamp.from(Instant.now().minusSeconds(daysAgo * 86_400)), UUID.fromString(idValue));
+    }
+
     private void insertConnection(JdbcTemplate jdbc, String idValue, UUID requester, UUID addressee, String status) {
         UUID id = UUID.fromString(idValue);
         if (count(jdbc, "connections", id) == 0) {
             jdbc.update("""
                     INSERT INTO connections
-                      (id, university_id, requester_id, addressee_id, status, created_at, responded_at)
-                    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP,
+                      (id, university_id, requester_id, addressee_id, status, pair_key, created_at, responded_at)
+                    VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP,
                             CASE WHEN ? = 'ACCEPTED' THEN CURRENT_TIMESTAMP ELSE NULL END)
-                    """, id, UNIVERSITY_ID, requester, addressee, status, status);
+                    """, id, UNIVERSITY_ID, requester, addressee, status,
+                    canonicalPair(requester, addressee), status);
         }
+    }
+
+    private String canonicalPair(UUID first, UUID second) {
+        String left = first.toString();
+        String right = second.toString();
+        return left.compareTo(right) < 0 ? left + ":" + right : right + ":" + left;
     }
 
     private int count(JdbcTemplate jdbc, String table, UUID id) {
