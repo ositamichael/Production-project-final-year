@@ -26,7 +26,7 @@
           <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg><span>Clearly separated from live university systems</span></li>
         </ul>
       </div>
-      <p class="story-footnote">Sprint 4 · Authenticated demonstration journey</p>
+      <p class="story-footnote">Sprint 6 · Multi-student realtime demonstration</p>
     </section>
 
     <section class="auth-form-panel" aria-labelledby="signInTitle">
@@ -42,10 +42,15 @@
 
         <form action="/login" method="post" id="demoLoginForm">
           <input type="hidden" id="csrfField">
-          <label for="username">Fictional university email</label>
+          <label for="username">Choose a fictional student</label>
           <div class="input-control">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
-            <input id="username" name="username" type="email" value="student@demo.unicircle.test" autocomplete="username" required readonly>
+            <select id="username" name="username" autocomplete="username" required>
+              <option value="student@demo.unicircle.test">Michael Carter — connected with Aisha</option>
+              <option value="aisha.khan@students.unicircle.test">Aisha Khan — connected with Michael</option>
+              <option value="james.wilson@students.unicircle.test">James Wilson — new student</option>
+              <option value="sophie.patel@students.unicircle.test">Sophie Patel — request sent to Michael</option>
+            </select>
           </div>
           <label for="password">Demonstration password</label>
           <div class="input-control">
@@ -59,7 +64,7 @@
         <button class="fill-account" id="fillDemoAccount" type="button">Fill the fictional password</button>
         <div class="demo-account">
           <span class="student-avatar" aria-hidden="true">MC</span>
-          <span><strong>Michael Carter</strong><small>Fictional BSc Computer Science · Year 3</small></span>
+          <span><strong>Four fictional student accounts</strong><small>Use separate browser sessions to test requests and live chat</small></span>
           <span class="demo-badge">DEMO</span>
         </div>
         <div class="separation-notice">

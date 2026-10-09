@@ -7,5 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 interface UserAccountRepository extends JpaRepository<UserAccount, UUID> {
     Optional<UserAccount> findByExternalSubject(String externalSubject);
+    Optional<UserAccount> findByEmailIgnoreCase(String email);
     Optional<UserAccount> findByUniversityOidcIssuerAndExternalSubject(String oidcIssuer, String externalSubject);
 }

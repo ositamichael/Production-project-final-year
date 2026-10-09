@@ -11,6 +11,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
 
 import uk.ac.unicircle.identity.CurrentIdentity;
@@ -19,6 +21,8 @@ import uk.ac.unicircle.social.SocialResponses.ConnectionResponse;
 import uk.ac.unicircle.social.SocialResponses.ConversationMessagesResponse;
 import uk.ac.unicircle.social.SocialResponses.ConversationResponse;
 import uk.ac.unicircle.social.SocialResponses.MessageResponse;
+import uk.ac.unicircle.social.SocialResponses.NotificationResponse;
+import uk.ac.unicircle.social.SocialResponses.SafetyActionResponse;
 import uk.ac.unicircle.social.SocialResponses.StudentDirectoryResponse;
 
 @Service
@@ -26,10 +30,12 @@ class SocialService {
 
     private final CurrentIdentity currentIdentity;
     private final JdbcTemplate jdbc;
+    private final SocialRealtimeGateway realtime;
 
-    SocialService(CurrentIdentity currentIdentity, JdbcTemplate jdbc) {
+    SocialService(CurrentIdentity currentIdentity, JdbcTemplate jdbc, SocialRealtimeGateway realtime) {
         this.currentIdentity = currentIdentity;
         this.jdbc = jdbc;
+        this.realtime = realtime;
     }
 
     @Transactional(readOnly = true)
@@ -76,9 +82,10 @@ class SocialService {
                   ON c.university_id = ua.university_id
                  AND ((c.requester_id = ? AND c.addressee_id = ua.id)
                    OR (c.requester_id = ua.id AND c.addressee_id = ?))
-                 AND c.status IN ('PENDING', 'ACCEPTED')
+                 AND c.status IN ('PENDING', 'ACCEPTED', 'BLOCKED')
                 WHERE ua.university_id = ? AND ua.id <> ?
                   AND ua.profile_visibility <> 'PRIVATE'
+                  AND (c.status IS NULL OR c.status <> 'BLOCKED' OR c.blocked_by_id = ?)
                   AND (? = '' OR LOWER(ua.display_name) LIKE ? OR LOWER(COALESCE(ua.course_name, '')) LIKE ?)
                 ORDER BY ua.created_at DESC, ua.display_name
                 """, (result, row) -> new StudentDirectoryResponse(
@@ -86,7 +93,7 @@ class SocialService {
                         result.getObject(4, Integer.class), result.getObject(5, OffsetDateTime.class),
                         result.getObject(6, UUID.class), result.getString(7), result.getString(8)),
                 current.accountId(), current.accountId(), current.accountId(), current.universityId(),
-                current.accountId(), cleanQuery, search, search);
+                current.accountId(), current.accountId(), cleanQuery, search, search);
     }
 
     @Transactional
@@ -117,6 +124,10 @@ class SocialService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "A connection decision already exists for these accounts.", error);
         }
+        createNotification(current.universityId(), targetAccountId, "CONNECTION_REQUEST",
+                "New connection request", displayName(current.accountId()) + " would like to connect.",
+                "CONNECTION", connectionId);
+        publishAfterCommit(targetAccountId, "NOTIFICATIONS_CHANGED", connectionId);
         return connection(connectionId, current);
     }
 
@@ -132,6 +143,12 @@ class SocialService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Only the recipient can accept an active connection request.");
         }
+        UUID requesterId = jdbc.queryForObject(
+                "SELECT requester_id FROM connections WHERE id = ?", UUID.class, connectionId);
+        createNotification(current.universityId(), requesterId, "CONNECTION_ACCEPTED",
+                "Connection accepted", displayName(current.accountId()) + " accepted your request.",
+                "CONNECTION", connectionId);
+        publishAfterCommit(requesterId, "CONNECTIONS_CHANGED", connectionId);
         return connection(connectionId, current);
     }
 
@@ -160,12 +177,23 @@ class SocialService {
                         ORDER BY m.sent_at DESC, m.id DESC LIMIT 1),
                        (SELECT m.sent_at FROM messages m
                         WHERE m.conversation_id = c.id AND m.deleted_at IS NULL
-                        ORDER BY m.sent_at DESC, m.id DESC LIMIT 1)
+                        ORDER BY m.sent_at DESC, m.id DESC LIMIT 1),
+                       (SELECT COUNT(*) FROM messages unread
+                        WHERE unread.conversation_id = c.id
+                          AND unread.sender_id <> ?
+                          AND unread.deleted_at IS NULL
+                          AND (mine.last_read_at IS NULL OR unread.sent_at > mine.last_read_at))
                 FROM conversations c
                 JOIN conversation_members mine ON mine.conversation_id = c.id AND mine.user_id = ?
                 JOIN conversation_members theirs ON theirs.conversation_id = c.id AND theirs.user_id <> ?
                 JOIN user_accounts other ON other.id = theirs.user_id AND other.university_id = c.university_id
                 WHERE c.university_id = ? AND c.conversation_type = 'DIRECT'
+                  AND EXISTS (
+                    SELECT 1 FROM connections accepted
+                    WHERE accepted.university_id = c.university_id
+                      AND accepted.pair_key = c.direct_pair_key
+                      AND accepted.status = 'ACCEPTED'
+                  )
                 ORDER BY COALESCE(
                     (SELECT MAX(m.sent_at) FROM messages m WHERE m.conversation_id = c.id), c.created_at
                 ) DESC
@@ -174,8 +202,9 @@ class SocialService {
                         result.getObject(2, UUID.class),
                         result.getString(3),
                         result.getString(4),
-                        result.getObject(5, OffsetDateTime.class)),
-                current.accountId(), current.accountId(), current.universityId());
+                        result.getObject(5, OffsetDateTime.class),
+                        result.getLong(6)),
+                current.accountId(), current.accountId(), current.accountId(), current.universityId());
     }
 
     @Transactional
@@ -270,7 +299,7 @@ class SocialService {
                 UPDATE conversation_members SET last_read_at = CURRENT_TIMESTAMP
                 WHERE conversation_id = ? AND user_id = ?
                 """, conversationId, current.accountId());
-        return jdbc.queryForObject("""
+        MessageResponse response = jdbc.queryForObject("""
                 SELECT m.id, m.sender_id, sender.display_name, m.body, m.sent_at
                 FROM messages m JOIN user_accounts sender ON sender.id = m.sender_id
                 WHERE m.id = ?
@@ -278,6 +307,104 @@ class SocialService {
                         result.getObject(1, UUID.class), result.getObject(2, UUID.class),
                         result.getString(3), result.getString(4),
                         result.getObject(5, OffsetDateTime.class), true), messageId);
+        UUID recipientId = otherConversationMember(conversationId, current.accountId());
+        createNotification(current.universityId(), recipientId, "MESSAGE",
+                "New message from " + displayName(current.accountId()), cleanBody,
+                "CONVERSATION", conversationId);
+        publishAfterCommit(recipientId, "MESSAGE_RECEIVED", conversationId);
+        publishAfterCommit(current.accountId(), "MESSAGE_SENT", conversationId);
+        return response;
+    }
+
+    @Transactional(readOnly = true)
+    List<NotificationResponse> notifications(Authentication authentication) {
+        SignedInAccount current = currentIdentity.require(authentication);
+        return jdbc.query("""
+                SELECT id, notification_type, title, body, resource_type, resource_id, created_at, read_at
+                FROM notifications
+                WHERE university_id = ? AND recipient_id = ?
+                ORDER BY created_at DESC, id DESC
+                LIMIT 40
+                """, (result, row) -> new NotificationResponse(
+                        result.getObject(1, UUID.class), result.getString(2), result.getString(3),
+                        result.getString(4), result.getString(5), result.getObject(6, UUID.class),
+                        result.getObject(7, OffsetDateTime.class), result.getObject(8) != null),
+                current.universityId(), current.accountId());
+    }
+
+    @Transactional
+    void markNotificationsRead(Authentication authentication) {
+        SignedInAccount current = currentIdentity.require(authentication);
+        jdbc.update("""
+                UPDATE notifications SET read_at = CURRENT_TIMESTAMP
+                WHERE university_id = ? AND recipient_id = ? AND read_at IS NULL
+                """, current.universityId(), current.accountId());
+        publishAfterCommit(current.accountId(), "NOTIFICATIONS_CHANGED", null);
+    }
+
+    @Transactional
+    SafetyActionResponse block(Authentication authentication, UUID targetAccountId) {
+        SignedInAccount current = currentIdentity.require(authentication);
+        requireUniversityAccount(current, targetAccountId);
+        if (current.accountId().equals(targetAccountId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot block your own account.");
+        }
+        String pairKey = pairKey(current.accountId(), targetAccountId);
+        int changed = jdbc.update("""
+                UPDATE connections
+                SET status = 'BLOCKED', blocked_by_id = ?, responded_at = CURRENT_TIMESTAMP
+                WHERE university_id = ? AND pair_key = ?
+                """, current.accountId(), current.universityId(), pairKey);
+        if (changed == 0) {
+            jdbc.update("""
+                    INSERT INTO connections
+                      (id, university_id, requester_id, addressee_id, status, pair_key, blocked_by_id,
+                       created_at, responded_at)
+                    VALUES (?, ?, ?, ?, 'BLOCKED', ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    """, UUID.randomUUID(), current.universityId(), current.accountId(), targetAccountId,
+                    pairKey, current.accountId());
+        }
+        createNotification(current.universityId(), current.accountId(), "SAFETY",
+                "Account blocked", "You will no longer receive connections or messages from "
+                        + displayName(targetAccountId) + ".", "ACCOUNT", targetAccountId);
+        publishAfterCommit(current.accountId(), "CONNECTIONS_CHANGED", targetAccountId);
+        publishAfterCommit(targetAccountId, "CONNECTIONS_CHANGED", current.accountId());
+        return new SafetyActionResponse(targetAccountId, displayName(targetAccountId), "BLOCKED", null);
+    }
+
+    @Transactional
+    SafetyActionResponse report(
+            Authentication authentication,
+            UUID targetAccountId,
+            String reason,
+            String details) {
+        SignedInAccount current = currentIdentity.require(authentication);
+        requireUniversityAccount(current, targetAccountId);
+        if (current.accountId().equals(targetAccountId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot report your own account.");
+        }
+        String cleanReason = reason == null ? "" : reason.trim().toUpperCase(Locale.ROOT);
+        if (!List.of("HARASSMENT", "SPAM", "IMPERSONATION", "UNSAFE_BEHAVIOUR", "OTHER")
+                .contains(cleanReason)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose a valid reporting reason.");
+        }
+        String cleanDetails = details == null ? "" : details.trim();
+        if (cleanDetails.length() > 1000) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Report details must be 1000 characters or fewer.");
+        }
+        UUID reportId = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO safety_reports
+                  (id, university_id, reporter_id, reported_account_id, reason, details)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """, reportId, current.universityId(), current.accountId(), targetAccountId,
+                cleanReason, cleanDetails.isBlank() ? null : cleanDetails);
+        createNotification(current.universityId(), current.accountId(), "SAFETY",
+                "Report received", "Your confidential report has been recorded for safeguarding review.",
+                "REPORT", reportId);
+        publishAfterCommit(current.accountId(), "NOTIFICATIONS_CHANGED", reportId);
+        return new SafetyActionResponse(targetAccountId, displayName(targetAccountId), "REPORTED", reportId);
     }
 
     private ConnectionResponse connection(UUID connectionId, SignedInAccount current) {
@@ -310,17 +437,29 @@ class SocialService {
                         ORDER BY m.sent_at DESC, m.id DESC LIMIT 1),
                        (SELECT m.sent_at FROM messages m
                         WHERE m.conversation_id = c.id AND m.deleted_at IS NULL
-                        ORDER BY m.sent_at DESC, m.id DESC LIMIT 1)
+                        ORDER BY m.sent_at DESC, m.id DESC LIMIT 1),
+                       (SELECT COUNT(*) FROM messages unread
+                        WHERE unread.conversation_id = c.id
+                          AND unread.sender_id <> ?
+                          AND unread.deleted_at IS NULL
+                          AND (mine.last_read_at IS NULL OR unread.sent_at > mine.last_read_at))
                 FROM conversations c
                 JOIN conversation_members mine ON mine.conversation_id = c.id AND mine.user_id = ?
                 JOIN conversation_members theirs ON theirs.conversation_id = c.id AND theirs.user_id <> ?
                 JOIN user_accounts other ON other.id = theirs.user_id AND other.university_id = c.university_id
                 WHERE c.id = ? AND c.university_id = ? AND c.conversation_type = 'DIRECT'
+                  AND EXISTS (
+                    SELECT 1 FROM connections accepted
+                    WHERE accepted.university_id = c.university_id
+                      AND accepted.pair_key = c.direct_pair_key
+                      AND accepted.status = 'ACCEPTED'
+                  )
                 """, (result, row) -> conversationResponse(
                         result.getObject(1, UUID.class), result.getObject(2, UUID.class),
                         result.getString(3), result.getString(4),
-                        result.getObject(5, OffsetDateTime.class)),
-                current.accountId(), current.accountId(), conversationId, current.universityId())
+                        result.getObject(5, OffsetDateTime.class), result.getLong(6)),
+                current.accountId(), current.accountId(), current.accountId(), conversationId,
+                current.universityId())
                 .stream().findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "The conversation is unavailable or you are not a member."));
@@ -337,19 +476,72 @@ class SocialService {
         }
     }
 
+    private void requireUniversityAccount(SignedInAccount current, UUID targetAccountId) {
+        Integer exists = jdbc.queryForObject("""
+                SELECT COUNT(*) FROM user_accounts WHERE id = ? AND university_id = ?
+                """, Integer.class, targetAccountId, current.universityId());
+        if (exists == null || exists == 0) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "That university account is unavailable.");
+        }
+    }
+
     private ConversationResponse conversationResponse(
             UUID conversationId,
             UUID participantAccountId,
             String participantDisplayName,
             String lastMessage,
-            OffsetDateTime lastMessageAt) {
+            OffsetDateTime lastMessageAt,
+            long unreadCount) {
         return new ConversationResponse(
                 conversationId,
                 participantAccountId,
                 participantDisplayName,
                 initials(participantDisplayName),
                 lastMessage == null ? "No messages yet" : lastMessage,
-                lastMessageAt);
+                lastMessageAt,
+                unreadCount);
+    }
+
+    private UUID otherConversationMember(UUID conversationId, UUID currentAccountId) {
+        return jdbc.query("""
+                SELECT user_id FROM conversation_members
+                WHERE conversation_id = ? AND user_id <> ?
+                """, (result, row) -> result.getObject(1, UUID.class), conversationId, currentAccountId)
+                .stream().findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "The conversation participant is unavailable."));
+    }
+
+    private String displayName(UUID accountId) {
+        return jdbc.queryForObject("SELECT display_name FROM user_accounts WHERE id = ?", String.class, accountId);
+    }
+
+    private void createNotification(
+            UUID universityId,
+            UUID recipientId,
+            String type,
+            String title,
+            String body,
+            String resourceType,
+            UUID resourceId) {
+        jdbc.update("""
+                INSERT INTO notifications
+                  (id, university_id, recipient_id, notification_type, title, body, resource_type, resource_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, UUID.randomUUID(), universityId, recipientId, type, title, body, resourceType, resourceId);
+    }
+
+    private void publishAfterCommit(UUID accountId, String type, UUID resourceId) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            realtime.publish(accountId, type, resourceId);
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                realtime.publish(accountId, type, resourceId);
+            }
+        });
     }
 
     private String initials(String displayName) {

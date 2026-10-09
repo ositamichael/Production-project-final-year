@@ -5,6 +5,9 @@ const notificationPanel = document.querySelector('#notificationPanel');
 const notificationClose = document.querySelector('#notificationClose');
 const markAllRead = document.querySelector('#markAllRead');
 const notificationBadge = document.querySelector('#notificationBadge');
+const notificationList = document.querySelector('#notificationList');
+const notificationSummary = document.querySelector('#notificationSummary');
+const messageUnreadBadge = document.querySelector('#messageUnreadBadge');
 const globalSearch = document.querySelector('#globalSearch');
 const searchEmpty = document.querySelector('#searchEmpty');
 
@@ -90,6 +93,7 @@ notificationButton?.addEventListener('click', () => {
   const willOpen = notificationPanel.hidden;
   notificationPanel.hidden = !willOpen;
   notificationButton.setAttribute('aria-expanded', String(willOpen));
+  if (willOpen) void loadNotifications();
 });
 
 document.addEventListener('pointerdown', (event) => {
@@ -105,13 +109,19 @@ notificationClose?.addEventListener('click', () => {
   notificationButton.focus();
 });
 
-markAllRead?.addEventListener('click', () => {
-  document.querySelectorAll('.unread-notification').forEach((item) => item.classList.remove('unread-notification'));
-  document.querySelectorAll('.notification-unread').forEach((dot) => dot.remove());
-  notificationBadge.hidden = true;
-  notificationButton.setAttribute('aria-label', 'Notifications, none unread');
-  document.querySelector('.notification-toolbar span').textContent = 'You are up to date';
+markAllRead?.addEventListener('click', async () => {
+  markAllRead.disabled = true;
+  try {
+    await socialPost('/api/social/notifications/read-all');
+    await loadNotifications();
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    markAllRead.disabled = false;
+  }
 });
+
+document.querySelector('#notificationMessagesLink')?.addEventListener('click', () => showPage('messages'));
 
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape' && !notificationPanel.hidden) {
@@ -387,6 +397,8 @@ function populateProfile(profile) {
   profileFields.disabled = false;
   showSignedInActions();
   updateVisibleIdentity(profile);
+  connectSocialRealtime();
+  void Promise.all([loadNotifications(), refreshConversationSummary()]);
 }
 
 function clearUniversityContext() {
@@ -482,7 +494,8 @@ async function loadProfile() {
 async function csrfToken() {
   const response = await fetch('/api/security/csrf', { headers: { Accept: 'application/json' } });
   if (!response.ok) throw new Error('The security token could not be prepared. Please try again.');
-  return response.json();
+  const responseBody = await response.text();
+  return responseBody ? JSON.parse(responseBody) : null;
 }
 
 async function socialPost(url, body) {
@@ -531,6 +544,10 @@ async function runConnectionAction(button, action, successMessage) {
 }
 
 function appendConnectionActions(container, person) {
+  if (person.connectionStatus === 'BLOCKED') {
+    container.append(connectionButton('Blocked', 'danger', null, true));
+    return;
+  }
   if (person.connectionState === 'CONNECTED' || person.connectionStatus === 'ACCEPTED') {
     container.append(connectionButton('Message', 'primary', () => startConversation(person.accountId)));
     return;
@@ -692,6 +709,9 @@ const studentDirectoryList = document.querySelector('#studentDirectoryList');
 const studentDirectorySearch = document.querySelector('#studentDirectorySearch');
 let loadedConversations = [];
 let activeConversationId = null;
+let activeConversationAccountId = null;
+let socialSocket = null;
+let realtimeReconnectTimer = null;
 let directoryTimer;
 
 function formatMessageTime(value) {
@@ -709,7 +729,110 @@ function recentlyJoined(value) {
   return !Number.isNaN(joined.getTime()) && Date.now() - joined.getTime() <= 30 * 24 * 60 * 60 * 1000;
 }
 
+function updateNotificationBadge(unread) {
+  notificationBadge.textContent = String(unread);
+  notificationBadge.hidden = unread === 0;
+  notificationButton.setAttribute('aria-label', unread
+    ? `Notifications, ${unread} unread`
+    : 'Notifications, none unread');
+  notificationSummary.textContent = unread ? `${unread} new update${unread === 1 ? '' : 's'}` : 'You are up to date';
+}
+
+function notificationVisual(type) {
+  if (type === 'MESSAGE') return ['message', 'message-type'];
+  if (type === 'SAFETY') return ['shield', 'opportunity-type'];
+  return ['users', 'booking-type'];
+}
+
+async function loadNotifications() {
+  if (!notificationList) return;
+  try {
+    const response = await fetch('/api/social/notifications', { headers: { Accept: 'application/json' } });
+    if (response.status === 401 || response.status === 403) {
+      notificationList.innerHTML = '<li class="notification-empty">Sign in to load your notifications.</li>';
+      notificationSummary.textContent = 'Sign in to view updates';
+      updateNotificationBadge(0);
+      return;
+    }
+    if (!response.ok) throw new Error();
+    const notifications = await response.json();
+    const unread = notifications.filter((item) => !item.read).length;
+    updateNotificationBadge(unread);
+    notificationList.replaceChildren();
+    notifications.forEach((notification) => {
+      const item = document.createElement('li');
+      if (!notification.read) item.className = 'unread-notification';
+      const [iconName, visualClass] = notificationVisual(notification.type);
+      const visual = document.createElement('span');
+      visual.className = `notification-type ${visualClass}`;
+      visual.setAttribute('aria-hidden', 'true');
+      visual.innerHTML = `<svg class="icon"><use href="#${iconName}"/></svg>`;
+      const copy = document.createElement('div');
+      const title = document.createElement('strong');
+      title.textContent = notification.title;
+      const body = document.createElement('p');
+      body.textContent = notification.body;
+      const time = document.createElement('time');
+      time.dateTime = notification.createdAt;
+      time.textContent = formatMessageTime(notification.createdAt);
+      copy.append(title, body, time);
+      item.append(visual, copy);
+      if (!notification.read) {
+        const dot = document.createElement('span');
+        dot.className = 'notification-unread';
+        dot.setAttribute('aria-label', 'Unread');
+        item.append(dot);
+      }
+      if (notification.resourceType === 'CONVERSATION' && notification.resourceId) {
+        item.classList.add('notification-actionable');
+        item.addEventListener('click', async () => {
+          showPage('messages');
+          await loadMessagingWorkspace(notification.resourceId);
+        });
+      } else if (notification.resourceType === 'CONNECTION') {
+        item.classList.add('notification-actionable');
+        item.addEventListener('click', () => {
+          openModal(studentDirectoryDialog);
+          void loadStudentDirectory();
+        });
+      }
+      notificationList.append(item);
+    });
+    if (!notifications.length) {
+      notificationList.innerHTML = '<li class="notification-empty">No notifications yet.</li>';
+    }
+  } catch {
+    notificationList.innerHTML = '<li class="notification-empty">Notifications are temporarily unavailable.</li>';
+  }
+}
+
+function connectSocialRealtime() {
+  if (socialSocket && [WebSocket.OPEN, WebSocket.CONNECTING].includes(socialSocket.readyState)) return;
+  clearTimeout(realtimeReconnectTimer);
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  socialSocket = new WebSocket(`${protocol}//${location.host}/ws/social`);
+  socialSocket.addEventListener('message', async (event) => {
+    let update;
+    try { update = JSON.parse(event.data); } catch { return; }
+    await loadNotifications();
+    if (['MESSAGE_RECEIVED', 'MESSAGE_SENT'].includes(update.type)) {
+      const messagesPageOpen = !document.querySelector('#messages-page').hidden;
+      if (messagesPageOpen) await loadMessagingWorkspace(activeConversationId || update.resourceId);
+      else await refreshConversationSummary();
+    }
+    if (update.type === 'CONNECTIONS_CHANGED') {
+      await Promise.all([loadUniversityContext(), loadStudentDirectory(), refreshConversationSummary()]);
+    }
+  });
+  socialSocket.addEventListener('close', () => {
+    socialSocket = null;
+    realtimeReconnectTimer = setTimeout(connectSocialRealtime, 3000);
+  });
+}
+
 function emptyConversation(message = 'Select a conversation or find a student and connect.') {
+  activeConversationAccountId = null;
+  document.querySelector('#conversationSafetyButton').hidden = true;
   conversationMessages.replaceChildren();
   const empty = document.createElement('div');
   empty.className = 'conversation-empty';
@@ -752,7 +875,17 @@ function renderConversationList() {
     const time = document.createElement('time');
     time.dateTime = conversation.lastMessageAt || '';
     time.textContent = formatMessageTime(conversation.lastMessageAt);
-    button.append(avatar, details, time);
+    const threadMeta = document.createElement('span');
+    threadMeta.className = 'thread-meta';
+    threadMeta.append(time);
+    if (conversation.unreadCount > 0) {
+      const unread = document.createElement('span');
+      unread.className = 'thread-unread';
+      unread.textContent = String(conversation.unreadCount);
+      unread.setAttribute('aria-label', `${conversation.unreadCount} unread messages`);
+      threadMeta.append(unread);
+    }
+    button.append(avatar, details, threadMeta);
     button.addEventListener('click', () => selectConversation(conversation.conversationId));
     item.append(button);
     conversationList.append(item);
@@ -760,6 +893,24 @@ function renderConversationList() {
   conversationListStatus.textContent = visible.length ? '' : query
     ? 'No conversations match your search.'
     : 'No conversations yet. Find a student and send a connection request.';
+}
+
+function updateMessageUnreadBadge() {
+  const unread = loadedConversations.reduce((total, conversation) => total + Number(conversation.unreadCount || 0), 0);
+  messageUnreadBadge.textContent = String(unread);
+  messageUnreadBadge.hidden = unread === 0;
+}
+
+async function refreshConversationSummary() {
+  try {
+    const response = await fetch('/api/social/conversations', { headers: { Accept: 'application/json' } });
+    if (!response.ok) return;
+    loadedConversations = await response.json();
+    updateMessageUnreadBadge();
+    renderConversationList();
+  } catch {
+    // A temporary realtime refresh failure does not interrupt the current screen.
+  }
 }
 
 async function loadMessagingWorkspace(preferredConversationId = null) {
@@ -776,6 +927,7 @@ async function loadMessagingWorkspace(preferredConversationId = null) {
     }
     if (!response.ok) throw new Error('Conversations are temporarily unavailable.');
     loadedConversations = await response.json();
+    updateMessageUnreadBadge();
     const preferred = preferredConversationId || activeConversationId;
     const selected = loadedConversations.find((item) => item.conversationId === preferred)
       || loadedConversations[0];
@@ -803,9 +955,11 @@ async function selectConversation(conversationId) {
     });
     if (!response.ok) throw new Error('This conversation could not be opened.');
     const result = await response.json();
+    activeConversationAccountId = result.conversation.participantAccountId;
     conversationName.textContent = result.conversation.participantDisplayName;
     conversationAvatar.textContent = result.conversation.participantInitials;
     conversationTrust.innerHTML = '<i class="online-dot"></i> Accepted connection · private conversation';
+    document.querySelector('#conversationSafetyButton').hidden = false;
     conversationMessages.replaceChildren();
     if (!result.messages.length) {
       emptyConversation('You are connected. Send the first message.');
@@ -824,6 +978,10 @@ async function selectConversation(conversationId) {
     messageInput.disabled = false;
     messageSend.disabled = false;
     messageInput.placeholder = `Message ${result.conversation.participantDisplayName}`;
+    const selected = loadedConversations.find((item) => item.conversationId === conversationId);
+    if (selected) selected.unreadCount = 0;
+    updateMessageUnreadBadge();
+    renderConversationList();
     conversationMessages.scrollTop = conversationMessages.scrollHeight;
   } catch (error) {
     emptyConversation(error.message);
@@ -912,6 +1070,63 @@ document.querySelector('#studentDirectoryClose')?.addEventListener('click', () =
 studentDirectorySearch?.addEventListener('input', () => {
   clearTimeout(directoryTimer);
   directoryTimer = setTimeout(loadStudentDirectory, 220);
+});
+
+const safetyDialog = document.querySelector('#safetyDialog');
+const safetyButton = document.querySelector('#conversationSafetyButton');
+const blockAccountButton = document.querySelector('#blockAccountButton');
+const reportAccountForm = document.querySelector('#reportAccountForm');
+
+safetyButton?.addEventListener('click', () => {
+  if (!activeConversationAccountId) return;
+  document.querySelector('#safetyPerson').textContent = `Control contact with ${conversationName.textContent} or confidentially report a concern.`;
+  blockAccountButton.dataset.confirming = 'false';
+  blockAccountButton.textContent = 'Block account';
+  reportAccountForm.reset();
+  openModal(safetyDialog);
+});
+
+document.querySelector('#safetyClose')?.addEventListener('click', () => closeModal(safetyDialog));
+
+blockAccountButton?.addEventListener('click', async () => {
+  if (!activeConversationAccountId) return;
+  if (blockAccountButton.dataset.confirming !== 'true') {
+    blockAccountButton.dataset.confirming = 'true';
+    blockAccountButton.textContent = `Confirm block ${conversationName.textContent}`;
+    return;
+  }
+  blockAccountButton.disabled = true;
+  try {
+    const result = await socialPost(`/api/social/safety/block/${activeConversationAccountId}`);
+    closeModal(safetyDialog);
+    showToast(`${result.displayName} has been blocked. You will no longer receive messages from this account.`);
+    activeConversationId = null;
+    await Promise.all([loadMessagingWorkspace(), loadUniversityContext(), loadNotifications()]);
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    blockAccountButton.disabled = false;
+  }
+});
+
+reportAccountForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!activeConversationAccountId || !reportAccountForm.reportValidity()) return;
+  const submit = reportAccountForm.querySelector('button[type="submit"]');
+  submit.disabled = true;
+  try {
+    await socialPost(`/api/social/safety/report/${activeConversationAccountId}`, {
+      reason: document.querySelector('#reportReason').value,
+      details: document.querySelector('#reportDetails').value.trim()
+    });
+    closeModal(safetyDialog);
+    showToast('Your confidential report has been recorded for safeguarding review.');
+    await loadNotifications();
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    submit.disabled = false;
+  }
 });
 
 document.querySelectorAll('.message-button').forEach((button) => {

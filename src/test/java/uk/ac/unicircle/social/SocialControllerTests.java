@@ -44,6 +44,8 @@ class SocialControllerTests {
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/social/conversations"))
                 .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/social/notifications"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -156,5 +158,68 @@ class SocialControllerTests {
         mockMvc.perform(get("/api/social/conversations/{conversationId}/messages", privateConversation)
                         .with(user("student")))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void messagesCreateAccountSpecificNotificationsForTheRecipient() throws Exception {
+        mockMvc.perform(post("/api/social/conversations/{conversationId}/messages", AISHA_CONVERSATION_ID)
+                        .with(user("student"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"body\":\"This should arrive live.\"}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/social/notifications")
+                        .with(user("aisha.khan@students.unicircle.test")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].type").value("MESSAGE"))
+                .andExpect(jsonPath("$[0].title").value("New message from Michael Carter"))
+                .andExpect(jsonPath("$[0].body").value("This should arrive live."))
+                .andExpect(jsonPath("$[0].read").value(false));
+    }
+
+    @Test
+    void blockingImmediatelyRemovesMessagingPermission() throws Exception {
+        mockMvc.perform(post("/api/social/safety/block/{accountId}", AISHA_ID)
+                        .with(user("student"))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("BLOCKED"));
+
+        mockMvc.perform(post("/api/social/conversations/{conversationId}/messages", AISHA_CONVERSATION_ID)
+                        .with(user("student"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"body\":\"This must not be stored.\"}"))
+                .andExpect(status().isNotFound());
+
+        String status = jdbc.queryForObject(
+                "SELECT status FROM connections WHERE pair_key = ?", String.class,
+                SocialService.pairKey(MICHAEL_ID, AISHA_ID));
+        org.assertj.core.api.Assertions.assertThat(status).isEqualTo("BLOCKED");
+    }
+
+    @Test
+    void confidentialSafetyReportIsValidatedAndPersisted() throws Exception {
+        mockMvc.perform(post("/api/social/safety/report/{accountId}", AISHA_ID)
+                        .with(user("student"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"SPAM\",\"details\":\"Repeated unwanted messages\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("REPORTED"));
+
+        Integer reports = jdbc.queryForObject("""
+                SELECT COUNT(*) FROM safety_reports
+                WHERE reporter_id = ? AND reported_account_id = ? AND reason = 'SPAM'
+                """, Integer.class, MICHAEL_ID, AISHA_ID);
+        org.assertj.core.api.Assertions.assertThat(reports).isEqualTo(1);
+
+        mockMvc.perform(post("/api/social/safety/report/{accountId}", AISHA_ID)
+                        .with(user("student"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"NOT_A_REASON\",\"details\":\"\"}"))
+                .andExpect(status().isBadRequest());
     }
 }

@@ -6,8 +6,8 @@
   <meta name="description" content="UniCircle campus connection and services platform prototype">
   <title>UniCircle — My Campus</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/css/app.css?v=10">
-  <script src="/js/app.js?v=10" defer></script>
+  <link rel="stylesheet" href="/css/app.css?v=11">
+  <script src="/js/app.js?v=11" defer></script>
 </head>
 <body>
   <svg class="svg-sprite" aria-hidden="true">
@@ -50,10 +50,11 @@
     <symbol id="room" viewBox="0 0 24 24"><path d="M4 21V4h12v17M16 9h4v12M2 21h20"/><path d="M8 9h4M8 13h4"/></symbol>
     <symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
     <symbol id="camera" viewBox="0 0 24 24"><path d="M14.5 5 13 3h-2L9.5 5H6a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3V8a3 3 0 0 0-3-3Z"/><circle cx="12" cy="13" r="4"/></symbol>
+    <symbol id="shield" viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 2.8 8.1 7 10 4.2-1.9 7-5.4 7-10V6Z"/><path d="m9 12 2 2 4-5"/></symbol>
   </svg>
   <a class="skip-link" href="#main-content">Skip to dashboard</a>
   <div class="prototype-banner" role="status">
-    Sprint 5 fictional sandbox — consent-based connections and stored private messaging; no live university systems are connected.
+    Sprint 6 fictional sandbox — live multi-session messaging, notifications and safety controls; no live university systems are connected.
   </div>
   <div class="app-shell">
     <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
@@ -65,7 +66,7 @@
         <a class="nav-item active" href="#campus" data-page-link="campus" aria-current="page"><svg class="icon" aria-hidden="true"><use href="#home"/></svg> My Campus</a>
         <a class="nav-item" href="#today" data-page-link="today"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg> Today</a>
         <a class="nav-item" href="#circles-page" data-page-link="circles"><svg class="icon" aria-hidden="true"><use href="#users"/></svg> Campus Circles</a>
-        <a class="nav-item" href="#messages-page" data-page-link="messages"><svg class="icon" aria-hidden="true"><use href="#message"/></svg> Messages <span class="nav-count">3</span></a>
+        <a class="nav-item" href="#messages-page" data-page-link="messages"><svg class="icon" aria-hidden="true"><use href="#message"/></svg> Messages <span class="nav-count" id="messageUnreadBadge" hidden>0</span></a>
         <a class="nav-item" href="#events-page" data-page-link="events"><svg class="icon" aria-hidden="true"><use href="#events"/></svg> Events</a>
         <a class="nav-item" href="#services-page" data-page-link="services"><svg class="icon" aria-hidden="true"><use href="#building"/></svg> Book a Service</a>
         <a class="nav-item" href="#opportunities-page" data-page-link="opportunities"><svg class="icon" aria-hidden="true"><use href="#briefcase"/></svg> Opportunities</a>
@@ -97,9 +98,9 @@
           <span class="sr-only">Search dashboard</span>
           <input id="globalSearch" type="search" placeholder="Search people, events, services…" autocomplete="off">
         </label>
-        <button class="icon-button" id="notificationButton" type="button" aria-expanded="false" aria-controls="notificationPanel" aria-label="Notifications, 3 unread">
+        <button class="icon-button" id="notificationButton" type="button" aria-expanded="false" aria-controls="notificationPanel" aria-label="Notifications, none unread">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"/><path d="M10 21h4"/></svg>
-          <span id="notificationBadge">3</span>
+          <span id="notificationBadge" hidden>0</span>
         </button>
         <button class="profile-button" id="profileButton" type="button" data-open-profile aria-label="Open your profile"><span class="avatar avatar-michael">UC</span></button>
       </header>
@@ -110,28 +111,12 @@
           <button class="panel-close" id="notificationClose" type="button" aria-label="Close notifications"><svg class="icon" aria-hidden="true"><use href="#close"/></svg></button>
         </div>
         <div class="notification-toolbar">
-          <span>3 new updates</span>
+          <span id="notificationSummary">Sign in to view updates</span>
           <button id="markAllRead" type="button">Mark all as read</button>
         </div>
-        <ol class="notification-list">
-          <li class="unread-notification">
-            <span class="notification-type message-type" aria-hidden="true"><svg class="icon"><use href="#message"/></svg></span>
-            <div><strong>New message from Emily Watson</strong><p>Are you still coming to the library later?</p><time>2 minutes ago</time></div>
-            <span class="notification-unread" aria-label="Unread"></span>
-          </li>
-          <li class="unread-notification">
-            <span class="notification-type booking-type" aria-hidden="true"><svg class="icon"><use href="#calendar"/></svg></span>
-            <div><strong>Group project meeting</strong><p>Library Study Room 3 starts at 11:00.</p><time>18 minutes ago</time></div>
-            <span class="notification-unread" aria-label="Unread"></span>
-          </li>
-          <li class="unread-notification">
-            <span class="notification-type opportunity-type" aria-hidden="true"><svg class="icon"><use href="#star"/></svg></span>
-            <div><strong>Careers fair added</strong><p>The Spring Careers Fair is now in your events.</p><time>1 hour ago</time></div>
-            <span class="notification-unread" aria-label="Unread"></span>
-          </li>
-        </ol>
-        <button class="notification-footer" type="button">View notification centre <svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button>
-        <p class="notification-disclaimer">Demonstration notifications for the Sprint 1 prototype.</p>
+        <ol class="notification-list" id="notificationList"><li class="notification-empty">Sign in to load your notifications.</li></ol>
+        <button class="notification-footer" id="notificationMessagesLink" type="button">Open messages <svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button>
+        <p class="notification-disclaimer">Account-specific updates stored in the local demonstration database.</p>
       </section>
 
       <section class="dashboard-grid page-surface" id="campus" data-page="campus" aria-label="UniCircle dashboard">
@@ -274,7 +259,7 @@
         <header class="view-hero"><div class="view-title"><span class="view-icon navy"><svg class="icon" aria-hidden="true"><use href="#message"/></svg></span><div><span class="eyebrow">CONVERSATIONS</span><h2 id="messagesTitle">Messages</h2><p>Private conversations with accepted UniCircle connections.</p></div></div><button class="primary-compact" id="studentDirectoryButton" type="button"><svg class="icon" aria-hidden="true"><use href="#users"/></svg> Find students</button></header>
         <div class="message-workspace">
           <aside class="thread-panel"><label class="mini-search"><svg class="icon" aria-hidden="true"><use href="#search"/></svg><span class="sr-only">Search messages</span><input id="conversationSearch" type="search" placeholder="Search conversations"></label><div class="messages-state" id="conversationListStatus" role="status">Sign in to load your private conversations.</div><ul class="thread-list" id="conversationList"></ul></aside>
-          <article class="conversation-panel"><header><span class="avatar navy-avatar" id="conversationAvatar">UC</span><div><h3 id="conversationName">Choose a conversation</h3><span id="conversationTrust"><i class="online-dot"></i> Accepted connections only</span></div></header><div class="conversation-body" id="conversationMessages" aria-live="polite"><div class="conversation-empty"><svg class="icon" aria-hidden="true"><use href="#message"/></svg><strong>Your private messages appear here</strong><span>Select a conversation or find a student and connect.</span></div></div><form class="composer" id="messageComposer"><label class="sr-only" for="messageInput">Write a message</label><input id="messageInput" type="text" maxlength="4000" autocomplete="off" placeholder="Select a conversation to write a message" disabled><button id="messageSend" type="submit" disabled aria-label="Send message"><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button></form><p class="panel-note" id="messagePrivacyNote">Messages are stored in the local development database. All displayed people and conversations are fictional test records.</p></article>
+          <article class="conversation-panel"><header><span class="avatar navy-avatar" id="conversationAvatar">UC</span><div><h3 id="conversationName">Choose a conversation</h3><span id="conversationTrust"><i class="online-dot"></i> Accepted connections only</span></div><button class="conversation-safety" id="conversationSafetyButton" type="button" hidden><svg class="icon" aria-hidden="true"><use href="#shield"/></svg> Safety</button></header><div class="conversation-body" id="conversationMessages" aria-live="polite"><div class="conversation-empty"><svg class="icon" aria-hidden="true"><use href="#message"/></svg><strong>Your private messages appear here</strong><span>Select a conversation or find a student and connect.</span></div></div><form class="composer" id="messageComposer"><label class="sr-only" for="messageInput">Write a message</label><input id="messageInput" type="text" maxlength="4000" autocomplete="off" placeholder="Select a conversation to write a message" disabled><button id="messageSend" type="submit" disabled aria-label="Send message"><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button></form><p class="panel-note" id="messagePrivacyNote">Messages are stored in the local development database and update across signed-in browser sessions. All displayed people and conversations are fictional test records.</p></article>
         </div>
       </section>
 
@@ -330,7 +315,7 @@
         <div class="assistant-workspace"><aside class="content-panel"><h3>Popular topics</h3><div class="topic-list"><button type="button" data-page-question="Find a quiet study space">Quiet study spaces<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button><button type="button" data-page-question="How do I book a sports facility?">Sports facilities<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button><button type="button" data-page-question="Tell me about career opportunities">Career opportunities<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button></div><p class="panel-note">Responses are limited to the demonstrated questions and are not connected to live university systems.</p></aside><article class="assistant-chat"><div class="assistant-chat-heading"><span class="avatar assistant-avatar">U</span><div><h3>UniCircle campus guide</h3><span>Prototype information assistant</span></div></div><div class="assistant-chat-body" id="pageAssistantResponse" role="status" aria-live="polite"><p class="bubble received">Hello Michael. Choose a topic or ask one of the supported demonstration questions.</p></div><form class="composer" id="pageAssistantForm"><label class="sr-only" for="pageAssistantInput">Ask the campus guide</label><input id="pageAssistantInput" type="text" maxlength="250" placeholder="Ask about spaces, facilities or careers"><button type="submit" aria-label="Send question"><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button></form></article></div>
       </section>
 
-      <footer><span>UniCircle · Sprint 5 consent-based social foundation</span><a href="/actuator/health">System health</a></footer>
+      <footer><span>UniCircle · Sprint 6 realtime communication and safety</span><a href="/actuator/health">System health</a></footer>
     </main>
   </div>
 
@@ -385,6 +370,17 @@
       <label class="mini-search wide"><svg class="icon" aria-hidden="true"><use href="#search"/></svg><span class="sr-only">Search students by name or course</span><input id="studentDirectorySearch" type="search" maxlength="80" placeholder="Search by name or course"></label>
       <div class="directory-notice"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><span>Only profiles permitted by the student’s privacy setting are shown. Messaging activates after a request is accepted.</span></div>
       <div class="student-directory-list" id="studentDirectoryList" aria-live="polite"></div>
+    </div>
+  </section>
+  <section id="safetyDialog" class="profile-dialog modal-surface safety-dialog" role="dialog" aria-modal="true" aria-labelledby="safetyTitle" hidden>
+    <div class="directory-surface">
+      <button class="dialog-close" type="button" id="safetyClose" aria-label="Close safety controls"><svg class="icon" aria-hidden="true"><use href="#close"/></svg></button>
+      <div class="directory-heading"><span class="view-icon coral"><svg class="icon" aria-hidden="true"><use href="#shield"/></svg></span><div><span class="eyebrow">YOUR SAFETY</span><h2 id="safetyTitle">Conversation controls</h2><p id="safetyPerson">Control contact or confidentially report a concern.</p></div></div>
+      <div class="safety-options">
+        <article><h3>Block this account</h3><p>Immediately removes the connection and prevents further private messages.</p><button class="danger-button" id="blockAccountButton" type="button">Block account</button></article>
+        <form id="reportAccountForm"><h3>Report a concern</h3><label for="reportReason">Reason</label><select id="reportReason" required><option value="">Choose a reason</option><option value="HARASSMENT">Harassment</option><option value="SPAM">Spam</option><option value="IMPERSONATION">Impersonation</option><option value="UNSAFE_BEHAVIOUR">Unsafe behaviour</option><option value="OTHER">Other</option></select><label for="reportDetails">Additional details <span>(optional)</span></label><textarea id="reportDetails" maxlength="1000" rows="4" placeholder="Give safeguarding staff useful context without adding unnecessary personal information."></textarea><button class="primary-button" type="submit">Submit confidential report</button></form>
+      </div>
+      <p class="privacy-note">Reports are stored for authorised safeguarding review. Blocking is private and the other student is not told who blocked them.</p>
     </div>
   </section>
   <div class="search-empty" id="searchEmpty" hidden role="status">No dashboard items match that search.</div>
