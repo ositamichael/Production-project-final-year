@@ -34,7 +34,8 @@ final class SocialResponses {
             String participantDisplayName,
             String participantInitials,
             String lastMessage,
-            OffsetDateTime lastMessageAt) {
+            OffsetDateTime lastMessageAt,
+            long unreadCount) {
     }
 
     record MessageResponse(
@@ -49,5 +50,23 @@ final class SocialResponses {
     record ConversationMessagesResponse(
             ConversationResponse conversation,
             List<MessageResponse> messages) {
+    }
+
+    record NotificationResponse(
+            UUID notificationId,
+            String type,
+            String title,
+            String body,
+            String resourceType,
+            UUID resourceId,
+            OffsetDateTime createdAt,
+            boolean read) {
+    }
+
+    record SafetyActionResponse(
+            UUID accountId,
+            String displayName,
+            String status,
+            UUID reportId) {
     }
 }

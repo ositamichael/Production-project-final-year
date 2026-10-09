@@ -45,6 +45,14 @@ class DemoSocialDataConfiguration {
                     "Yes, I will be there. I can bring the project notes too.", 2100);
             seedMessage(jdbc, "85e9d4a9-5368-4685-a0da-8e9c0cc6a103", AISHA_ID,
                     "Perfect. I have reserved a table near the study rooms.", 1500);
+            seedNotification(jdbc, "9ef264f2-117a-47ba-8937-9d21983fb101", MICHAEL_ID,
+                    "CONNECTION_REQUEST", "New connection request",
+                    "Sophie Patel would like to connect.", "CONNECTION",
+                    UUID.fromString("6fda523f-aa98-47df-a6f0-7d322aa8a102"), 1200);
+            seedNotification(jdbc, "9ef264f2-117a-47ba-8937-9d21983fb102", MICHAEL_ID,
+                    "MESSAGE", "New message from Aisha Khan",
+                    "Perfect. I have reserved a table near the study rooms.", "CONVERSATION",
+                    CONVERSATION_ID, 1500);
         };
     }
 
@@ -57,6 +65,30 @@ class DemoSocialDataConfiguration {
                       (id, university_id, conversation_id, sender_id, body, sent_at)
                     VALUES (?, ?, ?, ?, ?, ?)
                     """, id, UNIVERSITY_ID, CONVERSATION_ID, sender, body,
+                    Timestamp.from(Instant.now().minusSeconds(secondsAgo)));
+        }
+    }
+
+    private void seedNotification(
+            JdbcTemplate jdbc,
+            String idValue,
+            UUID recipient,
+            String type,
+            String title,
+            String body,
+            String resourceType,
+            UUID resourceId,
+            long secondsAgo) {
+        UUID id = UUID.fromString(idValue);
+        Integer notifications = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM notifications WHERE id = ?", Integer.class, id);
+        if (notifications != null && notifications == 0) {
+            jdbc.update("""
+                    INSERT INTO notifications
+                      (id, university_id, recipient_id, notification_type, title, body,
+                       resource_type, resource_id, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, id, UNIVERSITY_ID, recipient, type, title, body, resourceType, resourceId,
                     Timestamp.from(Instant.now().minusSeconds(secondsAgo)));
         }
     }

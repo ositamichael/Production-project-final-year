@@ -118,6 +118,24 @@ class FrontendStructureTests {
             .contains("id=\"conversationList\"")
             .contains("id=\"conversationMessages\"")
             .contains("id=\"messageComposer\"")
+            .contains("id=\"notificationList\"")
+            .contains("id=\"conversationSafetyButton\"")
+            .contains("id=\"safetyDialog\"")
+            .contains("id=\"blockAccountButton\"")
+            .contains("id=\"reportAccountForm\"")
             .contains("Messaging activates after a request is accepted");
+    }
+
+    @Test
+    void demonstrationSignInOffersSeparateFictionalStudentAccounts() throws IOException {
+        var resource = getClass().getResourceAsStream("/static/demo-login.html");
+        assertThat(resource).isNotNull();
+
+        var html = new String(resource.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(html)
+            .contains("Michael Carter — connected with Aisha")
+            .contains("aisha.khan@students.unicircle.test")
+            .contains("James Wilson — new student")
+            .contains("Use separate browser sessions to test requests and live chat");
     }
 }

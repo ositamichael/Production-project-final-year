@@ -55,6 +55,14 @@ public class SecurityConfiguration {
                 .password(passwordEncoder.encode(password))
                 .roles("STUDENT")
                 .build();
-        return new InMemoryUserDetailsManager(demoStudent);
+        var michael = User.withUsername("michael.carter@demo.university.example")
+                .password(passwordEncoder.encode(password)).roles("STUDENT").build();
+        var aisha = User.withUsername("aisha.khan@students.unicircle.test")
+                .password(passwordEncoder.encode(password)).roles("STUDENT").build();
+        var james = User.withUsername("james.wilson@students.unicircle.test")
+                .password(passwordEncoder.encode(password)).roles("STUDENT").build();
+        var sophie = User.withUsername("sophie.patel@students.unicircle.test")
+                .password(passwordEncoder.encode(password)).roles("STUDENT").build();
+        return new InMemoryUserDetailsManager(demoStudent, michael, aisha, james, sophie);
     }
 }

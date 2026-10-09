@@ -33,7 +33,8 @@ form label { display: block; margin: 13px 0 6px; color: #29415f; font-size: .72r
 .input-control { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 13px; border: 1px solid #cbd9e9; border-radius: 11px; background: #fff; transition: border-color .15s, box-shadow .15s; }
 .input-control:focus-within { border-color: #5c94ec; box-shadow: 0 0 0 4px rgba(33,104,237,.09); }
 .input-control svg { flex: 0 0 auto; width: 20px; height: 20px; fill: none; stroke: #6c809c; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-.input-control input { min-width: 0; flex: 1; height: 46px; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: .82rem; }
+.input-control input, .input-control select { min-width: 0; flex: 1; height: 46px; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: .82rem; }
+.input-control select { cursor: pointer; }
 .input-control input[readonly] { color: #50657f; }
 .reveal-password { border: 0; background: transparent; color: var(--blue); cursor: pointer; font-size: .67rem; font-weight: 800; }
 .sign-in-button { width: 100%; min-height: 50px; margin-top: 20px; border: 0; border-radius: 11px; background: linear-gradient(100deg, #123d7b, #2168ed); color: #fff; cursor: pointer; box-shadow: 0 12px 25px rgba(33,104,237,.2); font-weight: 800; }

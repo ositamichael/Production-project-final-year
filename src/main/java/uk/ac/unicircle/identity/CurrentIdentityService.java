@@ -36,7 +36,9 @@ class CurrentIdentityService implements CurrentIdentity {
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "The authenticated university account has not been provisioned."));
         } else if (!environment.acceptsProfiles(Profiles.of("prod"))) {
-            account = accounts.findByExternalSubject(ProfileService.DEMO_SUBJECT)
+            String authenticatedName = authentication == null ? "" : authentication.getName();
+            account = accounts.findByEmailIgnoreCase(authenticatedName)
+                    .or(() -> accounts.findByExternalSubject(ProfileService.DEMO_SUBJECT))
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "The local demonstration profile is unavailable."));
         } else {

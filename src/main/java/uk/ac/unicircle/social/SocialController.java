@@ -20,6 +20,8 @@ import uk.ac.unicircle.social.SocialResponses.ConnectionResponse;
 import uk.ac.unicircle.social.SocialResponses.ConversationMessagesResponse;
 import uk.ac.unicircle.social.SocialResponses.ConversationResponse;
 import uk.ac.unicircle.social.SocialResponses.MessageResponse;
+import uk.ac.unicircle.social.SocialResponses.NotificationResponse;
+import uk.ac.unicircle.social.SocialResponses.SafetyActionResponse;
 import uk.ac.unicircle.social.SocialResponses.StudentDirectoryResponse;
 
 @RestController
@@ -82,6 +84,34 @@ class SocialController {
         return social.send(authentication, conversationId, request.body());
     }
 
+    @GetMapping("/notifications")
+    List<NotificationResponse> notifications(Authentication authentication) {
+        return social.notifications(authentication);
+    }
+
+    @PostMapping("/notifications/read-all")
+    void markNotificationsRead(Authentication authentication) {
+        social.markNotificationsRead(authentication);
+    }
+
+    @PostMapping("/safety/block/{accountId}")
+    SafetyActionResponse block(Authentication authentication, @PathVariable UUID accountId) {
+        return social.block(authentication, accountId);
+    }
+
+    @PostMapping("/safety/report/{accountId}")
+    SafetyActionResponse report(
+            Authentication authentication,
+            @PathVariable UUID accountId,
+            @Valid @RequestBody ReportAccountRequest request) {
+        return social.report(authentication, accountId, request.reason(), request.details());
+    }
+
     record SendMessageRequest(@NotBlank @Size(max = 4000) String body) {
+    }
+
+    record ReportAccountRequest(
+            @NotBlank @Size(max = 40) String reason,
+            @Size(max = 1000) String details) {
     }
 }

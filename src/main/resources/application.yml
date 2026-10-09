@@ -36,7 +36,7 @@ management:
 info:
   app:
     name: UniCircle
-    stage: Sprint 5 consent-based connections and messaging
+    stage: Sprint 6 realtime communication, notifications and safety
     data-status: Prototype fixtures only
 
 unicircle:

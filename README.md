@@ -6,7 +6,7 @@ This repository is being rebuilt as a Level 6 final-year software engineering pr
 
 ## Current status
 
-Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, and Sprint 5 adds the first real social workflow:
+Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, and Sprint 6 adds live multi-session communication and safety controls:
 
 - Spring Boot 4.1.1 with Java 21 as the target language level.
 - A responsive desktop, tablet and mobile dashboard prototype.
@@ -16,6 +16,11 @@ Sprint 1 established the testable engineering foundation, Sprint 2 added the acc
 - Persisted connection requests with recipient-only accept and decline decisions.
 - Human-to-human private messaging that activates only after connection consent.
 - Persisted direct conversations and messages with server-enforced membership checks.
+- Authenticated WebSocket events that refresh messages and notifications across signed-in browser sessions.
+- Account-specific, database-backed notifications and unread counts.
+- Immediate account blocking that removes private messaging permission.
+- Confidential safeguarding reports with validated reasons and an auditable review state.
+- Four separate fictional student sign-ins for demonstrating requests and chat between people.
 - Flyway migrations, PostgreSQL production configuration and an H2 local profile.
 - Health monitoring, modular architecture checks, unit tests and CI.
 - Honest prototype labels wherever live university data is not yet connected.
@@ -27,7 +32,7 @@ Sprint 1 established the testable engineering foundation, Sprint 2 added the acc
 - A dedicated sign-in experience that explicitly prevents the use of Leeds Beckett or Microsoft credentials.
 - API requests return a clear unauthorised response rather than leaking protected profile information or returning a login page.
 
-The dashboard now contains a working local social demonstration, but it is not evidence of a live university integration. Real student identity, timetables, bookings and location require institutional approval, integration contracts, security review and deployment infrastructure. The current messages are stored only in the local development database; WebSocket delivery, moderation controls and production notifications remain future work.
+The dashboard now contains a working local social demonstration, but it is not evidence of a live university integration. Real student identity, timetables, bookings and location require institutional approval, integration contracts, security review and deployment infrastructure. Messages, notifications and reports are stored only in the local development database. Production push notifications, staffed safeguarding operations and retention policies remain future work.
 
 ## Run in IntelliJ IDEA
 
@@ -39,6 +44,8 @@ The dashboard now contains a working local social demonstration, but it is not e
 6. Open the profile and choose **Sign in to fictional sandbox**. The local-only test account is:
    - Email: `student@demo.unicircle.test`
    - Password: `CampusDemo!2026`
+
+The sign-in page also offers fictional Aisha, James and Sophie accounts using the same development-only password. Use separate browser profiles or a private window to demonstrate connection decisions and live messaging between two people.
 
 These credentials are deliberately fictional and exist only in the non-production profile. They can be overridden with `UNICIRCLE_DEMO_USERNAME` and `UNICIRCLE_DEMO_PASSWORD`. Never use a real university password or Authenticator code in this form.
 
@@ -72,6 +79,7 @@ UniCircle begins as a modular monolith. This keeps deployment manageable for a f
 - [`docs/sprints/03-university-context.md`](docs/sprints/03-university-context.md)
 - [`docs/sprints/04-demo-sign-in.md`](docs/sprints/04-demo-sign-in.md)
 - [`docs/sprints/05-connections-messaging.md`](docs/sprints/05-connections-messaging.md)
+- [`docs/sprints/06-realtime-safety.md`](docs/sprints/06-realtime-safety.md)
 
 ## Branching and assessment evidence
 
