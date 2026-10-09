@@ -158,4 +158,20 @@ class FrontendStructureTests {
             .contains("Account-specific registrations")
             .contains("Transactional sandbox booking");
     }
+
+    @Test
+    void verifiedOpportunitiesHaveSearchDetailsAndPrivateTracking() throws IOException {
+        var resource = getClass().getResourceAsStream("/static/index.html");
+        assertThat(resource).isNotNull();
+
+        var html = new String(resource.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(html)
+            .contains("id=\"opportunityCatalogue\"")
+            .contains("id=\"opportunitySearch\"")
+            .contains("id=\"opportunityDialog\"")
+            .contains("id=\"opportunityTrackingStatus\"")
+            .contains("id=\"dashboardOpportunityList\"")
+            .contains("Verified publisher")
+            .contains("it does not submit an application to an employer");
+    }
 }

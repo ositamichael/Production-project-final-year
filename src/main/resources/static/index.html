@@ -6,8 +6,8 @@
   <meta name="description" content="UniCircle campus connection and services platform prototype">
   <title>UniCircle — My Campus</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/css/app.css?v=12">
-  <script src="/js/app.js?v=12" defer></script>
+  <link rel="stylesheet" href="/css/app.css?v=13">
+  <script src="/js/app.js?v=13" defer></script>
 </head>
 <body>
   <svg class="svg-sprite" aria-hidden="true">
@@ -54,7 +54,7 @@
   </svg>
   <a class="skip-link" href="#main-content">Skip to dashboard</a>
   <div class="prototype-banner" role="status">
-    Sprint 7 fictional sandbox — account-specific events, bookings and schedules; no live university systems are connected.
+    Sprint 8 fictional sandbox — moderated opportunities and personal application tracking; no live university systems are connected.
   </div>
   <div class="app-shell">
     <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
@@ -213,7 +213,7 @@
 
         <article class="card opportunity-card searchable" id="opportunities" data-search="opportunities student ambassador internship library assistant">
           <div class="card-heading"><h2><span class="heading-icon green"><svg class="icon" aria-hidden="true"><use href="#briefcase"/></svg></span> Opportunities</h2><a href="#opportunities-page" data-open-page="opportunities">View all</a></div>
-          <div class="opportunity-grid"><button type="button"><strong>Student Ambassador</strong><small>Campus Experience Team</small><span>Part-time · On campus</span></button><button type="button"><strong>Software Engineering Internship</strong><small>Tech Solutions</small><span>Internship · Remote</span></button><button type="button"><strong>Library Assistant</strong><small>Learning Resources</small><span>Part-time · On campus</span></button></div>
+          <div class="opportunity-grid" id="dashboardOpportunityList"><span class="loading-copy">Sign in to load verified opportunities.</span></div>
         </article>
       </section>
 
@@ -280,10 +280,10 @@
       </section>
 
       <section class="page-view page-surface" id="opportunities-page" data-page="opportunities" hidden tabindex="-1" aria-labelledby="opportunitiesTitle">
-        <header class="view-hero"><div class="view-title"><span class="view-icon orange"><svg class="icon" aria-hidden="true"><use href="#briefcase"/></svg></span><div><span class="eyebrow">GROWTH</span><h2 id="opportunitiesTitle">Opportunities</h2><p>Explore verified work, placement, volunteering and development opportunities.</p></div></div><span class="data-badge">Prototype listings</span></header>
-        <div class="section-toolbar"><label class="mini-search"><svg class="icon" aria-hidden="true"><use href="#search"/></svg><span class="sr-only">Search opportunities</span><input class="page-search" data-search-items="#opportunities-page .opportunity-list-large article" type="search" placeholder="Search opportunities"></label><div class="filter-row" data-filter-target="#opportunities-page .opportunity-list-large article"><button class="filter-chip active" type="button" data-filter="all">Recommended</button><button class="filter-chip" type="button" data-filter="jobs">Jobs</button><button class="filter-chip" type="button" data-filter="placements">Placements</button><button class="filter-chip" type="button" data-filter="volunteering">Volunteering</button></div></div>
-        <div class="opportunity-list-large"><article data-category="jobs"><span class="company-mark blue-photo"><svg class="icon" aria-hidden="true"><use href="#id-badge"/></svg></span><div><span class="pill info">Part-time</span><h3>Student Ambassador</h3><p>Campus Experience Team · On campus · 8 hours/week</p></div><button class="secondary-button save-toggle" type="button" aria-pressed="false">Save</button></article><article data-category="placements"><span class="company-mark navy-photo"><svg class="icon" aria-hidden="true"><use href="#code"/></svg></span><div><span class="pill success">Internship</span><h3>Software Engineering Internship</h3><p>Tech Solutions · Hybrid · 12 weeks</p></div><button class="secondary-button save-toggle" type="button" aria-pressed="false">Save</button></article><article data-category="jobs"><span class="company-mark orange-photo"><svg class="icon" aria-hidden="true"><use href="#library"/></svg></span><div><span class="pill warning">Part-time</span><h3>Library Assistant</h3><p>Learning Resources · On campus · Evenings</p></div><button class="secondary-button save-toggle" type="button" aria-pressed="false">Save</button></article><article data-category="volunteering"><span class="company-mark green-photo"><svg class="icon" aria-hidden="true"><use href="#volunteer"/></svg></span><div><span class="pill neutral">Volunteering</span><h3>Peer Welcome Volunteer</h3><p>Students' Union · Flexible · Training provided</p></div><button class="secondary-button save-toggle" type="button" aria-pressed="false">Save</button></article></div>
-        <p class="panel-note">All listings shown here are fictional fixtures. A deployment must verify source, closing date and eligibility before publication.</p>
+        <header class="view-hero"><div class="view-title"><span class="view-icon orange"><svg class="icon" aria-hidden="true"><use href="#briefcase"/></svg></span><div><span class="eyebrow">GROWTH</span><h2 id="opportunitiesTitle">Opportunities</h2><p>Explore verified work, placements and volunteering, then organise your next steps.</p></div></div><span class="data-badge" id="opportunityCountBadge">Loading verified listings…</span></header>
+        <div class="section-toolbar"><label class="mini-search"><svg class="icon" aria-hidden="true"><use href="#search"/></svg><span class="sr-only">Search opportunities</span><input id="opportunitySearch" type="search" maxlength="100" placeholder="Search title, publisher or skill"></label><div class="filter-row" id="opportunityFilters"><button class="filter-chip active" type="button" data-opportunity-type="">Recommended</button><button class="filter-chip" type="button" data-opportunity-type="JOB">Jobs</button><button class="filter-chip" type="button" data-opportunity-type="PLACEMENT">Placements</button><button class="filter-chip" type="button" data-opportunity-type="VOLUNTEERING">Volunteering</button><button class="filter-chip" type="button" data-opportunity-view="tracker">My tracker</button></div></div>
+        <div class="opportunity-list-large" id="opportunityCatalogue" aria-live="polite"><div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#briefcase"/></svg><h3>Loading opportunities</h3><p>Moderated listings from verified fictional publishers will appear here.</p></div></div>
+        <p class="panel-note">All listings and publishers are fictional development fixtures. UniCircle records planning progress only; it does not submit an application to an employer.</p>
       </section>
 
       <section class="page-view page-surface" id="map-page" data-page="map" hidden tabindex="-1" aria-labelledby="mapTitle">
@@ -309,7 +309,7 @@
         <div class="assistant-workspace"><aside class="content-panel"><h3>Popular topics</h3><div class="topic-list"><button type="button" data-page-question="Find a quiet study space">Quiet study spaces<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button><button type="button" data-page-question="How do I book a sports facility?">Sports facilities<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button><button type="button" data-page-question="Tell me about career opportunities">Career opportunities<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button></div><p class="panel-note">Responses are limited to the demonstrated questions and are not connected to live university systems.</p></aside><article class="assistant-chat"><div class="assistant-chat-heading"><span class="avatar assistant-avatar">U</span><div><h3>UniCircle campus guide</h3><span>Prototype information assistant</span></div></div><div class="assistant-chat-body" id="pageAssistantResponse" role="status" aria-live="polite"><p class="bubble received">Hello Michael. Choose a topic or ask one of the supported demonstration questions.</p></div><form class="composer" id="pageAssistantForm"><label class="sr-only" for="pageAssistantInput">Ask the campus guide</label><input id="pageAssistantInput" type="text" maxlength="250" placeholder="Ask about spaces, facilities or careers"><button type="submit" aria-label="Send question"><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button></form></article></div>
       </section>
 
-      <footer><span>UniCircle · Sprint 7 campus events and transactional bookings</span><a href="/actuator/health">System health</a></footer>
+      <footer><span>UniCircle · Sprint 8 verified opportunities and application tracking</span><a href="/actuator/health">System health</a></footer>
     </main>
   </div>
 
@@ -375,6 +375,16 @@
         <form id="reportAccountForm"><h3>Report a concern</h3><label for="reportReason">Reason</label><select id="reportReason" required><option value="">Choose a reason</option><option value="HARASSMENT">Harassment</option><option value="SPAM">Spam</option><option value="IMPERSONATION">Impersonation</option><option value="UNSAFE_BEHAVIOUR">Unsafe behaviour</option><option value="OTHER">Other</option></select><label for="reportDetails">Additional details <span>(optional)</span></label><textarea id="reportDetails" maxlength="1000" rows="4" placeholder="Give safeguarding staff useful context without adding unnecessary personal information."></textarea><button class="primary-button" type="submit">Submit confidential report</button></form>
       </div>
       <p class="privacy-note">Reports are stored for authorised safeguarding review. Blocking is private and the other student is not told who blocked them.</p>
+    </div>
+  </section>
+  <section id="opportunityDialog" class="profile-dialog modal-surface opportunity-dialog" role="dialog" aria-modal="true" aria-labelledby="opportunityDialogTitle" hidden>
+    <div class="directory-surface">
+      <button class="dialog-close" type="button" id="opportunityDialogClose" aria-label="Close opportunity details"><svg class="icon" aria-hidden="true"><use href="#close"/></svg></button>
+      <div class="directory-heading"><span class="view-icon orange"><svg class="icon" aria-hidden="true"><use href="#briefcase"/></svg></span><div><span class="eyebrow" id="opportunityDialogType">VERIFIED OPPORTUNITY</span><h2 id="opportunityDialogTitle">Opportunity details</h2><p id="opportunityDialogSummary"></p></div></div>
+      <div class="verified-publisher"><svg class="icon" aria-hidden="true"><use href="#check"/></svg><span><strong id="opportunityPublisher"></strong><small id="opportunityPublisherType"></small></span><span class="pill success">Verified publisher</span></div>
+      <div class="opportunity-detail-grid"><article><span class="eyebrow">ABOUT THE ROLE</span><p id="opportunityDescription"></p><h3>Skills</h3><div class="module-chip-list" id="opportunitySkills"></div></article><article><h3>Key details</h3><dl class="opportunity-facts"><div><dt>Location</dt><dd id="opportunityLocation"></dd></div><div><dt>Working pattern</dt><dd id="opportunityHours"></dd></div><div><dt>Compensation</dt><dd id="opportunityCompensation"></dd></div><div><dt>Closing date</dt><dd id="opportunityDeadline"></dd></div></dl><h3>Eligibility</h3><p id="opportunityEligibility"></p></article></div>
+      <div class="opportunity-tracker-controls"><label for="opportunityTrackingStatus">Your application stage<select id="opportunityTrackingStatus"><option value="PLANNING">Planning</option><option value="APPLIED">Applied</option><option value="INTERVIEW">Interview</option><option value="OFFER">Offer</option><option value="CLOSED">Closed</option></select></label><button class="secondary-button" id="opportunitySaveButton" type="button">Save opportunity</button><button class="primary-button" id="opportunityTrackButton" type="button">Update tracker</button></div>
+      <p class="privacy-note">Tracking is private to this fictional account. Applying must take place through a separately verified university or employer route.</p>
     </div>
   </section>
   <div class="search-empty" id="searchEmpty" hidden role="status">No dashboard items match that search.</div>

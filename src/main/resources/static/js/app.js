@@ -237,11 +237,20 @@ const scheduleList = document.querySelector('#schedule-list');
 const todayCommitmentList = document.querySelector('#todayCommitmentList');
 const todayPlannedCount = document.querySelector('#todayPlannedCount');
 const todayCampusCommitmentCount = document.querySelector('#todayCampusCommitmentCount');
+const opportunityCatalogue = document.querySelector('#opportunityCatalogue');
+const dashboardOpportunityList = document.querySelector('#dashboardOpportunityList');
+const opportunitySearch = document.querySelector('#opportunitySearch');
+const opportunityDialog = document.querySelector('#opportunityDialog');
 const baseScheduleMarkup = scheduleList?.innerHTML || '';
 let loadedCampusEvents = [];
 let loadedCampusServices = [];
 let selectedBookingSlotId = null;
 let selectedEventCategory = '';
+let loadedOpportunities = [];
+let trackedOpportunities = [];
+let selectedOpportunityType = '';
+let showingOpportunityTracker = false;
+let activeOpportunityId = null;
 
 function selectBookingTab(tab) {
   bookingTabs.forEach((other) => {
@@ -664,6 +673,225 @@ async function loadCampusSchedule() {
   }
 }
 
+function opportunityPresentation(type) {
+  if (type === 'PLACEMENT') return ['code', 'navy-photo', 'Placement'];
+  if (type === 'VOLUNTEERING') return ['volunteer', 'green-photo', 'Volunteering'];
+  return ['briefcase', 'blue-photo', 'Job'];
+}
+
+function readableOpportunityValue(value) {
+  return String(value || '').toLowerCase().replaceAll('_', ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function opportunityDeadline(value) {
+  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    .format(new Date(`${value}T12:00:00`));
+}
+
+function visibleOpportunities() {
+  const source = showingOpportunityTracker ? trackedOpportunities : loadedOpportunities;
+  const query = opportunitySearch?.value.trim().toLowerCase() || '';
+  return source.filter((opportunity) => {
+    const matchesType = !selectedOpportunityType || opportunity.type === selectedOpportunityType;
+    const haystack = [opportunity.title, opportunity.summary, opportunity.publisherName,
+      opportunity.location, ...opportunity.skills].join(' ').toLowerCase();
+    return matchesType && (!query || haystack.includes(query));
+  });
+}
+
+function renderDashboardOpportunities() {
+  if (!dashboardOpportunityList) return;
+  dashboardOpportunityList.replaceChildren();
+  loadedOpportunities.slice(0, 3).forEach((opportunity) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    const title = document.createElement('strong');
+    title.textContent = opportunity.title;
+    const publisher = document.createElement('small');
+    publisher.textContent = opportunity.publisherName;
+    const detail = document.createElement('span');
+    detail.textContent = `${readableOpportunityValue(opportunity.workMode)} · closes ${opportunityDeadline(opportunity.closesAt)}`;
+    button.append(title, publisher, detail);
+    button.addEventListener('click', () => openOpportunityDetails(opportunity.id));
+    dashboardOpportunityList.append(button);
+  });
+}
+
+function renderOpportunities() {
+  if (!opportunityCatalogue) return;
+  const opportunities = visibleOpportunities();
+  opportunityCatalogue.replaceChildren();
+  document.querySelector('#opportunityCountBadge').textContent = showingOpportunityTracker
+    ? `${opportunities.length} tracked opportunit${opportunities.length === 1 ? 'y' : 'ies'}`
+    : `${opportunities.length} verified opportunit${opportunities.length === 1 ? 'y' : 'ies'}`;
+  opportunities.forEach((opportunity) => {
+    const [iconName, colour, typeLabel] = opportunityPresentation(opportunity.type);
+    const card = document.createElement('article');
+    card.dataset.opportunityId = opportunity.id;
+    const mark = document.createElement('span');
+    mark.className = `company-mark ${colour}`;
+    mark.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#${iconName}"/></svg>`;
+    const details = document.createElement('div');
+    const badges = document.createElement('span');
+    badges.className = 'opportunity-badges';
+    const typeBadge = document.createElement('span');
+    typeBadge.className = 'pill info';
+    typeBadge.textContent = typeLabel;
+    const verified = document.createElement('span');
+    verified.className = 'verified-label';
+    verified.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#check"/></svg> Verified';
+    badges.append(typeBadge, verified);
+    const title = document.createElement('h3');
+    title.textContent = opportunity.title;
+    const summary = document.createElement('p');
+    summary.textContent = opportunity.summary;
+    const meta = document.createElement('span');
+    meta.className = 'opportunity-meta';
+    meta.textContent = `${opportunity.publisherName} · ${readableOpportunityValue(opportunity.workMode)} · ${opportunity.location}`;
+    const deadline = document.createElement('small');
+    deadline.textContent = `Closes ${opportunityDeadline(opportunity.closesAt)}`;
+    details.append(badges, title, summary, meta, deadline);
+    const actions = document.createElement('span');
+    actions.className = 'opportunity-actions';
+    const view = document.createElement('button');
+    view.className = 'secondary-button';
+    view.type = 'button';
+    view.textContent = 'View details';
+    view.addEventListener('click', () => openOpportunityDetails(opportunity.id));
+    const save = document.createElement('button');
+    save.className = opportunity.saved ? 'secondary-button registered-action' : 'secondary-button';
+    save.type = 'button';
+    save.textContent = opportunity.saved ? 'Saved' : 'Save';
+    save.setAttribute('aria-pressed', String(opportunity.saved));
+    save.addEventListener('click', () => toggleOpportunitySaved(opportunity.id, save));
+    actions.append(view, save);
+    if (opportunity.trackingStatus) {
+      const stage = document.createElement('span');
+      stage.className = 'pill success';
+      stage.textContent = readableOpportunityValue(opportunity.trackingStatus);
+      actions.prepend(stage);
+    }
+    card.append(mark, details, actions);
+    opportunityCatalogue.append(card);
+  });
+  if (!opportunities.length) {
+    opportunityCatalogue.innerHTML = '<div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#briefcase"/></svg><h3>No matching opportunities</h3><p>Try another search or filter. Only approved listings from verified publishers are shown.</p></div>';
+  }
+}
+
+async function loadOpportunities() {
+  if (!opportunityCatalogue) return;
+  try {
+    const [catalogueResponse, trackerResponse] = await Promise.all([
+      fetch('/api/opportunities', { headers: { Accept: 'application/json' } }),
+      fetch('/api/opportunities/tracker', { headers: { Accept: 'application/json' } })
+    ]);
+    if ([catalogueResponse.status, trackerResponse.status].some((status) => status === 401 || status === 403)) {
+      opportunityCatalogue.innerHTML = '<div class="empty-state compact"><h3>Sign in to view verified opportunities</h3><p>Listings and tracking are scoped to your university account.</p></div>';
+      return;
+    }
+    if (!catalogueResponse.ok || !trackerResponse.ok) throw new Error();
+    loadedOpportunities = await catalogueResponse.json();
+    trackedOpportunities = await trackerResponse.json();
+    renderOpportunities();
+    renderDashboardOpportunities();
+  } catch {
+    opportunityCatalogue.innerHTML = '<div class="empty-state compact"><h3>Opportunities are temporarily unavailable</h3><p>Please try again shortly.</p></div>';
+  }
+}
+
+function opportunityById(id) {
+  return loadedOpportunities.find((opportunity) => opportunity.id === id)
+    || trackedOpportunities.find((opportunity) => opportunity.id === id);
+}
+
+function openOpportunityDetails(id) {
+  const opportunity = opportunityById(id);
+  if (!opportunity) return;
+  activeOpportunityId = id;
+  document.querySelector('#opportunityDialogType').textContent = `${readableOpportunityValue(opportunity.type)} · ${readableOpportunityValue(opportunity.workMode)}`;
+  document.querySelector('#opportunityDialogTitle').textContent = opportunity.title;
+  document.querySelector('#opportunityDialogSummary').textContent = opportunity.summary;
+  document.querySelector('#opportunityPublisher').textContent = opportunity.publisherName;
+  document.querySelector('#opportunityPublisherType').textContent = `${readableOpportunityValue(opportunity.publisherType)} · fictional verified source`;
+  document.querySelector('#opportunityDescription').textContent = opportunity.description;
+  document.querySelector('#opportunityLocation').textContent = opportunity.location;
+  document.querySelector('#opportunityHours').textContent = opportunity.hoursLabel;
+  document.querySelector('#opportunityCompensation').textContent = opportunity.compensationLabel;
+  document.querySelector('#opportunityDeadline').textContent = opportunityDeadline(opportunity.closesAt);
+  document.querySelector('#opportunityEligibility').textContent = opportunity.eligibility;
+  const skills = document.querySelector('#opportunitySkills');
+  skills.replaceChildren();
+  opportunity.skills.forEach((skill) => {
+    const chip = document.createElement('span');
+    chip.className = 'module-chip';
+    chip.textContent = skill;
+    skills.append(chip);
+  });
+  const saveButton = document.querySelector('#opportunitySaveButton');
+  saveButton.textContent = opportunity.saved ? 'Remove saved item' : 'Save opportunity';
+  saveButton.classList.toggle('registered-action', opportunity.saved);
+  saveButton.setAttribute('aria-pressed', String(opportunity.saved));
+  document.querySelector('#opportunityTrackingStatus').value = opportunity.trackingStatus || 'PLANNING';
+  openModal(opportunityDialog);
+}
+
+async function refreshOpportunityDetails(id) {
+  await loadOpportunities();
+  if (!opportunityDialog.hidden) openOpportunityDetails(id);
+}
+
+async function toggleOpportunitySaved(id, button) {
+  const opportunity = opportunityById(id);
+  if (!opportunity) return;
+  button.disabled = true;
+  try {
+    await socialPost(`/api/opportunities/${id}/${opportunity.saved ? 'unsave' : 'save'}`);
+    showToast(opportunity.saved ? 'Opportunity removed from your saved list.' : 'Opportunity saved to your private tracker.');
+    await refreshOpportunityDetails(id);
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+document.querySelectorAll('[data-opportunity-type]').forEach((button) => {
+  button.addEventListener('click', () => {
+    showingOpportunityTracker = false;
+    selectedOpportunityType = button.dataset.opportunityType;
+    renderOpportunities();
+  });
+});
+
+document.querySelector('[data-opportunity-view="tracker"]')?.addEventListener('click', () => {
+  showingOpportunityTracker = true;
+  selectedOpportunityType = '';
+  renderOpportunities();
+});
+
+opportunitySearch?.addEventListener('input', renderOpportunities);
+document.querySelector('#opportunityDialogClose')?.addEventListener('click', () => closeModal(opportunityDialog));
+document.querySelector('#opportunitySaveButton')?.addEventListener('click', (event) => {
+  if (activeOpportunityId) void toggleOpportunitySaved(activeOpportunityId, event.currentTarget);
+});
+document.querySelector('#opportunityTrackButton')?.addEventListener('click', async (event) => {
+  if (!activeOpportunityId) return;
+  const button = event.currentTarget;
+  button.disabled = true;
+  try {
+    const status = document.querySelector('#opportunityTrackingStatus').value;
+    await socialPost(`/api/opportunities/${activeOpportunityId}/track`, { status });
+    showToast(`Application tracker updated to ${readableOpportunityValue(status)}.`);
+    await refreshOpportunityDetails(activeOpportunityId);
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    button.disabled = false;
+  }
+});
+
 bookButton?.addEventListener('click', () => {
   if (!selectedBookingSlotId) return;
   void bookServiceSlot(selectedBookingSlotId, bookingName.textContent, bookButton);
@@ -678,7 +906,7 @@ const assistantAnswers = new Map([
 function answerQuestion(question) {
   const normalised = question.trim().toLowerCase();
   const exact = assistantAnswers.get(normalised);
-  const response = exact ?? 'This Sprint 1 guide only answers the three demonstrated campus questions. A later approved retrieval service will provide sourced university information.';
+  const response = exact ?? 'This campus guide currently answers the three demonstrated questions. A later approved retrieval service will provide sourced university information.';
   document.querySelector('#assistantResponse').textContent = response;
 }
 
@@ -695,7 +923,7 @@ document.querySelector('#assistantForm')?.addEventListener('submit', (event) => 
 
 function answerPageQuestion(question) {
   const normalised = question.trim().toLowerCase();
-  const response = assistantAnswers.get(normalised) ?? 'This Sprint 1 campus guide only answers the three demonstrated questions. A later approved retrieval service will provide sourced university information.';
+  const response = assistantAnswers.get(normalised) ?? 'This campus guide currently answers the three demonstrated questions. A later approved retrieval service will provide sourced university information.';
   const responsePanel = document.querySelector('#pageAssistantResponse');
   responsePanel.replaceChildren();
   const bubble = document.createElement('p');
@@ -784,7 +1012,8 @@ function populateProfile(profile) {
     loadCampusEvents(),
     loadCampusServices(),
     loadCampusBookings(),
-    loadCampusSchedule()
+    loadCampusSchedule(),
+    loadOpportunities()
   ]);
 }
 

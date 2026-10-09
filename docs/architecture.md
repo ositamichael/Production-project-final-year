@@ -31,7 +31,7 @@ Approved university APIs and OIDC identity provider
 | Support | Wellbeing routes and urgent help | Clear escalation; not a substitute for emergency services |
 | Assistant | Retrieval of approved campus information | Responses need sources, boundaries and failure handling |
 
-The identity, tenancy, connections, messaging, campus-event and transactional-booking foundations now run in the fictional development sandbox. Opportunities, support, approved-information retrieval and live university integrations remain staged future work.
+The identity, tenancy, connections, messaging, campus-event, transactional-booking and moderated-opportunity foundations now run in the fictional development sandbox. Support, approved-information retrieval and live university integrations remain staged future work.
 
 ## Data isolation
 
