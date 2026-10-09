@@ -200,6 +200,9 @@ dialog.dialog-fallback[open] { position: fixed !important; inset: 50% auto auto 
 .profile-status { margin: 18px 0 14px; padding: 11px 13px; border: 1px solid #d9e6f3; border-radius: 10px; background: #f5f9fe; color: #526a86; font-size: .68rem; line-height: 1.45; }
 .profile-status.success { border-color: #bfe9d8; background: #edfaf5; color: #116d53; }
 .profile-status.error { border-color: #ffcdd1; background: #fff4f5; color: #8d313b; }
+.profile-auth-actions { display: flex; justify-content: flex-end; margin: -4px 0 14px; }
+.profile-sign-in { width: auto; margin: 0; padding: 11px 16px; color: #fff; text-decoration: none; font-size: .7rem; }
+.profile-auth-actions .secondary-button { width: auto; padding: 9px 13px; }
 .profile-dialog fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .profile-dialog fieldset:disabled { opacity: .58; }
 .profile-fields { display: grid; gap: 12px; }
@@ -312,7 +315,7 @@ dialog.dialog-fallback[open] { position: fixed !important; inset: 50% auto auto 
   .notification-panel { top: 82px; right: 10px; width: calc(100vw - 20px); }
   .notification-panel::before { right: 47px; }
   .view-hero, .section-toolbar { align-items: flex-start; flex-direction: column; }.view-hero { padding: 19px; }.view-title { align-items: flex-start; }.metric-row { grid-template-columns: 1fr 1fr; }.feature-grid.three, .feature-grid.four, .service-grid, .message-workspace { grid-template-columns: 1fr; }.thread-panel { max-height: 330px; overflow: auto; }.conversation-panel { min-height: 540px; }.event-card-large { grid-template-columns: 78px 1fr; }.event-visual { min-height: 135px; }.map-workspace { grid-template-columns: 1fr; }.campus-map-large { min-height: 430px; }.opportunity-list-large article { grid-template-columns: auto minmax(0,1fr); }.opportunity-list-large article > button { grid-column: 2; justify-self: start; }.data-badge, .privacy-badge, .primary-compact { align-self: flex-start; }
-  .profile-dialog form { padding: 22px 18px; }.profile-dialog-heading { align-items: flex-start; }.profile-photo-preview { width: 56px; height: 56px; }.profile-fields.two-column, .profile-identity, .academic-columns { grid-template-columns: 1fr; }.university-context-heading { flex-direction: column; gap: 8px; }.dialog-actions { flex-direction: column-reverse; }.dialog-actions button { width: 100% !important; }
+  .profile-dialog form { padding: 22px 18px; }.profile-dialog-heading { align-items: flex-start; }.profile-photo-preview { width: 56px; height: 56px; }.profile-fields.two-column, .profile-identity, .academic-columns { grid-template-columns: 1fr; }.university-context-heading { flex-direction: column; gap: 8px; }.dialog-actions { flex-direction: column-reverse; }.dialog-actions button, .profile-auth-actions > * { width: 100% !important; }.profile-auth-actions { justify-content: stretch; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -37,7 +37,7 @@ class FrontendStructureTests {
 
         var html = new String(resource.readAllBytes(), StandardCharsets.UTF_8);
         assertThat(html)
-            .contains("no live university systems are connected yet")
+            .contains("no live university systems are connected")
             .contains("No live booking connection")
             .contains("No message is sent or stored")
             .contains("does not request or store device location");
@@ -82,8 +82,26 @@ class FrontendStructureTests {
             .contains("Fictional sandbox")
             .contains("id=\"profileDialog\"")
             .contains("id=\"profileForm\"")
+            .contains("id=\"profileSignIn\"")
+            .contains("href=\"/sign-in\"")
+            .contains("id=\"profileSignOut\"")
             .contains("accept=\"image/png,image/jpeg\"")
             .contains("Profile changes require an authenticated university session")
             .contains("remove embedded metadata");
+    }
+
+    @Test
+    void fictionalSignInPageIsExplicitlySeparatedFromUniversityAuthentication() throws IOException {
+        var resource = getClass().getResourceAsStream("/static/demo-login.html");
+        assertThat(resource).isNotNull();
+
+        var html = new String(resource.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(html)
+            .contains("FICTIONAL DEVELOPMENT SANDBOX")
+            .contains("student@demo.unicircle.test")
+            .contains("Never enter your Leeds Beckett password")
+            .contains("does not contact Leeds Beckett, Microsoft, or Authenticator")
+            .contains("action=\"/login\"")
+            .contains("id=\"csrfField\"");
     }
 }

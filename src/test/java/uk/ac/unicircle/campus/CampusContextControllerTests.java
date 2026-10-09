@@ -26,7 +26,7 @@ class CampusContextControllerTests {
     @Test
     void universityContextRequiresAuthentication() throws Exception {
         mockMvc.perform(get("/api/campus/me/context"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
