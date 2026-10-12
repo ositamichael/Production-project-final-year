@@ -24,7 +24,7 @@ public class SecurityConfiguration {
         return http
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
-                                "/", "/index.html", "/demo-login.html", "/favicon.svg", "/css/**", "/js/**",
+                                "/", "/index.html", "/demo-login.html", "/favicon.svg", "/css/**", "/js/**", "/images/**",
                                 "/error", "/sign-in", "/api/platform/status", "/api/security/csrf", "/actuator/health")
                         .permitAll()
                         .anyRequest().authenticated())

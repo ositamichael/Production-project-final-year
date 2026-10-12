@@ -42,6 +42,13 @@ class DemoSignInJourneyTests {
     }
 
     @Test
+    void campusPhotographyLoadsBeforeSignIn() throws Exception {
+        mockMvc.perform(get("/images/campus-events-v1.jpg"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("image/jpeg"));
+    }
+
+    @Test
     void validFictionalCredentialsCreateAProtectedSessionAndExposeTheDemoStudent() throws Exception {
         var login = mockMvc.perform(post("/login")
                         .with(csrf())
