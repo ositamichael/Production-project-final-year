@@ -25,7 +25,7 @@ class PilotTestCentreService {
 
     private static final List<Scenario> SCENARIOS = List.of(
             new Scenario("ACCOUNT_PROFILE", "Account", "Create and complete a profile",
-                    "Register a fresh invited account, sign in, add course and year, and upload a profile photograph.",
+                    "Register a fresh test account, sign in, add course and year, and upload a profile photograph.",
                     "The account remains available after signing out and back in, including its saved profile photograph."),
             new Scenario("DISCOVERY_REQUEST", "Connections", "Find a student and send a request",
                     "Use two accounts. Find the second tester in Find Students and send a connection request.",

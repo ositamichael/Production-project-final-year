@@ -37,30 +37,37 @@ import org.springframework.transaction.annotation.Transactional;
         "spring.datasource.url=jdbc:h2:mem:unicircle-pilot;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE",
         "spring.datasource.username=sa",
         "spring.datasource.password=",
-        "server.servlet.session.cookie.secure=false",
-        "unicircle.pilot.invite-code=0123456789abcdef0123456789abcdef"
+        "server.servlet.session.cookie.secure=false"
 })
 @Transactional
 class PilotFriendsJourneyTests {
-
-    private static final String INVITE = "0123456789abcdef0123456789abcdef";
 
     @Autowired MockMvc mockMvc;
     @Autowired JdbcTemplate jdbc;
 
     @Test
-    void pilotRequiresInvitationAndDoesNotExposeFictionalDemoAccounts() throws Exception {
+    void pilotRegistrationRequiresCsrfAndDoesNotExposeFictionalDemoAccounts() throws Exception {
         mockMvc.perform(get("/sign-in"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/pilot-login.html"));
         mockMvc.perform(get("/demo-login.html")).andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/pilot/register").contentType(MediaType.APPLICATION_JSON)
-                .content(registration("alice@example.net", "Alice", INVITE)))
+                .content(registration("alice@example.net", "Alice")))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(post("/api/pilot/register").with(csrf()).contentType(MediaType.APPLICATION_JSON)
-                .content(registration("alice@example.net", "Alice", "wrong")))
-                .andExpect(status().isBadRequest());
         mockMvc.perform(get("/api/social/directory")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void registrationValidationIdentifiesTheRejectedField() throws Exception {
+        mockMvc.perform(post("/api/pilot/register").with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"tester@example.net","displayName":"Pilot Tester",
+                                 "courseName":"Computer Science","yearOfStudy":3,
+                                 "password":"short"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.fields.password").value("size must be between 12 and 128"));
     }
 
     @Test
@@ -192,7 +199,7 @@ class PilotFriendsJourneyTests {
     }
 
     @Test
-    void invitedTesterCanRecordAcceptanceEvidenceAgainstTheCompleteApp() throws Exception {
+    void pilotTesterCanRecordAcceptanceEvidenceAgainstTheCompleteApp() throws Exception {
         register("tester@example.net", "Pilot Tester");
         MockHttpSession tester = signIn("tester@example.net");
 
@@ -207,7 +214,7 @@ class PilotFriendsJourneyTests {
                         .session(tester).with(csrf()).contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"status":"PASS","deviceLabel":"iPhone and Chrome",
-                                 "evidenceNote":"Second invited account appeared and received one request."}
+                                 "evidenceNote":"Second test account appeared and received one request."}
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.passed").value(1))
@@ -222,7 +229,7 @@ class PilotFriendsJourneyTests {
 
     private void register(String email, String name) throws Exception {
         mockMvc.perform(post("/api/pilot/register").with(csrf()).contentType(MediaType.APPLICATION_JSON)
-                .content(registration(email, name, INVITE))).andExpect(status().isCreated());
+                .content(registration(email, name))).andExpect(status().isCreated());
     }
 
     private MockHttpSession signIn(String email) throws Exception {
@@ -242,10 +249,9 @@ class PilotFriendsJourneyTests {
                 .andExpect(jsonPath("$.sharing").value(true));
     }
 
-    private String registration(String email, String name, String invite) {
+    private String registration(String email, String name) {
         return "{\"email\":\"" + email + "\",\"displayName\":\"" + name
                 + "\",\"password\":\"UniquePilotPassword!2026\","
-                + "\"courseName\":\"Computer Science\",\"yearOfStudy\":3,"
-                + "\"inviteCode\":\"" + invite + "\"}";
+                + "\"courseName\":\"Computer Science\",\"yearOfStudy\":3}";
     }
 }
