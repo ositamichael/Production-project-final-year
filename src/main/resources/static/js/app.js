@@ -53,6 +53,7 @@ const pageSurfaces = [...document.querySelectorAll('[data-page]')];
 const pageLinks = [...document.querySelectorAll('[data-page-link]')];
 const hashToPage = new Map([
   ['campus', 'campus'], ['today', 'today'], ['schedule', 'today'],
+  ['updates-page', 'updates'], ['live-classes-page', 'live-classes'],
   ['circles-page', 'circles'], ['messages-page', 'messages'], ['events-page', 'events'],
   ['services-page', 'services'], ['opportunities-page', 'opportunities'], ['map-page', 'map'],
   ['wellbeing-page', 'wellbeing'], ['lost-found-page', 'lost-found'],
@@ -81,6 +82,9 @@ function showPage(pageName, { updateHistory = true, focus = true } = {}) {
   window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   if (focus && nextPage !== document.querySelector('#campus')) nextPage.focus({ preventScroll: true });
   if (nextPage.dataset.page === 'messages') void loadMessagingWorkspace();
+  if (nextPage.dataset.page === 'updates') void loadAnnouncements();
+  if (nextPage.dataset.page === 'live-classes') void loadMeetings();
+  if (nextPage.dataset.page === 'wellbeing') void loadSupportCases();
   if (nextPage.dataset.page === 'lost-found-review' && staffReviewAccess) void loadStaffReview();
   if (nextPage.dataset.page === 'map' && pilotMode) void loadLocationPanel();
   if (nextPage.dataset.page !== 'map') clearInterval(locationRefreshTimer);
@@ -1440,6 +1444,7 @@ function showSignedOutActions() {
   profileSignOut.hidden = true;
   staffReviewAccess = false;
   staffReviewNav.hidden = true;
+  if (announcementPublisherPanel) announcementPublisherPanel.hidden = true;
 }
 
 function showSignedInActions() {
@@ -1484,6 +1489,7 @@ function updateVisibleIdentity(profile) {
 function populateProfile(profile) {
   staffReviewAccess = ['STAFF', 'ADMIN'].includes(profile.role);
   staffReviewNav.hidden = !staffReviewAccess;
+  if (announcementPublisherPanel) announcementPublisherPanel.hidden = !staffReviewAccess;
   document.querySelector('#profileDisplayName').value = profile.displayName || '';
   document.querySelector('#profileCourse').value = profile.courseName || '';
   document.querySelector('#profileYear').value = profile.yearOfStudy || '';
@@ -1508,6 +1514,9 @@ function populateProfile(profile) {
     loadCampusSchedule(),
     loadOpportunities(),
     loadLostFound(),
+    loadAnnouncements(),
+    loadMeetings(),
+    loadSupportCases(),
     ...(staffReviewAccess ? [loadStaffReview()] : [])
   ]);
 }
@@ -2722,6 +2731,487 @@ const locationStart = document.querySelector('#locationStart');
 const locationStop = document.querySelector('#locationStop');
 const locationRefresh = document.querySelector('#locationRefresh');
 const friendLocations = document.querySelector('#friendLocations');
+// Campus information, private support and live learning
+const announcementFeed = document.querySelector('#announcementFeed');
+const dashboardAnnouncementList = document.querySelector('#dashboardAnnouncementList');
+const announcementPublisherPanel = document.querySelector('#announcementPublisherPanel');
+const meetingList = document.querySelector('#meetingList');
+const dashboardMeetingList = document.querySelector('#dashboardMeetingList');
+const supportCaseList = document.querySelector('#supportCaseList');
+let loadedAnnouncements = [];
+let loadedMeetings = [];
+let selectedMeetingId = null;
+let currentMeetingRoom = null;
+let selectedClassMessageType = 'CHAT';
+
+function informationLabel(value) {
+  return String(value || '').toLowerCase().replaceAll('_', ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function informationDate(value, options = {}) {
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', ...options
+  }).format(new Date(value));
+}
+
+function renderDashboardAnnouncements() {
+  if (!dashboardAnnouncementList) return;
+  dashboardAnnouncementList.replaceChildren();
+  loadedAnnouncements.slice(0, 3).forEach((announcement) => {
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = `dashboard-update ${announcement.read ? '' : 'unread'}`;
+    const icon = document.createElement('span');
+    icon.className = announcement.urgent ? 'update-icon urgent' : 'update-icon';
+    icon.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#${announcement.urgent ? 'alert' : 'megaphone'}"/></svg>`;
+    const copy = document.createElement('span');
+    const title = document.createElement('strong');
+    title.textContent = announcement.title;
+    const meta = document.createElement('small');
+    meta.textContent = `${informationLabel(announcement.category)} · ${announcement.authorName}`;
+    copy.append(title, meta);
+    row.append(icon, copy);
+    row.addEventListener('click', () => {
+      showPage('updates');
+      document.querySelector(`[data-announcement-id="${announcement.id}"]`)?.focus();
+    });
+    dashboardAnnouncementList.append(row);
+  });
+}
+
+function announcementCard(announcement) {
+  const card = document.createElement('article');
+  card.className = `announcement-card ${announcement.read ? '' : 'unread'} ${announcement.urgent ? 'urgent' : ''}`;
+  card.dataset.announcementId = announcement.id;
+  card.tabIndex = -1;
+  const visual = document.createElement('span');
+  visual.className = `announcement-visual ${announcement.urgent ? 'urgent' : ''}`;
+  visual.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#${announcement.urgent ? 'alert' : 'megaphone'}"/></svg>`;
+  const content = document.createElement('div');
+  content.className = 'announcement-copy';
+  const badges = document.createElement('div');
+  badges.className = 'announcement-badges';
+  [informationLabel(announcement.category), announcement.audienceLabel].filter(Boolean).forEach((label, index) => {
+    const badge = document.createElement('span');
+    badge.className = index === 0 ? 'pill info' : 'pill neutral';
+    badge.textContent = label;
+    badges.append(badge);
+  });
+  if (announcement.pinned) {
+    const pinned = document.createElement('span');
+    pinned.className = 'pill success';
+    pinned.textContent = 'Pinned';
+    badges.append(pinned);
+  }
+  const title = document.createElement('h3');
+  title.textContent = announcement.title;
+  const body = document.createElement('p');
+  body.textContent = announcement.body;
+  const author = document.createElement('small');
+  author.textContent = `${announcement.authorName} · ${announcement.authorRole} · ${informationDate(announcement.publishedAt)}`;
+  content.append(badges, title, body, author);
+  const actions = document.createElement('div');
+  actions.className = 'announcement-actions';
+  if (announcement.actionUrl?.startsWith('#')) {
+    const action = document.createElement('button');
+    action.className = 'secondary-button';
+    action.type = 'button';
+    action.textContent = announcement.actionLabel || 'Open';
+    action.addEventListener('click', () => {
+      const pageName = hashToPage.get(announcement.actionUrl.slice(1));
+      if (pageName) showPage(pageName);
+    });
+    actions.append(action);
+  }
+  if (!announcement.read) {
+    const read = document.createElement('button');
+    read.className = 'secondary-button';
+    read.type = 'button';
+    read.textContent = 'Mark as read';
+    read.addEventListener('click', async () => {
+      read.disabled = true;
+      try {
+        await socialPost(`/api/campus-information/announcements/${announcement.id}/read`);
+        await loadAnnouncements();
+      } catch (error) {
+        showToast(error.message);
+        read.disabled = false;
+      }
+    });
+    actions.append(read);
+  }
+  card.append(visual, content, actions);
+  return card;
+}
+
+function renderAnnouncements() {
+  if (!announcementFeed) return;
+  announcementFeed.replaceChildren();
+  loadedAnnouncements.forEach((announcement) => announcementFeed.append(announcementCard(announcement)));
+  if (!loadedAnnouncements.length) {
+    announcementFeed.innerHTML = '<div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#megaphone"/></svg><h3>No matching updates</h3><p>There are no current announcements in this category.</p></div>';
+  }
+  const unread = loadedAnnouncements.filter((item) => !item.read).length;
+  const badge = document.querySelector('#announcementCountBadge');
+  if (badge) badge.textContent = `${loadedAnnouncements.length} update${loadedAnnouncements.length === 1 ? '' : 's'} · ${unread} unread`;
+  renderDashboardAnnouncements();
+}
+
+async function loadAnnouncements(category = '') {
+  if (!announcementFeed && !dashboardAnnouncementList) return;
+  try {
+    const response = await fetch(`/api/campus-information/announcements?category=${encodeURIComponent(category)}`, { headers: { Accept: 'application/json' } });
+    if (response.status === 401) {
+      loadedAnnouncements = [];
+      if (announcementFeed) announcementFeed.innerHTML = '<div class="empty-state compact"><h3>Sign in to view campus updates</h3><p>Announcements are targeted to your university account.</p></div>';
+      return;
+    }
+    if (!response.ok) throw new Error('Campus updates are temporarily unavailable.');
+    loadedAnnouncements = await response.json();
+    renderAnnouncements();
+  } catch (error) {
+    if (announcementFeed) announcementFeed.innerHTML = `<div class="empty-state compact"><h3>Updates unavailable</h3><p>${error.message}</p></div>`;
+  }
+}
+
+document.querySelectorAll('[data-announcement-category]').forEach((button) => {
+  button.addEventListener('click', () => {
+    document.querySelectorAll('[data-announcement-category]').forEach((item) => item.classList.remove('active'));
+    button.classList.add('active');
+    void loadAnnouncements(button.dataset.announcementCategory);
+  });
+});
+
+const publisherAudience = document.querySelector('#publisherAudience');
+const publisherAudienceLabel = document.querySelector('#publisherAudienceLabel');
+publisherAudience?.addEventListener('change', () => {
+  const allStudents = publisherAudience.value === 'UNIVERSITY';
+  publisherAudienceLabel.disabled = allStudents;
+  publisherAudienceLabel.required = !allStudents;
+  if (allStudents) publisherAudienceLabel.value = '';
+});
+
+document.querySelector('#announcementPublisherForm')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const submit = form.querySelector('button[type="submit"]');
+  const status = document.querySelector('#publisherStatus');
+  const actionUrl = document.querySelector('#publisherActionUrl').value;
+  submit.disabled = true;
+  status.textContent = 'Publishing the verified announcement…';
+  try {
+    const published = await socialPost('/api/campus-information/announcements', {
+      category: document.querySelector('#publisherCategory').value,
+      audienceType: publisherAudience.value,
+      audienceLabel: publisherAudienceLabel.value || null,
+      title: document.querySelector('#publisherTitle').value,
+      body: document.querySelector('#publisherBody').value,
+      actionLabel: actionUrl ? 'Open details' : null,
+      actionUrl: actionUrl || null,
+      pinned: document.querySelector('#publisherPinned').checked,
+      urgent: document.querySelector('#publisherUrgent').checked,
+      expiresAt: document.querySelector('#publisherExpiry').value
+        ? new Date(document.querySelector('#publisherExpiry').value).toISOString() : null
+    });
+    form.reset();
+    publisherAudience.dispatchEvent(new Event('change'));
+    status.textContent = `Published “${published.title}” to ${published.audienceLabel}.`;
+    await loadAnnouncements();
+  } catch (error) {
+    status.textContent = error.message;
+  } finally {
+    submit.disabled = false;
+  }
+});
+
+function renderDashboardMeetings() {
+  if (!dashboardMeetingList) return;
+  dashboardMeetingList.replaceChildren();
+  loadedMeetings.slice(0, 2).forEach((meeting) => {
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'dashboard-meeting';
+    const icon = document.createElement('span');
+    icon.className = 'meeting-time-icon';
+    icon.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#video"/></svg>';
+    const copy = document.createElement('span');
+    const title = document.createElement('strong');
+    title.textContent = meeting.title;
+    const meta = document.createElement('small');
+    meta.textContent = `${informationDate(meeting.startsAt)} · ${meeting.hostName}`;
+    copy.append(title, meta);
+    row.append(icon, copy);
+    row.addEventListener('click', () => { showPage('live-classes'); void loadMeetingRoom(meeting.id); });
+    dashboardMeetingList.append(row);
+  });
+}
+
+function renderMeetings() {
+  if (!meetingList) return;
+  meetingList.replaceChildren();
+  loadedMeetings.forEach((meeting) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `meeting-list-item ${meeting.id === selectedMeetingId ? 'active' : ''}`;
+    const date = document.createElement('time');
+    date.dateTime = meeting.startsAt;
+    date.textContent = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short' }).format(new Date(meeting.startsAt));
+    const copy = document.createElement('span');
+    const title = document.createElement('strong');
+    title.textContent = meeting.title;
+    const meta = document.createElement('small');
+    meta.textContent = `${informationDate(meeting.startsAt, { weekday: 'short' })} · ${meeting.hostName}`;
+    copy.append(title, meta);
+    const status = document.createElement('span');
+    status.className = meeting.joined ? 'pill success' : 'pill info';
+    status.textContent = meeting.joined ? 'Joined' : informationLabel(meeting.meetingType);
+    button.append(date, copy, status);
+    button.addEventListener('click', () => void loadMeetingRoom(meeting.id));
+    meetingList.append(button);
+  });
+  if (!loadedMeetings.length) meetingList.innerHTML = '<p class="loading-note">No scheduled classes are available.</p>';
+  const badge = document.querySelector('#meetingCountBadge');
+  if (badge) badge.textContent = `${loadedMeetings.length} scheduled`;
+  renderDashboardMeetings();
+}
+
+async function loadMeetings() {
+  if (!meetingList && !dashboardMeetingList) return;
+  try {
+    const response = await fetch('/api/campus-information/meetings', { headers: { Accept: 'application/json' } });
+    if (response.status === 401) {
+      if (meetingList) meetingList.innerHTML = '<p class="loading-note">Sign in to view your scheduled classes.</p>';
+      return;
+    }
+    if (!response.ok) throw new Error('Scheduled classes are temporarily unavailable.');
+    loadedMeetings = await response.json();
+    renderMeetings();
+  } catch (error) {
+    if (meetingList) meetingList.innerHTML = `<p class="loading-note">${error.message}</p>`;
+  }
+}
+
+function renderMeetingMessages(messages) {
+  const list = document.querySelector('#classMessageList');
+  list.replaceChildren();
+  messages.filter((message) => message.messageType === selectedClassMessageType).forEach((message) => {
+    const article = document.createElement('article');
+    article.className = `class-message ${message.messageType.toLowerCase()}`;
+    const heading = document.createElement('div');
+    const author = document.createElement('strong');
+    author.textContent = message.senderName;
+    const time = document.createElement('time');
+    time.textContent = new Date(message.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    heading.append(author, time);
+    const body = document.createElement('p');
+    body.textContent = message.body;
+    article.append(heading, body);
+    list.append(article);
+  });
+  if (!list.children.length) list.innerHTML = `<p>No ${selectedClassMessageType === 'QUESTION' ? 'questions' : 'messages'} yet.</p>`;
+}
+
+function renderMeetingRoom(room) {
+  currentMeetingRoom = room;
+  selectedMeetingId = room.meeting.id;
+  document.querySelector('#classroomEmpty').hidden = true;
+  document.querySelector('#classroom').hidden = false;
+  document.querySelector('#classroomModule').textContent = room.meeting.moduleCode || informationLabel(room.meeting.meetingType);
+  document.querySelector('#classroomTitle').textContent = room.meeting.title;
+  document.querySelector('#classroomHost').textContent = `${room.meeting.hostName} · ${informationDate(room.meeting.startsAt)}`;
+  document.querySelector('#classroomAgenda').textContent = room.meeting.agenda || 'The session agenda will be added by the host.';
+  document.querySelector('#classroomProviderStatus').textContent = room.providerStatus;
+  document.querySelector('#classroomStageTitle').textContent = room.meeting.joined ? 'You are in the class' : 'Ready to join';
+  document.querySelector('#classroomStatus').textContent = room.meeting.joined ? 'In class' : 'Not joined';
+  document.querySelector('#classroomStatus').className = room.meeting.joined ? 'pill success' : 'pill neutral';
+  const join = document.querySelector('#meetingJoin');
+  const leave = document.querySelector('#meetingLeave');
+  const hand = document.querySelector('#meetingHand');
+  join.disabled = room.meeting.joined;
+  leave.disabled = !room.meeting.joined;
+  hand.disabled = !room.meeting.joined;
+  hand.classList.toggle('active', room.meeting.handRaised);
+  hand.querySelector('span').textContent = room.meeting.handRaised ? 'Lower hand' : 'Raise hand';
+  const input = document.querySelector('#classMessageInput');
+  input.disabled = !room.meeting.joined;
+  input.placeholder = room.meeting.joined
+    ? (selectedClassMessageType === 'QUESTION' ? 'Ask a question…' : 'Write to the class…')
+    : 'Join the class to participate';
+  document.querySelector('#classMessageForm button').disabled = !room.meeting.joined;
+  const provider = document.querySelector('#classroomProviderLink');
+  provider.replaceChildren();
+  if (room.providerJoinUrl) {
+    const link = document.createElement('a');
+    link.className = 'primary-button meeting-provider-button';
+    link.href = room.providerJoinUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = 'Open secure video room';
+    provider.append(link);
+  } else {
+    const note = document.createElement('span');
+    note.className = 'provider-pending';
+    note.textContent = 'Video room awaiting an approved university provider';
+    provider.append(note);
+  }
+  const participants = document.querySelector('#participantList');
+  participants.replaceChildren();
+  room.participants.forEach((person) => {
+    const item = document.createElement('li');
+    const avatar = document.createElement('span');
+    avatar.className = 'participant-avatar';
+    avatar.textContent = initialsFor(person.displayName);
+    const copy = document.createElement('span');
+    const name = document.createElement('strong');
+    name.textContent = person.displayName;
+    const state = document.createElement('small');
+    state.textContent = `${informationLabel(person.role)} · ${person.present ? 'In class' : 'Left class'}`;
+    copy.append(name, state);
+    item.append(avatar, copy);
+    if (person.handRaised) {
+      const raised = document.createElement('span');
+      raised.className = 'hand-raised';
+      raised.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#hand"/></svg><span>Hand raised</span>';
+      item.append(raised);
+    }
+    participants.append(item);
+  });
+  document.querySelector('#participantCount').textContent = `${room.participants.filter((person) => person.present).length} present`;
+  renderMeetingMessages(room.messages);
+  renderMeetings();
+}
+
+async function loadMeetingRoom(meetingId) {
+  try {
+    const response = await fetch(`/api/campus-information/meetings/${meetingId}`, { headers: { Accept: 'application/json' } });
+    if (!response.ok) throw new Error('The classroom could not be opened.');
+    renderMeetingRoom(await response.json());
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
+document.querySelector('#meetingJoin')?.addEventListener('click', async () => {
+  try {
+    renderMeetingRoom(await socialPost(`/api/campus-information/meetings/${selectedMeetingId}/join`));
+    await loadMeetings();
+  } catch (error) { showToast(error.message); }
+});
+
+document.querySelector('#meetingLeave')?.addEventListener('click', async () => {
+  try {
+    renderMeetingRoom(await socialPost(`/api/campus-information/meetings/${selectedMeetingId}/leave`));
+    await loadMeetings();
+  } catch (error) { showToast(error.message); }
+});
+
+document.querySelector('#meetingHand')?.addEventListener('click', async () => {
+  try {
+    const raised = !currentMeetingRoom.meeting.handRaised;
+    renderMeetingRoom(await socialPost(`/api/campus-information/meetings/${selectedMeetingId}/hand`, { raised }));
+  } catch (error) { showToast(error.message); }
+});
+
+document.querySelectorAll('[data-class-message-type]').forEach((button) => {
+  button.addEventListener('click', () => {
+    selectedClassMessageType = button.dataset.classMessageType;
+    document.querySelectorAll('[data-class-message-type]').forEach((item) => item.classList.remove('active'));
+    button.classList.add('active');
+    if (currentMeetingRoom) renderMeetingRoom(currentMeetingRoom);
+  });
+});
+
+document.querySelector('#classMessageForm')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const input = document.querySelector('#classMessageInput');
+  const body = input.value.trim();
+  if (!body || !selectedMeetingId) return;
+  try {
+    await socialPost(`/api/campus-information/meetings/${selectedMeetingId}/messages`, {
+      messageType: selectedClassMessageType, body
+    });
+    input.value = '';
+    await loadMeetingRoom(selectedMeetingId);
+  } catch (error) { showToast(error.message); }
+});
+
+function renderSupportCases(cases) {
+  if (!supportCaseList) return;
+  supportCaseList.replaceChildren();
+  cases.forEach((supportCase) => {
+    const card = document.createElement('article');
+    card.className = 'support-case-card';
+    const heading = document.createElement('div');
+    const title = document.createElement('h4');
+    title.textContent = supportCase.subject;
+    const status = document.createElement('span');
+    status.className = supportCase.status === 'RESOLVED' ? 'pill success' : 'pill info';
+    status.textContent = informationLabel(supportCase.status);
+    heading.append(title, status);
+    const meta = document.createElement('small');
+    meta.textContent = `${supportCase.referenceCode} · ${supportCase.assignedTeam} · ${informationDate(supportCase.updatedAt)}`;
+    const description = document.createElement('p');
+    description.textContent = supportCase.description;
+    const replies = document.createElement('div');
+    replies.className = 'support-replies';
+    supportCase.replies.forEach((reply) => {
+      const replyRow = document.createElement('p');
+      const author = document.createElement('strong');
+      author.textContent = `${reply.authorName}: `;
+      replyRow.append(author, document.createTextNode(reply.body));
+      replies.append(replyRow);
+    });
+    card.append(heading, meta, description, replies);
+    supportCaseList.append(card);
+  });
+  if (!cases.length) supportCaseList.innerHTML = '<div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#mail"/></svg><h3>No support requests</h3><p>Create a private request when you need the right university team.</p></div>';
+}
+
+async function loadSupportCases() {
+  if (!supportCaseList) return;
+  try {
+    const response = await fetch('/api/campus-information/support-cases', { headers: { Accept: 'application/json' } });
+    if (response.status === 401) {
+      supportCaseList.innerHTML = '<div class="empty-state compact"><h3>Sign in to contact support</h3><p>Your requests are private to your account.</p></div>';
+      return;
+    }
+    if (!response.ok) throw new Error('Support tracking is temporarily unavailable.');
+    renderSupportCases(await response.json());
+  } catch (error) {
+    supportCaseList.innerHTML = `<div class="empty-state compact"><p>${error.message}</p></div>`;
+  }
+}
+
+document.querySelector('#supportFormFocus')?.addEventListener('click', () => {
+  document.querySelector('#supportCategory')?.focus();
+});
+
+document.querySelector('#supportRefresh')?.addEventListener('click', () => void loadSupportCases());
+
+document.querySelector('#supportCaseForm')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const status = document.querySelector('#supportFormStatus');
+  const form = event.currentTarget;
+  const submit = form.querySelector('button[type="submit"]');
+  submit.disabled = true;
+  status.textContent = 'Creating your private request…';
+  try {
+    const created = await socialPost('/api/campus-information/support-cases', {
+      category: document.querySelector('#supportCategory').value,
+      subject: document.querySelector('#supportSubject').value,
+      description: document.querySelector('#supportDescription').value
+    });
+    form.reset();
+    status.textContent = `${created.referenceCode} created and assigned to ${created.assignedTeam}.`;
+    await loadSupportCases();
+  } catch (error) {
+    status.textContent = error.message;
+  } finally {
+    submit.disabled = false;
+  }
+});
+
 let sharingLocation = false;
 
 function locationText(value) {

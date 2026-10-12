@@ -11,7 +11,8 @@ class FrontendStructureTests {
 
     private static final String[] PAGE_NAMES = {
         "campus", "today", "circles", "messages", "events", "services",
-        "opportunities", "map", "wellbeing", "lost-found", "assistant"
+        "opportunities", "map", "updates", "live-classes", "wellbeing",
+        "lost-found", "assistant"
     };
 
     @Test
@@ -217,6 +218,33 @@ class FrontendStructureTests {
             .contains("id=\"dashboardOpportunityList\"")
             .contains("Verified publisher")
             .contains("it does not submit an application to an employer");
+    }
+
+    @Test
+    void campusInformationAndLiveLearningHaveCompleteInteractiveWorkspaces() throws IOException {
+        var html = new String(getClass().getResourceAsStream("/static/index.html").readAllBytes(), StandardCharsets.UTF_8);
+        var script = new String(getClass().getResourceAsStream("/static/js/app.js").readAllBytes(), StandardCharsets.UTF_8);
+
+        assertThat(html)
+            .contains("id=\"announcementFeed\"")
+            .contains("id=\"announcementFilters\"")
+            .contains("id=\"announcementPublisherPanel\"")
+            .contains("id=\"announcementPublisherForm\"")
+            .contains("id=\"meetingList\"")
+            .contains("id=\"classroom\"")
+            .contains("id=\"meetingJoin\"")
+            .contains("id=\"meetingHand\"")
+            .contains("id=\"classMessageForm\"")
+            .contains("id=\"supportCaseForm\"")
+            .contains("id=\"supportCaseList\"")
+            .contains("approved meeting provider")
+            .contains("approved university mail connection");
+        assertThat(script)
+            .contains("/api/campus-information/announcements")
+            .contains("staffReviewAccess = ['STAFF', 'ADMIN'].includes(profile.role)")
+            .contains("/api/campus-information/meetings")
+            .contains("/api/campus-information/support-cases")
+            .contains("messageType: selectedClassMessageType, body");
     }
 
     @Test
