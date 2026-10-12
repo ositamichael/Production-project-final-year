@@ -38,6 +38,8 @@ document.querySelector('#registrationForm')?.addEventListener('submit', async (e
       headers: { 'Content-Type': 'application/json', [csrf.headerName]: csrf.token },
       body: JSON.stringify({
         displayName: document.querySelector('#registerName').value.trim(),
+        courseName: document.querySelector('#registerCourse').value.trim(),
+        yearOfStudy: Number(document.querySelector('#registerYear').value),
         email,
         password: document.querySelector('#registerPassword').value,
         inviteCode: document.querySelector('#registerInvite').value.trim()

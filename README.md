@@ -6,7 +6,7 @@ This repository is being rebuilt as a Level 6 final-year software engineering pr
 
 ## Current status
 
-Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, Sprint 7 added transactional campus events and service bookings, Sprint 8 added moderated opportunities and personal application tracking, Sprint 9 added secure lost-and-found reporting, Sprint 10 added a fictional staff review workflow, and the current branch adds an invitation-only friends pilot:
+Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, Sprint 7 added transactional campus events and service bookings, Sprint 8 added moderated opportunities and personal application tracking, Sprint 9 added secure lost-and-found reporting, Sprint 10 added a fictional staff review workflow, and Sprint 11 expands the invitation-only pilot into a testable campus experience:
 
 - Spring Boot 4.1.1 with Java 21 as the target language level.
 - A responsive desktop, tablet and mobile dashboard prototype.
@@ -50,7 +50,10 @@ Sprint 1 established the testable engineering foundation, Sprint 2 added the acc
 - Persistent pilot profile photos, messages and short-lived consent-based locations.
 - Live WebRTC voice and video calls inside accepted private conversations, with authenticated signalling, consent prompts, mute/camera controls and no application recording.
 - Location sharing that is off by default, mutual between accepted connections, rounded and automatically expired.
-- A Docker deployment path and a focused friends-pilot test guide for a single-instance Render rehearsal.
+- A Docker deployment path and a focused campus-pilot test guide for a single-instance Render rehearsal.
+- A five-destination mobile navigation bar matching the mobile product design: My Campus, Circles, Messages, Events and More.
+- Self-declared course and year onboarding, privacy-filtered pilot coursemates and clearly labelled non-institutional academic context.
+- Pilot event, service and opportunity catalogues with account-specific registration, booking, saving and tracking workflows.
 
 The dashboard now contains working local social, event-registration, booking, opportunity-tracking, lost-and-found and fictional staff-review demonstrations, but it is not evidence of a live university integration. Real student identity, official timetables, university booking systems, employer vacancy feeds, staffed lost-property services and location require institutional approval, integration contracts, security review and deployment infrastructure. Messages, registrations, bookings, saved listings, tracker stages, notifications, item reports and claims are stored only in the local development environment. Production push notifications, institutionally governed staff moderation and safeguarding operations, secure media storage and retention policies remain future work.
 
@@ -106,6 +109,7 @@ UniCircle begins as a modular monolith. This keeps deployment manageable for a f
 - [`docs/sprints/08-opportunities.md`](docs/sprints/08-opportunities.md)
 - [`docs/sprints/09-lost-found.md`](docs/sprints/09-lost-found.md)
 - [`docs/sprints/10-lost-found-staff-review.md`](docs/sprints/10-lost-found-staff-review.md)
+- [`docs/sprints/11-campus-pilot.md`](docs/sprints/11-campus-pilot.md)
 
 ## Branching and assessment evidence
 

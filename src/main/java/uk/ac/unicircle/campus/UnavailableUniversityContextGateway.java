@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 @Component
-@Profile("prod | pilot")
+@Profile("prod")
 class UnavailableUniversityContextGateway implements UniversityContextGateway {
 
     @Override

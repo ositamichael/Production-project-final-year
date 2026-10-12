@@ -1,4 +1,5 @@
 const menuButton = document.querySelector('#menuButton');
+const mobileMoreButton = document.querySelector('#mobileMoreButton');
 const sidebar = document.querySelector('#sidebar');
 const notificationButton = document.querySelector('#notificationButton');
 const notificationPanel = document.querySelector('#notificationPanel');
@@ -8,6 +9,7 @@ const notificationBadge = document.querySelector('#notificationBadge');
 const notificationList = document.querySelector('#notificationList');
 const notificationSummary = document.querySelector('#notificationSummary');
 const messageUnreadBadge = document.querySelector('#messageUnreadBadge');
+const mobileMessageUnreadBadge = document.querySelector('#mobileMessageUnreadBadge');
 const globalSearch = document.querySelector('#globalSearch');
 const searchEmpty = document.querySelector('#searchEmpty');
 let pilotMode = false;
@@ -38,6 +40,13 @@ function closeModal(dialog) {
 menuButton?.addEventListener('click', () => {
   const open = sidebar.classList.toggle('open');
   menuButton.setAttribute('aria-expanded', String(open));
+  mobileMoreButton?.setAttribute('aria-expanded', String(open));
+});
+
+mobileMoreButton?.addEventListener('click', () => {
+  const open = sidebar.classList.toggle('open');
+  mobileMoreButton.setAttribute('aria-expanded', String(open));
+  menuButton?.setAttribute('aria-expanded', String(open));
 });
 
 const pageSurfaces = [...document.querySelectorAll('[data-page]')];
@@ -51,7 +60,6 @@ const hashToPage = new Map([
 ]);
 
 function showPage(pageName, { updateHistory = true, focus = true } = {}) {
-  if (pilotMode && !['campus', 'messages', 'map'].includes(pageName)) pageName = 'campus';
   const requestedPage = pageSurfaces.find((page) => page.dataset.page === pageName);
   const nextPage = requestedPage ?? pageSurfaces.find((page) => page.dataset.page === 'campus');
   pageSurfaces.forEach((page) => { page.hidden = page !== nextPage; });
@@ -63,6 +71,7 @@ function showPage(pageName, { updateHistory = true, focus = true } = {}) {
   });
   sidebar.classList.remove('open');
   menuButton?.setAttribute('aria-expanded', 'false');
+  mobileMoreButton?.setAttribute('aria-expanded', 'false');
   notificationPanel.hidden = true;
   notificationButton?.setAttribute('aria-expanded', 'false');
   if (updateHistory) {
@@ -1518,7 +1527,9 @@ function connectionLabel(state) {
 function renderUniversityContext(context) {
   document.querySelector('#academicSource').textContent = context.dataSource === 'FICTIONAL_DEVELOPMENT_FIXTURE'
     ? 'Fictional sandbox'
-    : 'Approved university source';
+    : context.dataSource === 'SELF_DECLARED_PILOT_PROFILE'
+      ? 'Pilot profile'
+      : 'Approved university source';
   document.querySelector('#academicProgramme').textContent = `${context.student.qualification} ${context.student.programmeTitle}`;
   document.querySelector('#academicProgrammeMeta').textContent = `${context.student.programmeCode} · Year ${context.student.yearOfStudy}`;
   document.querySelector('#academicNotice').textContent = context.dataNotice;
@@ -2421,6 +2432,10 @@ function updateMessageUnreadBadge() {
   const unread = loadedConversations.reduce((total, conversation) => total + Number(conversation.unreadCount || 0), 0);
   messageUnreadBadge.textContent = String(unread);
   messageUnreadBadge.hidden = unread === 0;
+  if (mobileMessageUnreadBadge) {
+    mobileMessageUnreadBadge.textContent = String(unread);
+    mobileMessageUnreadBadge.hidden = unread === 0;
+  }
 }
 
 function renderDashboardMessages() {
@@ -2834,19 +2849,19 @@ fetch('/api/platform/status')
   })
   .then((status) => {
     document.documentElement.dataset.platformStage = status.stage;
-    pilotMode = status.stage === 'Invitation-only friends pilot';
+    pilotMode = status.stage === 'Invitation-only campus pilot';
     if (pilotMode) {
       document.body.classList.add('pilot-mode');
       document.querySelector('#pilotWelcome').hidden = false;
       document.querySelector('#environmentBanner').textContent =
-        'Invitation-only friends pilot — real test accounts, not verified university identities or official campus data.';
+        'Invitation-only campus pilot — real test accounts and workflows; no university identity or official campus systems are connected.';
       document.querySelector('#notificationStorageNote').textContent =
         'Account-specific pilot updates. Do not share sensitive information while testing.';
+      document.querySelector('#messagePrivacyNote').textContent =
+        'Messages are stored for the signed-in pilot accounts and update across open sessions. Voice and video calls are live, are not recorded by UniCircle, and require both people to have the app open.';
       document.querySelector('#mapDashboardNote').textContent =
         'Share a five-minute position with accepted connections only when you choose. Both people must opt in.';
       void refreshConversationSummary();
-      if (!['campus', 'messages', 'map'].includes(document.querySelector('.page-surface:not([hidden])')?.dataset.page))
-        showPage('campus');
       if (!document.querySelector('#map-page').hidden) void loadLocationPanel();
     } else {
       locationText('Real location sharing is available in the invitation-only pilot, not the fictional sandbox.');
