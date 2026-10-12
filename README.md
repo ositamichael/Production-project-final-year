@@ -6,7 +6,7 @@ This repository is being rebuilt as a Level 6 final-year software engineering pr
 
 ## Current status
 
-Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, Sprint 7 added transactional campus events and service bookings, Sprint 8 added moderated opportunities and personal application tracking, Sprint 9 added secure lost-and-found reporting, Sprint 10 added a fictional staff review workflow, Sprint 11 expanded the invitation-only pilot into a testable campus experience, and Sprint 12 adds trusted campus information, private support and live-learning participation:
+Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, Sprint 7 added transactional campus events and service bookings, Sprint 8 added moderated opportunities and personal application tracking, Sprint 9 added secure lost-and-found reporting, Sprint 10 added a fictional staff review workflow, Sprint 11 expanded the invitation-only pilot into a testable campus experience, Sprint 12 added trusted campus information, private support and live-learning participation, and Sprint 13 adds structured multi-user acceptance evidence inside the same complete application:
 
 - Spring Boot 4.1.1 with Java 21 as the target language level.
 - A responsive desktop, tablet and mobile dashboard prototype.
@@ -60,6 +60,8 @@ Sprint 1 established the testable engineering foundation, Sprint 2 added the acc
 - Scheduled lectures, project meetings and careers drop-ins with persisted attendance and participant lists.
 - A live-class workspace with class chat, Q&A, raise/lower hand controls, agendas and provider-aware video-room status.
 - A configurable boundary for an approved meeting provider through `UNICIRCLE_MEETING_PROVIDER_BASE_URL`.
+- An account-specific Pilot Test Centre covering profiles, discovery, connections, messaging, calls, consent-based location, safety, announcements, bookings, opportunities, support, live classes, lost property and mobile access.
+- Persisted pass, fail, blocked and not-tested results with device and non-sensitive evidence notes for supervised staging evaluation.
 
 The dashboard now contains working local social, event-registration, booking, opportunity-tracking, lost-and-found, fictional staff-review, announcement, support-case and live-learning demonstrations, but it is not evidence of a live university integration. Real student identity, official timetables, staff publishing, university email, booking systems, employer vacancy feeds, staffed support services, multiparty video and location require institutional approval, integration contracts, security review and deployment infrastructure. The pilot records information in its own database; it does not falsely report that an email was sent or a video room was opened when those approved services are absent. Production push notifications, institutionally governed moderation and safeguarding operations, secure media storage and retention policies remain future work.
 
@@ -80,7 +82,7 @@ These credentials are deliberately fictional and exist only in the non-productio
 
 No local PostgreSQL installation is required for the default profile. It uses an in-memory H2 database configured to behave like PostgreSQL for early development. Production uses PostgreSQL and environment variables documented in `.env.example`.
 
-For the separate invitation-only test-account flow and Render rehearsal instructions, see [`docs/friends-pilot.md`](docs/friends-pilot.md). Pilot participants must never enter university credentials or Authenticator codes.
+For the invitation-only staging-account flow within the complete UniCircle application and Render rehearsal instructions, see [`docs/friends-pilot.md`](docs/friends-pilot.md). Pilot participants must never enter university credentials or Authenticator codes.
 
 ## Command-line checks
 
@@ -117,6 +119,7 @@ UniCircle begins as a modular monolith. This keeps deployment manageable for a f
 - [`docs/sprints/10-lost-found-staff-review.md`](docs/sprints/10-lost-found-staff-review.md)
 - [`docs/sprints/11-campus-pilot.md`](docs/sprints/11-campus-pilot.md)
 - [`docs/sprints/12-campus-information-live-learning.md`](docs/sprints/12-campus-information-live-learning.md)
+- [`docs/sprints/13-staging-acceptance-evidence.md`](docs/sprints/13-staging-acceptance-evidence.md)
 
 ## Branching and assessment evidence
 

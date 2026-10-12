@@ -506,6 +506,25 @@ dialog.dialog-fallback[open] { position: fixed !important; inset: 50% auto auto 
 .pilot-welcome-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
 .pilot-welcome-actions .primary-button, .pilot-welcome-actions .secondary-button { display: inline-flex; align-items: center; justify-content: center; width: auto; min-width: 150px; text-decoration: none; }
 
+/* Staging acceptance evidence */
+.pilot-test-notice { display: flex; align-items: flex-start; gap: 13px; margin-bottom: 16px; padding: 16px 18px; border: 1px solid #bfe4d8; border-radius: 15px; background: linear-gradient(135deg,#effbf7,#fff); color: #244a43; }
+.pilot-test-notice > .icon { flex: 0 0 auto; width: 24px; height: 24px; color: #128068; }
+.pilot-test-notice strong { font-size: .78rem; }.pilot-test-notice p { max-width: 85ch; margin: 5px 0 0; font-size: .66rem; line-height: 1.5; }
+.pilot-test-metrics article:nth-child(2) strong { color: #13805f; }.pilot-test-metrics article:nth-child(3) strong { color: #c64c43; }.pilot-test-metrics article:nth-child(4) strong { color: #9a6a16; }
+.pilot-test-list { display: grid; gap: 12px; margin: 16px 0; }
+.pilot-test-card { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 15px; padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: #fff; box-shadow: var(--shadow); }
+.pilot-test-card[data-status="PASS"] { border-left: 4px solid #20a37c; }.pilot-test-card[data-status="FAIL"] { border-left: 4px solid #df5d55; }.pilot-test-card[data-status="BLOCKED"] { border-left: 4px solid #d89a2e; }
+.pilot-test-number { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; background: #eaf2ff; color: var(--blue); font-size: .72rem; font-weight: 900; }
+.pilot-test-copy { display: grid; gap: 9px; min-width: 0; }.pilot-test-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.pilot-test-heading h3 { margin: 3px 0 0; color: var(--navy-900); font-size: .88rem; }.pilot-test-heading .eyebrow { font-size: .52rem; }
+.pilot-test-status { flex: 0 0 auto; padding: 6px 9px; border-radius: 999px; background: #edf1f6; color: #53667c; font-size: .54rem; font-weight: 850; }
+.pilot-test-status.pass { background: #dcf7ed; color: #13725a; }.pilot-test-status.fail { background: #ffe7e4; color: #a53f38; }.pilot-test-status.blocked { background: #fff0d6; color: #875b10; }
+.pilot-test-copy > p { margin: 0; color: #50657e; font-size: .67rem; line-height: 1.55; }.pilot-test-expected { padding: 10px 12px; border-radius: 10px; background: #f4f8fd; color: #314d6d; font-size: .63rem; line-height: 1.5; }.pilot-test-expected strong { color: var(--navy-900); }
+.pilot-test-form { display: grid; grid-template-columns: minmax(145px,.45fr) minmax(180px,.75fr) minmax(260px,1.5fr) auto; align-items: end; gap: 9px; padding-top: 3px; }
+.pilot-test-form label { display: grid; gap: 5px; color: #37516e; font-size: .57rem; font-weight: 800; }.pilot-test-form select, .pilot-test-form input { width: 100%; min-height: 39px; padding: 8px 10px; border: 1px solid #cbd9e9; border-radius: 9px; background: #fff; color: var(--ink); font: inherit; font-size: .62rem; }
+.pilot-test-form button { min-height: 39px; padding: 0 14px; border: 0; border-radius: 9px; background: var(--blue); color: #fff; cursor: pointer; font-size: .6rem; font-weight: 850; }.pilot-test-form button:disabled { cursor: wait; opacity: .6; }
+.pilot-test-meta { color: var(--muted); font-size: .54rem; }
+
 /* Campus information and live learning */
 .campus-updates-card, .live-class-card { grid-column: span 6; }
 .dashboard-update-list, .dashboard-meeting-list { display: grid; gap: 5px; }
@@ -612,6 +631,7 @@ dialog.dialog-fallback[open] { position: fixed !important; inset: 50% auto auto 
   .campus-updates-card, .live-class-card { grid-column: span 6; }
   .learning-workspace, .support-workspace { grid-template-columns: 1fr; }
   .meeting-list { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .pilot-test-form { grid-template-columns: repeat(2,minmax(0,1fr)); }.pilot-test-form button { align-self: stretch; }
 }
 
 @media (max-width: 620px) {
@@ -625,4 +645,5 @@ dialog.dialog-fallback[open] { position: fixed !important; inset: 50% auto auto 
   .announcement-visual { width: 40px; height: 40px; border-radius: 11px; }
   .learning-workspace { min-height: 0; }.meeting-list { grid-template-columns: 1fr; }.classroom-panel, .meeting-list-panel { padding: 13px; }.classroom-empty { min-height: 300px; }.classroom-stage { min-height: 280px; padding: 17px 12px; }.classroom-details { grid-template-columns: 1fr; }.classroom-heading { flex-direction: column; }.classroom-controls { gap: 6px; }.class-control { padding: 0 10px; }
   .support-workspace { grid-template-columns: 1fr; }
+  .pilot-test-card { grid-template-columns: 1fr; padding: 14px; }.pilot-test-number { width: 36px; height: 36px; }.pilot-test-heading { align-items: flex-start; flex-direction: column; }.pilot-test-form { grid-template-columns: 1fr; }
 }

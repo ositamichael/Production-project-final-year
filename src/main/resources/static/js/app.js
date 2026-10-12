@@ -57,7 +57,8 @@ const hashToPage = new Map([
   ['circles-page', 'circles'], ['messages-page', 'messages'], ['events-page', 'events'],
   ['services-page', 'services'], ['opportunities-page', 'opportunities'], ['map-page', 'map'],
   ['wellbeing-page', 'wellbeing'], ['lost-found-page', 'lost-found'],
-  ['lost-found-review-page', 'lost-found-review'], ['assistant-page', 'assistant']
+  ['lost-found-review-page', 'lost-found-review'], ['pilot-tests-page', 'pilot-tests'],
+  ['assistant-page', 'assistant']
 ]);
 
 function showPage(pageName, { updateHistory = true, focus = true } = {}) {
@@ -87,6 +88,7 @@ function showPage(pageName, { updateHistory = true, focus = true } = {}) {
   if (nextPage.dataset.page === 'wellbeing') void loadSupportCases();
   if (nextPage.dataset.page === 'lost-found-review' && staffReviewAccess) void loadStaffReview();
   if (nextPage.dataset.page === 'map' && pilotMode) void loadLocationPanel();
+  if (nextPage.dataset.page === 'pilot-tests' && pilotMode) void loadPilotTests();
   if (nextPage.dataset.page !== 'map') clearInterval(locationRefreshTimer);
 }
 
@@ -3332,6 +3334,145 @@ locationStop?.addEventListener('click', async () => {
 
 locationRefresh?.addEventListener('click', () => void loadLocationPanel());
 
+const pilotTestList = document.querySelector('#pilotTestList');
+
+function pilotTestStatusLabel(status) {
+  return { PASS: 'Passed', FAIL: 'Failed', BLOCKED: 'Blocked', NOT_RUN: 'Not tested' }[status] || 'Not tested';
+}
+
+function updatePilotTestSummary(plan) {
+  document.querySelector('#pilotTestTotal').textContent = plan.total;
+  document.querySelector('#pilotTestPassed').textContent = plan.passed;
+  document.querySelector('#pilotTestFailed').textContent = plan.failed;
+  document.querySelector('#pilotTestRemaining').textContent = plan.blocked + plan.notRun;
+}
+
+function pilotTestCard(scenario, index) {
+  const card = document.createElement('article');
+  card.className = 'pilot-test-card';
+  card.dataset.status = scenario.status;
+
+  const number = document.createElement('span');
+  number.className = 'pilot-test-number';
+  number.textContent = String(index + 1).padStart(2, '0');
+
+  const copy = document.createElement('div');
+  copy.className = 'pilot-test-copy';
+  const heading = document.createElement('div');
+  heading.className = 'pilot-test-heading';
+  const titleWrap = document.createElement('div');
+  const area = document.createElement('span');
+  area.className = 'eyebrow';
+  area.textContent = scenario.area;
+  const title = document.createElement('h3');
+  title.textContent = scenario.title;
+  titleWrap.append(area, title);
+  const status = document.createElement('span');
+  status.className = `pilot-test-status ${scenario.status.toLowerCase().replace('_', '-')}`;
+  status.textContent = pilotTestStatusLabel(scenario.status);
+  heading.append(titleWrap, status);
+
+  const instruction = document.createElement('p');
+  instruction.textContent = scenario.instruction;
+  const expected = document.createElement('div');
+  expected.className = 'pilot-test-expected';
+  const expectedTitle = document.createElement('strong');
+  expectedTitle.textContent = 'Expected result: ';
+  expected.append(expectedTitle, document.createTextNode(scenario.expectedResult));
+
+  const form = document.createElement('form');
+  form.className = 'pilot-test-form';
+  const statusLabel = document.createElement('label');
+  statusLabel.append(document.createTextNode('Result'));
+  const select = document.createElement('select');
+  select.setAttribute('aria-label', `${scenario.title} result`);
+  [['NOT_RUN', 'Not tested'], ['PASS', 'Pass'], ['FAIL', 'Fail'], ['BLOCKED', 'Blocked']].forEach(([value, label]) => {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = label;
+    option.selected = value === scenario.status;
+    select.append(option);
+  });
+  statusLabel.append(select);
+  const deviceLabel = document.createElement('label');
+  deviceLabel.append(document.createTextNode('Device or browser'));
+  const device = document.createElement('input');
+  device.maxLength = 180;
+  device.placeholder = 'e.g. iPhone and Chrome';
+  device.value = scenario.deviceLabel || '';
+  deviceLabel.append(device);
+  const noteLabel = document.createElement('label');
+  noteLabel.append(document.createTextNode('Evidence note'));
+  const note = document.createElement('input');
+  note.maxLength = 2000;
+  note.placeholder = 'What happened? Do not enter sensitive information.';
+  note.value = scenario.evidenceNote || '';
+  noteLabel.append(note);
+  const save = document.createElement('button');
+  save.type = 'submit';
+  save.textContent = 'Save result';
+  form.append(statusLabel, deviceLabel, noteLabel, save);
+
+  const metadata = document.createElement('small');
+  metadata.className = 'pilot-test-meta';
+  metadata.textContent = scenario.testedAt
+    ? `Last tested ${new Date(scenario.testedAt).toLocaleString()}`
+    : 'No result recorded for this account.';
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    save.disabled = true;
+    try {
+      const csrf = await csrfToken();
+      const response = await fetch(`/api/pilot-tests/${encodeURIComponent(scenario.code)}`, {
+        method: 'PUT',
+        headers: {
+          Accept: 'application/json', 'Content-Type': 'application/json',
+          [csrf.headerName]: csrf.token
+        },
+        body: JSON.stringify({ status: select.value, evidenceNote: note.value, deviceLabel: device.value })
+      });
+      if (response.status === 401) throw new Error('Sign in with an invited staging account to save results.');
+      if (!response.ok) throw new Error('The test result could not be saved. Check the information and try again.');
+      renderPilotTests(await response.json());
+      showToast(`${scenario.title} was recorded as ${pilotTestStatusLabel(select.value).toLowerCase()}.`);
+    } catch (error) {
+      showToast(error.message);
+    } finally {
+      save.disabled = false;
+    }
+  });
+
+  copy.append(heading, instruction, expected, form, metadata);
+  card.append(number, copy);
+  return card;
+}
+
+function renderPilotTests(plan) {
+  updatePilotTestSummary(plan);
+  pilotTestList.replaceChildren(...plan.scenarios.map(pilotTestCard));
+}
+
+async function loadPilotTests() {
+  if (!pilotTestList) return;
+  try {
+    const response = await fetch('/api/pilot-tests', { headers: { Accept: 'application/json' } });
+    if (response.status === 401) throw new Error('Sign in with an invited staging account to use the Pilot Test Centre.');
+    if (!response.ok) throw new Error('The pilot test plan is temporarily unavailable.');
+    renderPilotTests(await response.json());
+  } catch (error) {
+    pilotTestList.replaceChildren();
+    const state = document.createElement('div');
+    state.className = 'empty-state compact';
+    const heading = document.createElement('h3');
+    heading.textContent = 'Test plan unavailable';
+    const message = document.createElement('p');
+    message.textContent = error.message;
+    state.append(heading, message);
+    pilotTestList.append(state);
+  }
+}
+
 fetch('/api/platform/status')
   .then((response) => {
     if (!response.ok) throw new Error('Status endpoint unavailable');
@@ -3339,12 +3480,13 @@ fetch('/api/platform/status')
   })
   .then((status) => {
     document.documentElement.dataset.platformStage = status.stage;
-    pilotMode = status.stage === 'Invitation-only campus pilot';
+    pilotMode = status.stage === 'UniCircle Staging Campus';
     if (pilotMode) {
       document.body.classList.add('pilot-mode');
       document.querySelector('#pilotWelcome').hidden = false;
+      document.querySelector('#pilotTestNav').hidden = false;
       document.querySelector('#environmentBanner').textContent =
-        'Invitation-only campus pilot — real test accounts and workflows; no university identity or official campus systems are connected.';
+        'UniCircle Staging Campus — real invited accounts and workflows using fictional campus data; no official university systems are connected.';
       document.querySelector('#notificationStorageNote').textContent =
         'Account-specific pilot updates. Do not share sensitive information while testing.';
       document.querySelector('#messagePrivacyNote').textContent =
