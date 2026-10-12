@@ -1604,7 +1604,7 @@ async function loadUniversityContext() {
   }
 }
 
-async function loadProfile() {
+async function loadProfile(redirectWhenSignedOut = false) {
   profileFields.disabled = true;
   clearUniversityContext();
   setProfileStatus('Checking your secure session…');
@@ -1614,16 +1614,20 @@ async function loadProfile() {
       showSignedOutActions();
       setProfileStatus(pilotMode ? 'Sign in with your pilot account to continue.'
         : 'This profile is protected. Sign in with the fictional student account to test the complete experience safely.', 'error');
-      return;
+      if (redirectWhenSignedOut) window.location.assign('/sign-in');
+      return false;
     }
     if (!response.ok) throw new Error('Your profile is temporarily unavailable.');
     const profile = await response.json();
     populateProfile(profile);
     await loadUniversityContext();
     setProfileStatus(pilotMode ? 'Your pilot profile is ready to edit.' : 'Your verified profile is ready to edit.', 'success');
+    return true;
   } catch (error) {
     showSignedOutActions();
     setProfileStatus(error.message || 'Your profile could not be loaded.', 'error');
+    showToast(error.message || 'Your profile could not be loaded.');
+    return false;
   }
 }
 
@@ -1737,10 +1741,9 @@ function appendConnectionActions(container, person) {
   container.append(connect);
 }
 
-function openProfilePanel() {
+async function openProfilePanel() {
   if (!profileDialog) return;
-  openModal(profileDialog);
-  loadProfile();
+  if (await loadProfile(true)) openModal(profileDialog);
 }
 
 document.querySelectorAll('[data-open-profile]').forEach((button) => {

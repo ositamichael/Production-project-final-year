@@ -119,9 +119,12 @@ class FrontendStructureTests {
     @Test
     void profileEditorIsSignInGatedAndSupportsValidatedPhotographs() throws IOException {
         var resource = getClass().getResourceAsStream("/static/index.html");
+        var scriptResource = getClass().getResourceAsStream("/static/js/app.js");
         assertThat(resource).isNotNull();
+        assertThat(scriptResource).isNotNull();
 
         var html = new String(resource.readAllBytes(), StandardCharsets.UTF_8);
+        var script = new String(scriptResource.readAllBytes(), StandardCharsets.UTF_8);
         assertThat(html)
             .contains("id=\"profileButton\"")
             .contains("class=\"account-card\" id=\"sidebarProfileButton\" type=\"button\" data-open-profile")
@@ -140,6 +143,10 @@ class FrontendStructureTests {
             .contains("accept=\"image/png,image/jpeg\"")
             .contains("Profile changes require an authenticated university session")
             .contains("remove embedded metadata");
+
+        assertThat(script)
+            .contains("if (redirectWhenSignedOut) window.location.assign('/sign-in')")
+            .contains("if (await loadProfile(true)) openModal(profileDialog)");
     }
 
     @Test
