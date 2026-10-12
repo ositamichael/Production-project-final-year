@@ -1435,6 +1435,8 @@ const academicModules = document.querySelector('#academicModules');
 const academicCoursemates = document.querySelector('#academicCoursemates');
 const profileSignIn = document.querySelector('#profileSignIn');
 const profileSignOut = document.querySelector('#profileSignOut');
+const messagesAccountBadge = document.querySelector('#messagesAccountBadge');
+const studentDirectoryIdentity = document.querySelector('#studentDirectoryIdentity');
 
 function setProfileStatus(message, state = '') {
   profileStatus.textContent = message;
@@ -1444,6 +1446,10 @@ function setProfileStatus(message, state = '') {
 function showSignedOutActions() {
   profileSignIn.hidden = false;
   profileSignOut.hidden = true;
+  if (messagesAccountBadge) messagesAccountBadge.hidden = true;
+  if (studentDirectoryIdentity) {
+    studentDirectoryIdentity.textContent = 'Sign in to find other student accounts. Your own account is never listed as a friend suggestion.';
+  }
   staffReviewAccess = false;
   staffReviewNav.hidden = true;
   if (announcementPublisherPanel) announcementPublisherPanel.hidden = true;
@@ -1503,6 +1509,10 @@ function populateProfile(profile) {
   profileFields.disabled = false;
   showSignedInActions();
   updateVisibleIdentity(profile);
+  if (messagesAccountBadge) messagesAccountBadge.hidden = false;
+  if (studentDirectoryIdentity) {
+    studentDirectoryIdentity.textContent = `You are signed in as ${profile.displayName}. Your own account is not listed here because you cannot connect to yourself. Use a different account on another phone, browser or laptop to test friend requests.`;
+  }
   if (pilotMode) {
     document.querySelector('#universityAccountButton .verified-dot').hidden = true;
   }

@@ -6,8 +6,8 @@
   <meta name="description" content="UniCircle campus connection and services platform prototype">
   <title>UniCircle — My Campus</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/css/app.css?v=20">
-  <script src="/js/app.js?v=20" defer></script>
+  <link rel="stylesheet" href="/css/app.css?v=21">
+  <script src="/js/app.js?v=21" defer></script>
 </head>
 <body>
   <svg class="svg-sprite" aria-hidden="true">
@@ -318,7 +318,7 @@
       </section>
 
       <section class="page-view page-surface" id="messages-page" data-page="messages" hidden tabindex="-1" aria-labelledby="messagesTitle">
-        <header class="view-hero"><div class="view-title"><span class="view-icon navy"><svg class="icon" aria-hidden="true"><use href="#message"/></svg></span><div><span class="eyebrow">CONVERSATIONS</span><h2 id="messagesTitle">Messages</h2><p>Private conversations with accepted UniCircle connections.</p></div></div><button class="primary-compact" id="studentDirectoryButton" type="button"><svg class="icon" aria-hidden="true"><use href="#users"/></svg> Find students</button></header>
+        <header class="view-hero"><div class="view-title"><span class="view-icon navy"><svg class="icon" aria-hidden="true"><use href="#message"/></svg></span><div><span class="eyebrow">CONVERSATIONS</span><h2 id="messagesTitle">Messages</h2><p>Private conversations with accepted UniCircle connections.</p></div></div><div class="view-hero-actions"><span class="current-account-badge" id="messagesAccountBadge" hidden><span class="avatar avatar-michael" aria-hidden="true">UC</span><span><small>Signed in as</small><strong data-current-user-name>Campus guest</strong></span></span><button class="primary-compact" id="studentDirectoryButton" type="button"><svg class="icon" aria-hidden="true"><use href="#users"/></svg> Find students</button></div></header>
         <div class="message-workspace">
           <aside class="thread-panel"><label class="mini-search"><svg class="icon" aria-hidden="true"><use href="#search"/></svg><span class="sr-only">Search messages</span><input id="conversationSearch" type="search" placeholder="Search conversations"></label><div class="messages-state" id="conversationListStatus" role="status">Sign in to load your private conversations.</div><ul class="thread-list" id="conversationList"></ul></aside>
           <article class="conversation-panel">
@@ -463,7 +463,7 @@
       <button class="dialog-close" type="button" id="studentDirectoryClose" aria-label="Close student directory"><svg class="icon" aria-hidden="true"><use href="#close"/></svg></button>
       <div class="directory-heading"><span class="view-icon navy"><svg class="icon" aria-hidden="true"><use href="#users"/></svg></span><div><span class="eyebrow">VERIFIED CAMPUS DIRECTORY</span><h2 id="studentDirectoryTitle">Find students</h2><p>Discover new and existing students from your university, then request permission to connect.</p></div></div>
       <label class="mini-search wide"><svg class="icon" aria-hidden="true"><use href="#search"/></svg><span class="sr-only">Search students by name or course</span><input id="studentDirectorySearch" type="search" maxlength="80" placeholder="Search by name or course"></label>
-      <div class="directory-notice"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><span>Only profiles permitted by the student’s privacy setting are shown. Messaging activates after a request is accepted.</span></div>
+      <div class="directory-notice"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><span><strong id="studentDirectoryIdentity">Sign in to find other student accounts. Your own account is never listed as a friend suggestion.</strong><small>Only profiles allowed by each member’s privacy setting are shown. Messaging activates after a request is accepted.</small></span></div>
       <div class="student-directory-list" id="studentDirectoryList" aria-live="polite"></div>
     </div>
   </section>
