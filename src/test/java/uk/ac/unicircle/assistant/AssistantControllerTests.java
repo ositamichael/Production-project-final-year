@@ -22,14 +22,17 @@ class AssistantControllerTests {
     MockMvc mockMvc;
 
     @Test
-    void assistantRequiresAnAuthenticatedAccount() throws Exception {
+    void assistantIsAvailableToGuestsWithoutExposingPrivateAccountData() throws Exception {
         mockMvc.perform(get("/api/assistant/status"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.enabled").value(false));
 
         mockMvc.perform(post("/api/assistant/ask").with(csrf())
                         .contentType("application/json")
                         .content("{\"message\":\"Help me study\",\"mode\":\"STUDY_COACH\"}"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mode").value("STUDY_COACH"))
+                .andExpect(jsonPath("$.live").value(false));
     }
 
     @Test

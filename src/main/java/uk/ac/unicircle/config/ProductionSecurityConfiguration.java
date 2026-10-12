@@ -21,7 +21,7 @@ public class ProductionSecurityConfiguration {
                         .requestMatchers(
                                 "/", "/index.html", "/favicon.svg", "/css/**", "/js/**", "/images/**",
                                 "/error", "/sign-in", "/api/platform/status", "/api/security/csrf", "/actuator/health",
-                                "/oauth2/**", "/login/**")
+                                "/api/assistant/**", "/oauth2/**", "/login/**")
                         .permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptions -> exceptions.defaultAuthenticationEntryPointFor(

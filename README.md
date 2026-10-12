@@ -88,7 +88,7 @@ No local PostgreSQL installation is required for the default profile. It uses an
 
 ## Ask UniCircle AI setup
 
-The assistant interface and protected API run without a provider key, but live answers, web research, code execution and image generation remain disabled until the deployment has a valid `OPENAI_API_KEY`. Add the key only as a private server-side environment variable in Render or the chosen host; never place it in JavaScript, commit it to Git or ask a student to enter it.
+The assistant interface and public API run without an account, but live answers, web research, code execution and image generation remain disabled until the deployment has a valid `OPENAI_API_KEY`. Add the key only as a private server-side environment variable in Render or the chosen host; never place it in JavaScript, commit it to Git or ask a student to enter it. Guest requests receive the same validation, moderation and session-based usage limit as signed-in requests; private profiles, messaging and university data remain account-protected.
 
 The default main model is `gpt-6.1-sol`, selected as a strong balance of reasoning quality and cost, and the default image tool is `gpt-image-2.5-flare`. Both can be changed without code edits using `UNICIRCLE_ASSISTANT_MODEL` and `UNICIRCLE_ASSISTANT_IMAGE_MODEL`. Provider usage is chargeable and should be protected with account limits, budget alerts and institutional approval before a wider pilot.
 
