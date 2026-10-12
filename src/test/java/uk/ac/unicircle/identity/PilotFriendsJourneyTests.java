@@ -64,6 +64,14 @@ class PilotFriendsJourneyTests {
     }
 
     @Test
+    void publicErrorEndpointDoesNotReplaceRegistrationGuidanceWithUnauthorized() throws Exception {
+        mockMvc.perform(get("/error").requestAttr("jakarta.servlet.error.status_code", 400)
+                        .requestAttr("jakarta.servlet.error.request_uri", "/api/pilot/register")
+                        .requestAttr("jakarta.servlet.error.message", "Invalid registration request"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void twoFriendsCanJoinConnectChatAndShareOnlyWithMutualConsent() throws Exception {
         register("alice@example.net", "Alice Hill");
         register("bob@example.net", "Bob Dean");
