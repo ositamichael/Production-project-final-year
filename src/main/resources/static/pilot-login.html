@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Invitation-only access to the complete UniCircle Staging Campus">
+  <meta name="description" content="Account access to the complete UniCircle Staging Campus">
   <title>Staging Campus — UniCircle</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/css/auth.css?v=2">
-  <script src="/js/pilot-auth.js?v=1" defer></script>
+  <script src="/js/pilot-auth.js?v=2" defer></script>
 </head>
 <body>
   <main class="auth-shell">
@@ -16,7 +16,7 @@
       <div class="story-content">
         <span class="environment-label">UNICIRCLE STAGING CAMPUS</span>
         <h1 id="storyTitle">Your campus life, connected.</h1>
-        <p>Test the complete campus experience with another invited member: connect, message, call and explore every service.</p>
+        <p>Test the complete campus experience with another member: connect, message, call and explore every service.</p>
         <ul class="trust-list">
           <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg><span>Separate account for each person</span></li>
           <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg><span>Messages only after a request is accepted</span></li>
@@ -40,7 +40,7 @@
           <button class="sign-in-button" id="signInButton" type="submit" disabled>Sign in to UniCircle</button>
         </form>
         <details class="pilot-register">
-          <summary>New here? Create an invited account</summary>
+          <summary>New here? Create an account</summary>
           <form id="registrationForm">
             <label for="registerName">Your name</label>
             <div class="input-control"><input id="registerName" type="text" maxlength="80" autocomplete="name" required></div>
@@ -52,12 +52,10 @@
             <div class="input-control"><input id="registerEmail" type="email" maxlength="320" autocomplete="email" required></div>
             <label for="registerPassword">Create a password (12 characters or more)</label>
             <div class="input-control"><input id="registerPassword" type="password" minlength="12" maxlength="128" autocomplete="new-password" required></div>
-            <label for="registerInvite">Invitation code</label>
-            <div class="input-control"><input id="registerInvite" type="text" autocomplete="off" required></div>
             <button class="sign-in-button" id="registerButton" type="submit" disabled>Create staging account</button>
           </form>
         </details>
-        <p class="separation-notice">These accounts are self-declared test identities, not verified Leeds Beckett accounts. Share the invitation privately and avoid uploading sensitive information.</p>
+        <p class="separation-notice">These accounts are self-declared test identities, not verified Leeds Beckett accounts. Use test information and avoid uploading sensitive information.</p>
         <a class="back-link" href="/">Return to campus preview</a>
       </div>
     </section>

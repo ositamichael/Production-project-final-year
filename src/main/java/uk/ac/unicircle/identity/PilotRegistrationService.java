@@ -1,13 +1,8 @@
 package uk.ac.unicircle.identity;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.Locale;
 import java.util.UUID;
 
-import jakarta.annotation.PostConstruct;
-
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -27,31 +22,17 @@ class PilotRegistrationService {
     private final UserAccountRepository accounts;
     private final JdbcTemplate jdbc;
     private final PasswordEncoder passwordEncoder;
-    private final String inviteCode;
 
     PilotRegistrationService(UniversityRepository universities, UserAccountRepository accounts,
-            JdbcTemplate jdbc, PasswordEncoder passwordEncoder,
-            @Value("${unicircle.pilot.invite-code:}") String inviteCode) {
+            JdbcTemplate jdbc, PasswordEncoder passwordEncoder) {
         this.universities = universities;
         this.accounts = accounts;
         this.jdbc = jdbc;
         this.passwordEncoder = passwordEncoder;
-        this.inviteCode = inviteCode;
-    }
-
-    @PostConstruct
-    void validateConfiguration() {
-        if (inviteCode.length() < 32) {
-            throw new IllegalStateException("PILOT_INVITE_CODE must contain at least 32 characters.");
-        }
     }
 
     @Transactional
     void register(PilotRegistrationController.RegistrationRequest request) {
-        if (!MessageDigest.isEqual(inviteCode.getBytes(StandardCharsets.UTF_8),
-                request.inviteCode().getBytes(StandardCharsets.UTF_8))) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The pilot invitation is invalid.");
-        }
         String email = request.email().strip().toLowerCase(Locale.ROOT);
         if (accounts.findByEmailIgnoreCase(email).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "An account already exists for this email.");

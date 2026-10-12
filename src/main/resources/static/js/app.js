@@ -1601,7 +1601,7 @@ async function loadProfile() {
     const response = await fetch('/api/profile/me', { headers: { Accept: 'application/json' } });
     if (response.status === 401 || response.status === 403) {
       showSignedOutActions();
-      setProfileStatus(pilotMode ? 'Sign in with your invited pilot account to continue.'
+      setProfileStatus(pilotMode ? 'Sign in with your pilot account to continue.'
         : 'This profile is protected. Sign in with the fictional student account to test the complete experience safely.', 'error');
       return;
     }
@@ -3432,7 +3432,7 @@ function pilotTestCard(scenario, index) {
         },
         body: JSON.stringify({ status: select.value, evidenceNote: note.value, deviceLabel: device.value })
       });
-      if (response.status === 401) throw new Error('Sign in with an invited staging account to save results.');
+      if (response.status === 401) throw new Error('Sign in with a staging account to save results.');
       if (!response.ok) throw new Error('The test result could not be saved. Check the information and try again.');
       renderPilotTests(await response.json());
       showToast(`${scenario.title} was recorded as ${pilotTestStatusLabel(select.value).toLowerCase()}.`);
@@ -3457,7 +3457,7 @@ async function loadPilotTests() {
   if (!pilotTestList) return;
   try {
     const response = await fetch('/api/pilot-tests', { headers: { Accept: 'application/json' } });
-    if (response.status === 401) throw new Error('Sign in with an invited staging account to use the Pilot Test Centre.');
+    if (response.status === 401) throw new Error('Sign in with a staging account to use the Pilot Test Centre.');
     if (!response.ok) throw new Error('The pilot test plan is temporarily unavailable.');
     renderPilotTests(await response.json());
   } catch (error) {
@@ -3486,7 +3486,7 @@ fetch('/api/platform/status')
       document.querySelector('#pilotWelcome').hidden = false;
       document.querySelector('#pilotTestNav').hidden = false;
       document.querySelector('#environmentBanner').textContent =
-        'UniCircle Staging Campus — real invited accounts and workflows using fictional campus data; no official university systems are connected.';
+        'UniCircle Staging Campus — real test accounts and workflows using fictional campus data; no official university systems are connected.';
       document.querySelector('#notificationStorageNote').textContent =
         'Account-specific pilot updates. Do not share sensitive information while testing.';
       document.querySelector('#messagePrivacyNote').textContent =

@@ -20,7 +20,3 @@ server:
         secure: true
         http-only: true
         same-site: lax
-
-unicircle:
-  pilot:
-    invite-code: ${PILOT_INVITE_CODE}

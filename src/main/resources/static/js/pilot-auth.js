@@ -41,12 +41,23 @@ document.querySelector('#registrationForm')?.addEventListener('submit', async (e
         courseName: document.querySelector('#registerCourse').value.trim(),
         yearOfStudy: Number(document.querySelector('#registerYear').value),
         email,
-        password: document.querySelector('#registerPassword').value,
-        inviteCode: document.querySelector('#registerInvite').value.trim()
+        password: document.querySelector('#registerPassword').value
       })
     });
-    if (response.status === 409) throw new Error('This email already has a staging account. Sign in above.');
-    if (response.status === 400) throw new Error('Check your details and invitation code. Passwords need at least 12 characters.');
+    const problem = response.ok ? null : await response.json().catch(() => null);
+    if (problem?.code === 'VALIDATION_ERROR') {
+      const labels = {
+        displayName: 'name', courseName: 'course', yearOfStudy: 'year of study',
+        email: 'email address', password: 'password'
+      };
+      const first = Object.entries(problem.fields || {})[0];
+      const detail = first ? `${labels[first[0]] || first[0]} ${first[1]}` : problem.message;
+      throw new Error(`Check your ${detail}.`);
+    }
+    if (response.status === 409 || problem?.code === 'EMAIL_EXISTS') {
+      throw new Error('This email already has a staging account. Sign in above.');
+    }
+    if (response.status === 400) throw new Error(problem?.message || 'Check your registration details.');
     if (!response.ok) throw new Error('Account creation is unavailable. Please try again.');
     document.querySelector('#username').value = email;
     document.querySelector('#password').focus();

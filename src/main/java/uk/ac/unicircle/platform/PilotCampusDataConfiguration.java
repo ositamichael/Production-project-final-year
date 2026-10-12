@@ -83,7 +83,7 @@ class PilotCampusDataConfiguration {
     private void seedEventsAndServices(JdbcTemplate jdbc) {
         LocalDate nextMonday = LocalDate.now(CAMPUS_ZONE).with(TemporalAdjusters.next(DayOfWeek.MONDAY));
         event(jdbc, "5f28500c-8509-4177-a253-6cf20f673101", "Pilot Welcome Meetup",
-                "Meet other invited testers and explore the UniCircle connection journey.",
+                "Meet other pilot testers and explore the UniCircle connection journey.",
                 "SOCIAL", "Campus Hub", at(nextMonday, 12, 0), at(nextMonday, 13, 30), 80);
         event(jdbc, "5f28500c-8509-4177-a253-6cf20f673102", "Careers and Placement Drop-in",
                 "Bring your CV and discuss placements, internships and graduate preparation.",
@@ -171,7 +171,7 @@ class PilotCampusDataConfiguration {
                 "Student Community Ambassador", "Help welcome new pilot members and improve campus connection.",
                 "Support test events, collect structured feedback and help members find the right campus service.",
                 "JOB", "ON_CAMPUS", "Campus Hub", "6 hours per week", "Paid pilot role",
-                "Communication,Teamwork,Event support", "Open to invited student testers.", 28);
+                "Communication,Teamwork,Event support", "Open to staging student testers.", 28);
         opportunity(jdbc, "9d6c9440-c94d-45bb-e697-afb64fb17102", employer,
                 "Software Engineering Placement", "Join a supervised product team for a structured placement.",
                 "Work with Java, APIs, automated testing and delivery practices with technical mentoring.",

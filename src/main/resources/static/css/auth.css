@@ -51,7 +51,7 @@ form label { display: block; margin: 13px 0 6px; color: #29415f; font-size: .72r
 @media (max-width: 900px) { .auth-shell { grid-template-columns: 1fr; }.auth-story { min-height: 350px; padding: 34px; }.story-content { margin: 70px 0; }.story-content h1 { font-size: 2.7rem; }.auth-form-panel { padding: 45px 28px; } }
 @media (max-width: 520px) { .auth-shell { width: 100%; min-height: 100vh; margin: 0; border: 0; border-radius: 0; }.auth-story { min-height: 300px; padding: 26px 22px; }.story-content { margin: 52px 0 38px; }.story-content h1 { font-size: 2.2rem; }.trust-list { display: none; }.auth-form-panel { padding: 36px 22px; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; } }
-/* Invitation-only pilot registration follows the existing sign-in visual language. */
+/* Pilot registration follows the existing sign-in visual language. */
 .pilot-register { margin-top: 1.5rem; padding: 1rem 0; border-top: 1px solid rgba(14, 48, 91, .15); }
 .pilot-register summary { cursor: pointer; color: #153c75; font-weight: 700; }
 .pilot-register form { margin-top: 1.25rem; }

@@ -31,7 +31,7 @@ public class PlatformStatusService {
         return new PlatformStatus(
                 "UniCircle",
                 pilot ? "UniCircle Staging Campus" : "Sprint 10 engineering prototype",
-                pilot ? "STAGING — real invited accounts with fictional campus records; no university identity or official campus data connected"
+                pilot ? "STAGING — real test accounts with fictional campus records; no university identity or official campus data connected"
                         : "Prototype fixtures only — no live university systems connected",
                 List.of(
                         "Multi-university data boundary",
