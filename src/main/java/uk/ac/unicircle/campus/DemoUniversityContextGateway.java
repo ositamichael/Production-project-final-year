@@ -15,7 +15,7 @@ import uk.ac.unicircle.campus.UniversityContextResponse.StudentSummary;
 import uk.ac.unicircle.campus.UniversityContextResponse.UniversitySummary;
 
 @Component
-@Profile("!prod")
+@Profile("!prod & !pilot")
 class DemoUniversityContextGateway implements UniversityContextGateway {
 
     private static final String SOURCE = "FICTIONAL_DEVELOPMENT_FIXTURE";

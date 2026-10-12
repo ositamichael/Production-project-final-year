@@ -35,6 +35,11 @@ class CurrentIdentityService implements CurrentIdentity {
                             issuer.toString(), authentication.getName())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "The authenticated university account has not been provisioned."));
+        } else if (environment.acceptsProfiles(Profiles.of("pilot"))) {
+            String authenticatedName = authentication == null ? "" : authentication.getName();
+            account = accounts.findByEmailIgnoreCase(authenticatedName)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                            "The pilot account is unavailable."));
         } else if (!environment.acceptsProfiles(Profiles.of("prod"))) {
             String authenticatedName = authentication == null ? "" : authentication.getName();
             account = accounts.findByEmailIgnoreCase(authenticatedName)

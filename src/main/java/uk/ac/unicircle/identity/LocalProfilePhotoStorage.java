@@ -19,10 +19,12 @@ import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.ImageOutputStream;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 @Component
+@Profile("!pilot")
 class LocalProfilePhotoStorage implements ProfilePhotoStorage {
 
     static final long MAX_UPLOAD_BYTES = 5L * 1024 * 1024;

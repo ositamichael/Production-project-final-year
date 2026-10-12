@@ -25,7 +25,8 @@ final class SocialResponses {
             OffsetDateTime joinedAt,
             UUID connectionId,
             String connectionStatus,
-            String connectionDirection) {
+            String connectionDirection,
+            boolean hasPhoto) {
     }
 
     record ConversationResponse(

@@ -21,7 +21,8 @@ class SignInController {
     RedirectView signIn() {
         String destination = environment.acceptsProfiles(Profiles.of("prod"))
                 ? "/oauth2/authorization/university"
-                : "/demo-login.html";
+                : environment.acceptsProfiles(Profiles.of("pilot"))
+                    ? "/pilot-login.html" : "/demo-login.html";
         RedirectView redirect = new RedirectView(URI.create(destination).toASCIIString());
         redirect.setExposeModelAttributes(false);
         return redirect;

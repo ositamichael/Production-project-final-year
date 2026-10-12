@@ -6,7 +6,7 @@ This repository is being rebuilt as a Level 6 final-year software engineering pr
 
 ## Current status
 
-Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, Sprint 7 added transactional campus events and service bookings, Sprint 8 added moderated opportunities and personal application tracking, Sprint 9 added secure lost-and-found reporting, and Sprint 10 adds a fictional staff review workflow:
+Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, Sprint 7 added transactional campus events and service bookings, Sprint 8 added moderated opportunities and personal application tracking, Sprint 9 added secure lost-and-found reporting, Sprint 10 added a fictional staff review workflow, and the current branch adds an invitation-only friends pilot:
 
 - Spring Boot 4.1.1 with Java 21 as the target language level.
 - A responsive desktop, tablet and mobile dashboard prototype.
@@ -46,6 +46,11 @@ Sprint 1 established the testable engineering foundation, Sprint 2 added the acc
 - A development-only fictional student sign-in with a real Spring Security session and secure logout.
 - A dedicated sign-in experience that explicitly prevents the use of Leeds Beckett or Microsoft credentials.
 - API requests return a clear unauthorised response rather than leaking protected profile information or returning a login page.
+- Separate invitation-only pilot accounts with strong password hashing and database-backed profiles.
+- Persistent pilot profile photos, messages and short-lived consent-based locations.
+- Live WebRTC voice and video calls inside accepted private conversations, with authenticated signalling, consent prompts, mute/camera controls and no application recording.
+- Location sharing that is off by default, mutual between accepted connections, rounded and automatically expired.
+- A Docker deployment path and a focused friends-pilot test guide for a single-instance Render rehearsal.
 
 The dashboard now contains working local social, event-registration, booking, opportunity-tracking, lost-and-found and fictional staff-review demonstrations, but it is not evidence of a live university integration. Real student identity, official timetables, university booking systems, employer vacancy feeds, staffed lost-property services and location require institutional approval, integration contracts, security review and deployment infrastructure. Messages, registrations, bookings, saved listings, tracker stages, notifications, item reports and claims are stored only in the local development environment. Production push notifications, institutionally governed staff moderation and safeguarding operations, secure media storage and retention policies remain future work.
 
@@ -65,6 +70,8 @@ The sign-in page also offers fictional Aisha, James and Sophie student accounts 
 These credentials are deliberately fictional and exist only in the non-production profile. They can be overridden with `UNICIRCLE_DEMO_USERNAME` and `UNICIRCLE_DEMO_PASSWORD`. Never use a real university password or Authenticator code in this form.
 
 No local PostgreSQL installation is required for the default profile. It uses an in-memory H2 database configured to behave like PostgreSQL for early development. Production uses PostgreSQL and environment variables documented in `.env.example`.
+
+For the separate invitation-only test-account flow and Render rehearsal instructions, see [`docs/friends-pilot.md`](docs/friends-pilot.md). Pilot participants must never enter university credentials or Authenticator codes.
 
 ## Command-line checks
 

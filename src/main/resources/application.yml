@@ -40,6 +40,11 @@ info:
     data-status: Prototype fixtures only
 
 unicircle:
+  calls:
+    stun-urls: ${UNICIRCLE_STUN_URLS:stun:stun.l.google.com:19302}
+    turn-urls: ${UNICIRCLE_TURN_URLS:}
+    turn-username: ${UNICIRCLE_TURN_USERNAME:}
+    turn-credential: ${UNICIRCLE_TURN_CREDENTIAL:}
   demo:
     username: ${UNICIRCLE_DEMO_USERNAME:student@demo.unicircle.test}
     password: ${UNICIRCLE_DEMO_PASSWORD:CampusDemo!2026}

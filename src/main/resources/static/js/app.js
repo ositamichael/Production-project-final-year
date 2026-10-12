@@ -10,6 +10,8 @@ const notificationSummary = document.querySelector('#notificationSummary');
 const messageUnreadBadge = document.querySelector('#messageUnreadBadge');
 const globalSearch = document.querySelector('#globalSearch');
 const searchEmpty = document.querySelector('#searchEmpty');
+let pilotMode = false;
+let locationRefreshTimer;
 
 function openModal(dialog) {
   if (dialog.matches('dialog')) {
@@ -49,6 +51,7 @@ const hashToPage = new Map([
 ]);
 
 function showPage(pageName, { updateHistory = true, focus = true } = {}) {
+  if (pilotMode && !['campus', 'messages', 'map'].includes(pageName)) pageName = 'campus';
   const requestedPage = pageSurfaces.find((page) => page.dataset.page === pageName);
   const nextPage = requestedPage ?? pageSurfaces.find((page) => page.dataset.page === 'campus');
   pageSurfaces.forEach((page) => { page.hidden = page !== nextPage; });
@@ -70,6 +73,8 @@ function showPage(pageName, { updateHistory = true, focus = true } = {}) {
   if (focus && nextPage !== document.querySelector('#campus')) nextPage.focus({ preventScroll: true });
   if (nextPage.dataset.page === 'messages') void loadMessagingWorkspace();
   if (nextPage.dataset.page === 'lost-found-review' && staffReviewAccess) void loadStaffReview();
+  if (nextPage.dataset.page === 'map' && pilotMode) void loadLocationPanel();
+  if (nextPage.dataset.page !== 'map') clearInterval(locationRefreshTimer);
 }
 
 pageLinks.forEach((item) => {
@@ -1437,6 +1442,17 @@ function initialsFor(name) {
   return name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'U';
 }
 
+function showMemberPhoto(avatar, accountId) {
+  const photo = new Image();
+  photo.onload = () => {
+    avatar.style.backgroundImage = `url("${photo.src}")`;
+    avatar.style.backgroundSize = 'cover';
+    avatar.style.backgroundPosition = 'center';
+    avatar.textContent = '';
+  };
+  photo.src = `/api/profile/${encodeURIComponent(accountId)}/photo`;
+}
+
 function updateVisibleIdentity(profile) {
   document.querySelectorAll('[data-current-user-name]').forEach((node) => { node.textContent = profile.displayName; });
   document.querySelectorAll('[data-current-user-course]').forEach((node) => { node.textContent = profile.courseName || profile.role; });
@@ -1470,6 +1486,9 @@ function populateProfile(profile) {
   profileFields.disabled = false;
   showSignedInActions();
   updateVisibleIdentity(profile);
+  if (pilotMode) {
+    document.querySelector('#universityAccountButton .verified-dot').hidden = true;
+  }
   connectSocialRealtime();
   void Promise.all([
     loadNotifications(),
@@ -1560,14 +1579,15 @@ async function loadProfile() {
     const response = await fetch('/api/profile/me', { headers: { Accept: 'application/json' } });
     if (response.status === 401 || response.status === 403) {
       showSignedOutActions();
-      setProfileStatus('This profile is protected. Sign in with the fictional student account to test the complete experience safely.', 'error');
+      setProfileStatus(pilotMode ? 'Sign in with your invited pilot account to continue.'
+        : 'This profile is protected. Sign in with the fictional student account to test the complete experience safely.', 'error');
       return;
     }
     if (!response.ok) throw new Error('Your profile is temporarily unavailable.');
     const profile = await response.json();
     populateProfile(profile);
     await loadUniversityContext();
-    setProfileStatus('Your verified profile is ready to edit.', 'success');
+    setProfileStatus(pilotMode ? 'Your pilot profile is ready to edit.' : 'Your verified profile is ready to edit.', 'success');
   } catch (error) {
     showSignedOutActions();
     setProfileStatus(error.message || 'Your profile could not be loaded.', 'error');
@@ -1806,6 +1826,24 @@ const conversationTrust = document.querySelector('#conversationTrust');
 const messageComposer = document.querySelector('#messageComposer');
 const messageInput = document.querySelector('#messageInput');
 const messageSend = document.querySelector('#messageSend');
+const conversationCallActions = document.querySelector('#conversationCallActions');
+const audioCallButton = document.querySelector('#audioCallButton');
+const videoCallButton = document.querySelector('#videoCallButton');
+const callDialog = document.querySelector('#callDialog');
+const callPeerName = document.querySelector('#callPeerName');
+const callPeerAvatar = document.querySelector('#callPeerAvatar');
+const callDirection = document.querySelector('#callDirection');
+const callStatus = document.querySelector('#callStatus');
+const callNetworkNotice = document.querySelector('#callNetworkNotice');
+const remoteCallVideo = document.querySelector('#remoteCallVideo');
+const localCallVideo = document.querySelector('#localCallVideo');
+const incomingCallActions = document.querySelector('#incomingCallActions');
+const activeCallActions = document.querySelector('#activeCallActions');
+const callAccept = document.querySelector('#callAccept');
+const callDecline = document.querySelector('#callDecline');
+const callMute = document.querySelector('#callMute');
+const callCamera = document.querySelector('#callCamera');
+const callEnd = document.querySelector('#callEnd');
 const studentDirectoryDialog = document.querySelector('#studentDirectoryDialog');
 const studentDirectoryList = document.querySelector('#studentDirectoryList');
 const studentDirectorySearch = document.querySelector('#studentDirectorySearch');
@@ -1815,6 +1853,8 @@ let activeConversationAccountId = null;
 let socialSocket = null;
 let realtimeReconnectTimer = null;
 let directoryTimer;
+let callConfiguration = null;
+let activeCall = null;
 
 function formatMessageTime(value) {
   if (!value) return '';
@@ -1910,6 +1950,379 @@ async function loadNotifications() {
   }
 }
 
+const CALL_SIGNAL_TYPES = new Set([
+  'CALL_OFFER', 'CALL_ANSWER', 'CALL_ICE_CANDIDATE', 'CALL_REJECTED',
+  'CALL_CANCELLED', 'CALL_ENDED', 'CALL_BUSY', 'CALL_UNAVAILABLE',
+  'CALL_FORBIDDEN', 'CALL_INVALID', 'CALL_RESOLVED_ELSEWHERE'
+]);
+
+function callId() {
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
+    const random = Math.random() * 16 | 0;
+    const value = character === 'x' ? random : (random & 0x3) | 0x8;
+    return value.toString(16);
+  });
+}
+
+function setCallButtonsAvailable(available) {
+  if (!conversationCallActions) return;
+  conversationCallActions.hidden = !available;
+  audioCallButton.disabled = !available || Boolean(activeCall);
+  videoCallButton.disabled = !available || Boolean(activeCall);
+}
+
+async function loadCallConfiguration() {
+  if (callConfiguration) return callConfiguration;
+  const response = await fetch('/api/social/calls/configuration', { headers: { Accept: 'application/json' } });
+  if (!response.ok) throw new Error('Call configuration is temporarily unavailable.');
+  const result = await response.json();
+  callConfiguration = {
+    iceServers: (result.iceServers || []).map((server) => ({
+      urls: server.urls,
+      ...(server.username ? { username: server.username } : {}),
+      ...(server.credential ? { credential: server.credential } : {})
+    })),
+    relayConfigured: Boolean(result.relayConfigured),
+    privacyNotice: result.privacyNotice
+  };
+  return callConfiguration;
+}
+
+function waitForRealtime() {
+  if (socialSocket?.readyState === WebSocket.OPEN) return Promise.resolve();
+  connectSocialRealtime();
+  return new Promise((resolve, reject) => {
+    const started = Date.now();
+    const timer = setInterval(() => {
+      if (socialSocket?.readyState === WebSocket.OPEN) {
+        clearInterval(timer);
+        resolve();
+      } else if (Date.now() - started > 4000) {
+        clearInterval(timer);
+        reject(new Error('The live call service is not connected. Please try again.'));
+      }
+    }, 100);
+  });
+}
+
+async function sendCallSignal(type, details = {}, call = activeCall) {
+  if (!call) return;
+  await waitForRealtime();
+  socialSocket.send(JSON.stringify({
+    type,
+    callId: call.id,
+    targetAccountId: call.peerAccountId,
+    ...details
+  }));
+}
+
+function updateCallControl(button, pressed, activeIcon, inactiveIcon, activeLabel, inactiveLabel) {
+  button.setAttribute('aria-pressed', String(pressed));
+  button.querySelector('use').setAttribute('href', `#${pressed ? activeIcon : inactiveIcon}`);
+  button.querySelector('span').textContent = pressed ? activeLabel : inactiveLabel;
+}
+
+function showCallInterface(call, mode) {
+  callPeerName.textContent = call.peerName;
+  callPeerAvatar.textContent = initialsFor(call.peerName);
+  callDirection.textContent = mode === 'incoming'
+    ? `INCOMING ${call.media === 'VIDEO' ? 'VIDEO' : 'VOICE'} CALL`
+    : `${call.media === 'VIDEO' ? 'VIDEO' : 'VOICE'} CALL`;
+  callStatus.textContent = mode === 'incoming' ? `${call.peerName} is calling you.` : `Calling ${call.peerName}…`;
+  incomingCallActions.hidden = mode !== 'incoming';
+  activeCallActions.hidden = mode === 'incoming';
+  callCamera.hidden = call.media !== 'VIDEO';
+  callMute.disabled = false;
+  callCamera.disabled = false;
+  callEnd.disabled = false;
+  updateCallControl(callMute, false, 'mic-off', 'mic', 'Unmute', 'Mute');
+  updateCallControl(callCamera, false, 'video-off', 'video', 'Camera on', 'Camera');
+  remoteCallVideo.hidden = true;
+  remoteCallVideo.srcObject = null;
+  localCallVideo.hidden = true;
+  localCallVideo.srcObject = null;
+  callPeerAvatar.hidden = false;
+  callNetworkNotice.textContent = call.media === 'VIDEO'
+    ? 'Your browser will ask before sharing your microphone and camera. UniCircle does not record calls.'
+    : 'Your browser will ask before sharing your microphone. UniCircle does not record calls.';
+  openModal(callDialog);
+  (mode === 'incoming' ? callAccept : callEnd).focus();
+  setCallButtonsAvailable(Boolean(activeConversationAccountId));
+}
+
+function stopCallMedia(call) {
+  clearTimeout(call?.ringTimer);
+  clearTimeout(call?.disconnectTimer);
+  call?.localStream?.getTracks().forEach((track) => track.stop());
+  if (call?.peerConnection) {
+    call.peerConnection.ontrack = null;
+    call.peerConnection.onicecandidate = null;
+    call.peerConnection.onconnectionstatechange = null;
+    call.peerConnection.close();
+  }
+  remoteCallVideo.srcObject = null;
+  localCallVideo.srcObject = null;
+}
+
+function finishCall(message, delay = 1300) {
+  const finished = activeCall;
+  if (!finished) return;
+  stopCallMedia(finished);
+  activeCall = null;
+  incomingCallActions.hidden = true;
+  activeCallActions.hidden = true;
+  callStatus.textContent = message;
+  setCallButtonsAvailable(Boolean(activeConversationAccountId));
+  window.setTimeout(() => {
+    if (!activeCall && !callDialog.hidden) closeModal(callDialog);
+  }, delay);
+}
+
+async function requestCallMedia(media) {
+  if (!navigator.mediaDevices?.getUserMedia || !globalThis.RTCPeerConnection) {
+    throw new Error('This browser does not support secure voice and video calls.');
+  }
+  if (!window.isSecureContext) {
+    throw new Error('Calls require a secure HTTPS address.');
+  }
+  try {
+    return await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true },
+      video: media === 'VIDEO' ? { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } : false
+    });
+  } catch (error) {
+    if (error?.name === 'NotAllowedError') throw new Error('Microphone or camera permission was not granted.');
+    if (error?.name === 'NotFoundError') throw new Error('A required microphone or camera was not found.');
+    throw new Error('Your microphone or camera could not be started.');
+  }
+}
+
+async function createCallPeer(call) {
+  const configuration = await loadCallConfiguration();
+  const peer = new RTCPeerConnection({ iceServers: configuration.iceServers });
+  call.peerConnection = peer;
+  call.localStream.getTracks().forEach((track) => peer.addTrack(track, call.localStream));
+  peer.addEventListener('icecandidate', (event) => {
+    if (!event.candidate || activeCall !== call) return;
+    void sendCallSignal('CALL_ICE_CANDIDATE', {
+      candidate: event.candidate.candidate,
+      sdpMid: event.candidate.sdpMid,
+      sdpMLineIndex: event.candidate.sdpMLineIndex
+    }).catch(() => finishCall('The live call connection was lost.'));
+  });
+  peer.addEventListener('track', (event) => {
+    if (activeCall !== call) return;
+    const stream = event.streams[0] || new MediaStream([event.track]);
+    remoteCallVideo.srcObject = stream;
+    void remoteCallVideo.play().catch(() => {});
+    if (call.media === 'VIDEO') {
+      remoteCallVideo.hidden = false;
+      callPeerAvatar.hidden = true;
+    }
+  });
+  peer.addEventListener('connectionstatechange', () => {
+    if (activeCall !== call) return;
+    if (peer.connectionState === 'connected') {
+      clearTimeout(call.ringTimer);
+      clearTimeout(call.disconnectTimer);
+      call.phase = 'connected';
+      callStatus.textContent = 'Connected';
+    } else if (peer.connectionState === 'disconnected') {
+      callStatus.textContent = 'Reconnecting…';
+      clearTimeout(call.disconnectTimer);
+      call.disconnectTimer = window.setTimeout(() => {
+        if (activeCall === call && peer.connectionState === 'disconnected') {
+          void sendCallSignal('CALL_ENDED').catch(() => {});
+          finishCall('Call ended because the connection was lost.');
+        }
+      }, 8000);
+    } else if (peer.connectionState === 'failed' || peer.connectionState === 'closed') {
+      void sendCallSignal('CALL_ENDED').catch(() => {});
+      finishCall('The call connection ended.');
+    }
+  });
+  return peer;
+}
+
+async function flushCallCandidates(call) {
+  if (!call.peerConnection?.remoteDescription) return;
+  const pending = [...call.pendingCandidates];
+  call.pendingCandidates.length = 0;
+  for (const candidate of pending) {
+    try { await call.peerConnection.addIceCandidate(candidate); } catch { /* Ignore obsolete candidates. */ }
+  }
+}
+
+async function beginCall(media) {
+  if (!activeConversationAccountId || activeCall) return;
+  const call = {
+    id: callId(),
+    peerAccountId: activeConversationAccountId,
+    peerName: conversationName.textContent,
+    media,
+    direction: 'outgoing',
+    phase: 'preparing',
+    pendingCandidates: []
+  };
+  activeCall = call;
+  showCallInterface(call, 'outgoing');
+  try {
+    call.localStream = await requestCallMedia(media);
+    if (activeCall !== call) return stopCallMedia(call);
+    localCallVideo.srcObject = call.localStream;
+    localCallVideo.hidden = media !== 'VIDEO';
+    if (media === 'VIDEO') void localCallVideo.play().catch(() => {});
+    const peer = await createCallPeer(call);
+    const offer = await peer.createOffer();
+    await peer.setLocalDescription(offer);
+    call.phase = 'ringing';
+    await sendCallSignal('CALL_OFFER', { media, sdp: offer.sdp });
+    callStatus.textContent = `Ringing ${call.peerName}…`;
+    call.ringTimer = window.setTimeout(() => {
+      if (activeCall === call && call.phase === 'ringing') {
+        void sendCallSignal('CALL_CANCELLED').catch(() => {});
+        finishCall('No answer.');
+      }
+    }, 30000);
+  } catch (error) {
+    finishCall(error.message || 'The call could not be started.', 2200);
+  }
+}
+
+async function acceptIncomingCall() {
+  const call = activeCall;
+  if (!call || call.direction !== 'incoming') return;
+  callAccept.disabled = true;
+  callDecline.disabled = true;
+  callStatus.textContent = 'Starting your microphone and camera…';
+  try {
+    call.localStream = await requestCallMedia(call.media);
+    if (activeCall !== call) return stopCallMedia(call);
+    localCallVideo.srcObject = call.localStream;
+    localCallVideo.hidden = call.media !== 'VIDEO';
+    if (call.media === 'VIDEO') void localCallVideo.play().catch(() => {});
+    const peer = await createCallPeer(call);
+    await peer.setRemoteDescription({ type: 'offer', sdp: call.offerSdp });
+    await flushCallCandidates(call);
+    const answer = await peer.createAnswer();
+    await peer.setLocalDescription(answer);
+    call.phase = 'connecting';
+    incomingCallActions.hidden = true;
+    activeCallActions.hidden = false;
+    callCamera.hidden = call.media !== 'VIDEO';
+    callStatus.textContent = 'Connecting securely…';
+    await sendCallSignal('CALL_ANSWER', { sdp: answer.sdp });
+  } catch (error) {
+    await sendCallSignal('CALL_REJECTED').catch(() => {});
+    finishCall(error.message || 'The call could not be answered.', 2200);
+  } finally {
+    callAccept.disabled = false;
+    callDecline.disabled = false;
+  }
+}
+
+async function handleCallSignal(signal) {
+  if (signal.type === 'CALL_OFFER') {
+    if (activeCall) {
+      const busyCall = {
+        id: signal.callId,
+        peerAccountId: signal.fromAccountId,
+        peerName: signal.fromDisplayName,
+        media: signal.media,
+        pendingCandidates: []
+      };
+      await sendCallSignal('CALL_BUSY', {}, busyCall).catch(() => {});
+      return;
+    }
+    activeCall = {
+      id: signal.callId,
+      peerAccountId: signal.fromAccountId,
+      peerName: signal.fromDisplayName,
+      media: signal.media,
+      direction: 'incoming',
+      phase: 'ringing',
+      offerSdp: signal.sdp,
+      pendingCandidates: []
+    };
+    showCallInterface(activeCall, 'incoming');
+    return;
+  }
+  if (!activeCall || (signal.callId && signal.callId !== activeCall.id)) return;
+  if (signal.type === 'CALL_ANSWER') {
+    if (activeCall.direction !== 'outgoing' || !activeCall.peerConnection) return;
+    clearTimeout(activeCall.ringTimer);
+    activeCall.phase = 'connecting';
+    callStatus.textContent = 'Connecting securely…';
+    await activeCall.peerConnection.setRemoteDescription({ type: 'answer', sdp: signal.sdp });
+    await flushCallCandidates(activeCall);
+  } else if (signal.type === 'CALL_ICE_CANDIDATE') {
+    const candidate = new RTCIceCandidate({
+      candidate: signal.candidate,
+      sdpMid: signal.sdpMid ?? null,
+      sdpMLineIndex: signal.sdpMLineIndex ?? null
+    });
+    if (activeCall.peerConnection?.remoteDescription) {
+      try { await activeCall.peerConnection.addIceCandidate(candidate); } catch { /* Candidate may be obsolete. */ }
+    } else {
+      activeCall.pendingCandidates.push(candidate);
+    }
+  } else if (signal.type === 'CALL_REJECTED') {
+    finishCall(`${activeCall.peerName} declined the call.`);
+  } else if (signal.type === 'CALL_BUSY') {
+    finishCall(`${activeCall.peerName} is already on another call.`);
+  } else if (signal.type === 'CALL_UNAVAILABLE') {
+    finishCall(signal.reason || `${activeCall.peerName} is not currently online.`, 2200);
+  } else if (signal.type === 'CALL_FORBIDDEN' || signal.type === 'CALL_INVALID') {
+    finishCall(signal.reason || 'The call was not permitted.', 2200);
+  } else if (signal.type === 'CALL_CANCELLED') {
+    finishCall('The caller cancelled.');
+  } else if (signal.type === 'CALL_ENDED') {
+    finishCall('Call ended.');
+  } else if (signal.type === 'CALL_RESOLVED_ELSEWHERE') {
+    finishCall('This call was answered on another tab.');
+  }
+}
+
+async function declineOrEndCall() {
+  if (!activeCall) return;
+  const type = activeCall.direction === 'incoming' && activeCall.phase === 'ringing'
+    ? 'CALL_REJECTED'
+    : activeCall.direction === 'outgoing' && activeCall.phase === 'ringing'
+      ? 'CALL_CANCELLED'
+      : 'CALL_ENDED';
+  await sendCallSignal(type).catch(() => {});
+  finishCall(type === 'CALL_REJECTED' ? 'Call declined.' : 'Call ended.', 700);
+}
+
+audioCallButton?.addEventListener('click', () => void beginCall('AUDIO'));
+videoCallButton?.addEventListener('click', () => void beginCall('VIDEO'));
+callAccept?.addEventListener('click', () => void acceptIncomingCall());
+callDecline?.addEventListener('click', () => void declineOrEndCall());
+callEnd?.addEventListener('click', () => void declineOrEndCall());
+callMute?.addEventListener('click', () => {
+  if (!activeCall?.localStream) return;
+  const muted = callMute.getAttribute('aria-pressed') !== 'true';
+  activeCall.localStream.getAudioTracks().forEach((track) => { track.enabled = !muted; });
+  updateCallControl(callMute, muted, 'mic-off', 'mic', 'Unmute', 'Mute');
+});
+callCamera?.addEventListener('click', () => {
+  if (!activeCall?.localStream || activeCall.media !== 'VIDEO') return;
+  const disabled = callCamera.getAttribute('aria-pressed') !== 'true';
+  activeCall.localStream.getVideoTracks().forEach((track) => { track.enabled = !disabled; });
+  updateCallControl(callCamera, disabled, 'video-off', 'video', 'Camera on', 'Camera');
+});
+window.addEventListener('beforeunload', () => {
+  if (activeCall && socialSocket?.readyState === WebSocket.OPEN) {
+    socialSocket.send(JSON.stringify({
+      type: activeCall.phase === 'ringing' ? 'CALL_CANCELLED' : 'CALL_ENDED',
+      callId: activeCall.id,
+      targetAccountId: activeCall.peerAccountId
+    }));
+  }
+  stopCallMedia(activeCall);
+});
+
 function connectSocialRealtime() {
   if (socialSocket && [WebSocket.OPEN, WebSocket.CONNECTING].includes(socialSocket.readyState)) return;
   clearTimeout(realtimeReconnectTimer);
@@ -1918,6 +2331,10 @@ function connectSocialRealtime() {
   socialSocket.addEventListener('message', async (event) => {
     let update;
     try { update = JSON.parse(event.data); } catch { return; }
+    if (CALL_SIGNAL_TYPES.has(update.type)) {
+      await handleCallSignal(update);
+      return;
+    }
     await loadNotifications();
     if (['MESSAGE_RECEIVED', 'MESSAGE_SENT'].includes(update.type)) {
       const messagesPageOpen = !document.querySelector('#messages-page').hidden;
@@ -1934,9 +2351,10 @@ function connectSocialRealtime() {
   });
 }
 
-function emptyConversation(message = 'Select a conversation or find a student and connect.') {
-  activeConversationAccountId = null;
+function emptyConversation(message = 'Select a conversation or find a student and connect.', resetSelection = true) {
+  if (resetSelection) activeConversationAccountId = null;
   document.querySelector('#conversationSafetyButton').hidden = true;
+  setCallButtonsAvailable(!resetSelection && Boolean(activeConversationAccountId));
   conversationMessages.replaceChildren();
   const empty = document.createElement('div');
   empty.className = 'conversation-empty';
@@ -2005,6 +2423,37 @@ function updateMessageUnreadBadge() {
   messageUnreadBadge.hidden = unread === 0;
 }
 
+function renderDashboardMessages() {
+  if (!pilotMode) return;
+  const list = document.querySelector('#dashboardMessagesList');
+  list.replaceChildren();
+  if (!loadedConversations.length) {
+    const empty = document.createElement('li');
+    empty.textContent = 'No conversations yet. Find a friend and connect to start chatting.';
+    list.append(empty);
+    return;
+  }
+  loadedConversations.slice(0, 3).forEach((conversation) => {
+    const item = document.createElement('li');
+    const avatar = document.createElement('span');
+    avatar.className = 'avatar navy-avatar';
+    avatar.textContent = conversation.participantInitials;
+    showMemberPhoto(avatar, conversation.participantAccountId);
+    const info = document.createElement('div');
+    const name = document.createElement('strong');
+    name.textContent = conversation.participantDisplayName;
+    const preview = document.createElement('small');
+    preview.textContent = conversation.lastMessage || 'Open your conversation';
+    info.append(name, preview);
+    item.append(avatar, info);
+    item.addEventListener('click', () => {
+      showPage('messages');
+      void loadMessagingWorkspace(conversation.conversationId);
+    });
+    list.append(item);
+  });
+}
+
 async function refreshConversationSummary() {
   try {
     const response = await fetch('/api/social/conversations', { headers: { Accept: 'application/json' } });
@@ -2012,6 +2461,7 @@ async function refreshConversationSummary() {
     loadedConversations = await response.json();
     updateMessageUnreadBadge();
     renderConversationList();
+    renderDashboardMessages();
   } catch {
     // A temporary realtime refresh failure does not interrupt the current screen.
   }
@@ -2032,6 +2482,7 @@ async function loadMessagingWorkspace(preferredConversationId = null) {
     if (!response.ok) throw new Error('Conversations are temporarily unavailable.');
     loadedConversations = await response.json();
     updateMessageUnreadBadge();
+    renderDashboardMessages();
     const preferred = preferredConversationId || activeConversationId;
     const selected = loadedConversations.find((item) => item.conversationId === preferred)
       || loadedConversations[0];
@@ -2062,11 +2513,13 @@ async function selectConversation(conversationId) {
     activeConversationAccountId = result.conversation.participantAccountId;
     conversationName.textContent = result.conversation.participantDisplayName;
     conversationAvatar.textContent = result.conversation.participantInitials;
+    conversationAvatar.style.backgroundImage = '';
+    showMemberPhoto(conversationAvatar, result.conversation.participantAccountId);
     conversationTrust.innerHTML = '<i class="online-dot"></i> Accepted connection · private conversation';
     document.querySelector('#conversationSafetyButton').hidden = false;
     conversationMessages.replaceChildren();
     if (!result.messages.length) {
-      emptyConversation('You are connected. Send the first message.');
+      emptyConversation('You are connected. Send the first message.', false);
     } else {
       result.messages.forEach((message) => {
         const bubble = document.createElement('p');
@@ -2081,6 +2534,8 @@ async function selectConversation(conversationId) {
     }
     messageInput.disabled = false;
     messageSend.disabled = false;
+    document.querySelector('#conversationSafetyButton').hidden = false;
+    setCallButtonsAvailable(true);
     messageInput.placeholder = `Message ${result.conversation.participantDisplayName}`;
     const selected = loadedConversations.find((item) => item.conversationId === conversationId);
     if (selected) selected.unreadCount = 0;
@@ -2143,6 +2598,7 @@ async function loadStudentDirectory() {
       const avatar = document.createElement('span');
       avatar.className = 'avatar navy-avatar';
       avatar.textContent = initialsFor(student.displayName);
+      if (student.hasPhoto) showMemberPhoto(avatar, student.accountId);
       const details = document.createElement('span');
       details.className = 'directory-person-details';
       const name = document.createElement('strong');
@@ -2150,7 +2606,8 @@ async function loadStudentDirectory() {
       const course = document.createElement('span');
       course.textContent = student.courseName || 'University student';
       const meta = document.createElement('small');
-      const status = recentlyJoined(student.joinedAt) ? 'New to UniCircle' : 'Verified fictional student';
+      const status = recentlyJoined(student.joinedAt) ? 'New to UniCircle'
+        : pilotMode ? 'Pilot member · identity not university-verified' : 'Verified fictional student';
       meta.textContent = student.yearOfStudy ? `Year ${student.yearOfStudy} · ${status}` : status;
       details.append(name, course, meta);
       const actions = document.createElement('span');
@@ -2169,6 +2626,9 @@ document.querySelector('#studentDirectoryButton')?.addEventListener('click', () 
   openModal(studentDirectoryDialog);
   studentDirectorySearch.value = '';
   void loadStudentDirectory();
+});
+document.querySelector('#pilotFindFriends')?.addEventListener('click', () => {
+  document.querySelector('#studentDirectoryButton')?.click();
 });
 document.querySelector('#studentDirectoryClose')?.addEventListener('click', () => closeModal(studentDirectoryDialog));
 studentDirectorySearch?.addEventListener('input', () => {
@@ -2242,12 +2702,156 @@ document.querySelectorAll('.message-button').forEach((button) => {
   });
 });
 
+const locationStatus = document.querySelector('#locationStatus');
+const locationStart = document.querySelector('#locationStart');
+const locationStop = document.querySelector('#locationStop');
+const locationRefresh = document.querySelector('#locationRefresh');
+const friendLocations = document.querySelector('#friendLocations');
+let sharingLocation = false;
+
+function locationText(value) {
+  locationStatus.textContent = value;
+}
+
+function geolocate() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('This browser does not support location.'));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(resolve, () => reject(new Error(
+      'Location permission was denied or your position could not be determined. Check browser settings.')),
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+  });
+}
+
+async function publishLocation() {
+  const position = await geolocate();
+  const result = await socialPost('/api/location/me', {
+    latitude: position.coords.latitude,
+    longitude: position.coords.longitude,
+    accuracyMetres: Math.min(10000, Math.max(0, Math.round(position.coords.accuracy)))
+  });
+  sharingLocation = true;
+  locationStart.disabled = true;
+  locationStop.disabled = false;
+  locationText(`Sharing with accepted connections who are also sharing, until ${new Date(result.expiresAt).toLocaleTimeString()}.`);
+  await loadFriendLocations();
+}
+
+async function loadFriendLocations() {
+  const response = await fetch('/api/location/connections', { headers: { Accept: 'application/json' } });
+  if (!response.ok) throw new Error('Friend locations could not be loaded.');
+  const friends = await response.json();
+  friendLocations.replaceChildren();
+  if (!friends.length) {
+    const empty = document.createElement('p');
+    empty.textContent = sharingLocation ? 'No accepted connections are sharing right now.'
+      : 'Choose to share first. Only people who are also sharing will appear.';
+    friendLocations.append(empty);
+    return;
+  }
+  friends.forEach((friend) => {
+    const row = document.createElement('div');
+    row.className = 'friend-location';
+    const title = document.createElement('strong');
+    title.textContent = friend.displayName;
+    const details = document.createElement('small');
+    details.textContent = `Shared ${new Date(friend.updatedAt).toLocaleTimeString()} · device accuracy about ${friend.accuracyMetres} m`;
+    const map = document.createElement('a');
+    map.href = `https://www.openstreetmap.org/?mlat=${friend.latitude}&mlon=${friend.longitude}#map=17/${friend.latitude}/${friend.longitude}`;
+    map.target = '_blank';
+    map.rel = 'noopener noreferrer';
+    map.textContent = 'Open position on map ↗';
+    row.append(title, details, map);
+    friendLocations.append(row);
+  });
+}
+
+async function loadLocationPanel() {
+  if (!pilotMode) return;
+  try {
+    const response = await fetch('/api/location/me', { headers: { Accept: 'application/json' } });
+    if (response.status === 401) {
+      locationText('Sign in with your pilot account to use location sharing.');
+      return;
+    }
+    if (!response.ok) throw new Error('Location controls are unavailable.');
+    const current = await response.json();
+    sharingLocation = current.sharing;
+    locationStart.disabled = current.sharing;
+    locationStop.disabled = !current.sharing;
+    locationRefresh.disabled = false;
+    locationText(current.sharing
+      ? `Sharing until ${new Date(current.expiresAt).toLocaleTimeString()}. Turn it off at any time.`
+      : 'Your location is not being shared.');
+    await loadFriendLocations();
+  } catch (error) {
+    locationText(error.message);
+  }
+}
+
+locationStart?.addEventListener('click', async () => {
+  locationStart.disabled = true;
+  locationText('Asking your browser for location permission…');
+  try {
+    await publishLocation();
+    clearInterval(locationRefreshTimer);
+    locationRefreshTimer = setInterval(() => {
+      if (document.visibilityState === 'visible' && !document.querySelector('#map-page').hidden)
+        void publishLocation().catch((error) => locationText(error.message));
+    }, 60000);
+  } catch (error) {
+    locationStart.disabled = false;
+    locationText(error.message);
+  }
+});
+
+locationStop?.addEventListener('click', async () => {
+  try {
+    const csrf = await csrfToken();
+    const response = await fetch('/api/location/me', {
+      method: 'DELETE', headers: { [csrf.headerName]: csrf.token }
+    });
+    if (!response.ok) throw new Error('Could not stop sharing. Try again.');
+    clearInterval(locationRefreshTimer);
+    sharingLocation = false;
+    locationStart.disabled = false;
+    locationStop.disabled = true;
+    locationText('Location sharing is off. Your saved position was deleted.');
+    await loadFriendLocations();
+  } catch (error) {
+    locationText(error.message);
+  }
+});
+
+locationRefresh?.addEventListener('click', () => void loadLocationPanel());
+
 fetch('/api/platform/status')
   .then((response) => {
     if (!response.ok) throw new Error('Status endpoint unavailable');
     return response.json();
   })
-  .then((status) => document.documentElement.dataset.platformStage = status.stage)
+  .then((status) => {
+    document.documentElement.dataset.platformStage = status.stage;
+    pilotMode = status.stage === 'Invitation-only friends pilot';
+    if (pilotMode) {
+      document.body.classList.add('pilot-mode');
+      document.querySelector('#pilotWelcome').hidden = false;
+      document.querySelector('#environmentBanner').textContent =
+        'Invitation-only friends pilot — real test accounts, not verified university identities or official campus data.';
+      document.querySelector('#notificationStorageNote').textContent =
+        'Account-specific pilot updates. Do not share sensitive information while testing.';
+      document.querySelector('#mapDashboardNote').textContent =
+        'Share a five-minute position with accepted connections only when you choose. Both people must opt in.';
+      void refreshConversationSummary();
+      if (!['campus', 'messages', 'map'].includes(document.querySelector('.page-surface:not([hidden])')?.dataset.page))
+        showPage('campus');
+      if (!document.querySelector('#map-page').hidden) void loadLocationPanel();
+    } else {
+      locationText('Real location sharing is available in the invitation-only pilot, not the fictional sandbox.');
+    }
+  })
   .catch(() => document.documentElement.dataset.platformStage = 'offline');
 
 const initialPage = hashToPage.get(location.hash.slice(1)) ?? 'campus';

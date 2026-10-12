@@ -18,7 +18,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 @Configuration
-@Profile("!prod")
+@Profile("!prod & !pilot")
 class DemoEngagementDataConfiguration {
 
     private static final ZoneId CAMPUS_ZONE = ZoneId.of("Europe/London");
