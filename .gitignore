@@ -31,3 +31,5 @@ build/
 
 ### VS Code ###
 .vscode/
+unicircle-pilot.mv.db
+unicircle-pilot.trace.db

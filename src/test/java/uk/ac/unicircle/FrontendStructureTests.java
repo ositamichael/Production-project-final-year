@@ -40,7 +40,10 @@ class FrontendStructureTests {
             .contains("no live university systems are connected")
             .contains("Transactional sandbox booking")
             .contains("Messages are stored in the local development database")
-            .contains("does not request or store device location");
+            .contains("Location sharing is off by default")
+            .contains("id=\"locationStart\"")
+            .contains("id=\"locationStop\"")
+            .contains("both chosen to share");
     }
 
     @Test
@@ -125,6 +128,29 @@ class FrontendStructureTests {
             .contains("id=\"blockAccountButton\"")
             .contains("id=\"reportAccountForm\"")
             .contains("Messaging activates after a request is accepted");
+    }
+
+    @Test
+    void acceptedConnectionsHaveRealTimeVoiceAndVideoCallControls() throws IOException {
+        var html = new String(getClass().getResourceAsStream("/static/index.html").readAllBytes(), StandardCharsets.UTF_8);
+        var script = new String(getClass().getResourceAsStream("/static/js/app.js").readAllBytes(), StandardCharsets.UTF_8);
+
+        assertThat(html)
+            .contains("id=\"audioCallButton\"")
+            .contains("id=\"videoCallButton\"")
+            .contains("id=\"callDialog\"")
+            .contains("id=\"callAccept\"")
+            .contains("id=\"callDecline\"")
+            .contains("id=\"callMute\"")
+            .contains("id=\"callCamera\"")
+            .contains("UniCircle does not record calls");
+        assertThat(script)
+            .contains("new RTCPeerConnection")
+            .contains("navigator.mediaDevices.getUserMedia")
+            .contains("CALL_OFFER")
+            .contains("CALL_ANSWER")
+            .contains("CALL_ICE_CANDIDATE")
+            .contains("Calls require a secure HTTPS address");
     }
 
     @Test

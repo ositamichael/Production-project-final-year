@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Invitation-only UniCircle friends pilot">
+  <title>Friends pilot — UniCircle</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/auth.css?v=2">
+  <script src="/js/pilot-auth.js?v=1" defer></script>
+</head>
+<body>
+  <main class="auth-shell">
+    <section class="auth-story" aria-labelledby="storyTitle">
+      <a class="auth-brand" href="/"><span class="brand-mark" aria-hidden="true"><span></span></span><span>UniCircle</span></a>
+      <div class="story-content">
+        <span class="environment-label">INVITATION-ONLY FRIENDS PILOT</span>
+        <h1 id="storyTitle">Connect with your friends, for real.</h1>
+        <p>Create your own test account, find another pilot member, accept a connection request and chat privately.</p>
+        <ul class="trust-list">
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg><span>Separate account for each person</span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg><span>Messages only after a request is accepted</span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg><span>Location sharing is off until you switch it on</span></li>
+        </ul>
+      </div>
+      <p class="story-footnote">Independent test pilot · Not an official university service</p>
+    </section>
+    <section class="auth-form-panel" aria-labelledby="signInTitle">
+      <div class="auth-form-wrap">
+        <span class="section-label">PRIVATE PILOT ACCESS</span>
+        <h2 id="signInTitle">Sign in</h2>
+        <p class="form-intro">Use the email and password you created for this pilot. Never use your university password or Authenticator code here.</p>
+        <div class="auth-message" id="authMessage" role="status" aria-live="polite">Preparing sign-in…</div>
+        <form action="/login" method="post" id="pilotLoginForm">
+          <input type="hidden" id="loginCsrfField">
+          <label for="username">Email</label>
+          <div class="input-control"><input id="username" name="username" type="email" autocomplete="username" required></div>
+          <label for="password">Pilot password</label>
+          <div class="input-control"><input id="password" name="password" type="password" autocomplete="current-password" required></div>
+          <button class="sign-in-button" id="signInButton" type="submit" disabled>Sign in to pilot</button>
+        </form>
+        <details class="pilot-register">
+          <summary>New here? Create an invited account</summary>
+          <form id="registrationForm">
+            <label for="registerName">Your name</label>
+            <div class="input-control"><input id="registerName" type="text" maxlength="80" autocomplete="name" required></div>
+            <label for="registerEmail">Email</label>
+            <div class="input-control"><input id="registerEmail" type="email" maxlength="320" autocomplete="email" required></div>
+            <label for="registerPassword">Create a password (12 characters or more)</label>
+            <div class="input-control"><input id="registerPassword" type="password" minlength="12" maxlength="128" autocomplete="new-password" required></div>
+            <label for="registerInvite">Invitation code</label>
+            <div class="input-control"><input id="registerInvite" type="text" autocomplete="off" required></div>
+            <button class="sign-in-button" id="registerButton" type="submit" disabled>Create pilot account</button>
+          </form>
+        </details>
+        <p class="separation-notice">These accounts are self-declared test identities, not verified Leeds Beckett accounts. Share the invitation privately and avoid uploading sensitive information.</p>
+        <a class="back-link" href="/">Return to campus preview</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

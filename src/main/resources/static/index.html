@@ -6,8 +6,8 @@
   <meta name="description" content="UniCircle campus connection and services platform prototype">
   <title>UniCircle — My Campus</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/css/app.css?v=15">
-  <script src="/js/app.js?v=15" defer></script>
+  <link rel="stylesheet" href="/css/app.css?v=17">
+  <script src="/js/app.js?v=17" defer></script>
 </head>
 <body>
   <svg class="svg-sprite" aria-hidden="true">
@@ -50,11 +50,17 @@
     <symbol id="room" viewBox="0 0 24 24"><path d="M4 21V4h12v17M16 9h4v12M2 21h20"/><path d="M8 9h4M8 13h4"/></symbol>
     <symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
     <symbol id="camera" viewBox="0 0 24 24"><path d="M14.5 5 13 3h-2L9.5 5H6a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3V8a3 3 0 0 0-3-3Z"/><circle cx="12" cy="13" r="4"/></symbol>
+    <symbol id="phone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.4 19.4 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></symbol>
+    <symbol id="video" viewBox="0 0 24 24"><rect x="2" y="5" width="15" height="14" rx="3"/><path d="m17 10 5-3v10l-5-3Z"/></symbol>
+    <symbol id="phone-off" viewBox="0 0 24 24"><path d="m3 3 18 18M8.6 8.6 8.1 9.9a16 16 0 0 0 6 6l1.3-.5M5.5 5.5 4.1 2h-3A2 2 0 0 0 2.1 4.2a19.8 19.8 0 0 0 3.1 8.6 19.4 19.4 0 0 0 6 6 19.8 19.8 0 0 0 8.6 3.1 2 2 0 0 0 2.2-2v-3a2 2 0 0 0-1.7-2c-.7-.1-1.4-.2-2.1-.5"/></symbol>
+    <symbol id="mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5M8 22h8"/></symbol>
+    <symbol id="mic-off" viewBox="0 0 24 24"><path d="m3 3 18 18M9 9v2a3 3 0 0 0 4.6 2.5M15 9.3V5a3 3 0 0 0-5.1-2.1M17 16.9A7 7 0 0 0 19 12v-2M5 10v2a7 7 0 0 0 10.5 6.1M12 19v3M8 22h8"/></symbol>
+    <symbol id="video-off" viewBox="0 0 24 24"><path d="m3 3 18 18M10.6 5H5a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h12v-2.6M17 10l5-3v10l-2.5-1.5M14.7 5.3A3 3 0 0 1 17 8v5"/></symbol>
     <symbol id="shield" viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 2.8 8.1 7 10 4.2-1.9 7-5.4 7-10V6Z"/><path d="m9 12 2 2 4-5"/></symbol>
   </svg>
   <a class="skip-link" href="#main-content">Skip to dashboard</a>
-  <div class="prototype-banner" role="status">
-    Sprint 10 fictional sandbox — staff review of lost-and-found reports; no live university systems are connected.
+  <div class="prototype-banner" id="environmentBanner" role="status">
+    Invitation-only friends pilot — social features use independent test accounts; no live university systems are connected.
   </div>
   <div class="app-shell">
     <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
@@ -117,10 +123,17 @@
         </div>
         <ol class="notification-list" id="notificationList"><li class="notification-empty">Sign in to load your notifications.</li></ol>
         <button class="notification-footer" id="notificationMessagesLink" type="button">Open messages <svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button>
-        <p class="notification-disclaimer">Account-specific updates stored in the local demonstration database.</p>
+        <p class="notification-disclaimer" id="notificationStorageNote">Account-specific updates stored in the local demonstration database.</p>
       </section>
 
       <section class="dashboard-grid page-surface" id="campus" data-page="campus" aria-label="UniCircle dashboard">
+        <article class="card pilot-welcome" id="pilotWelcome" hidden>
+          <span class="eyebrow">YOUR FRIENDS PILOT</span>
+          <h2>Make a real connection.</h2>
+          <p>Find someone you invited, send a request, then start a private chat after they accept. You can also choose whether to share a short-lived position with accepted connections.</p>
+          <div class="pilot-welcome-actions"><button class="primary-button" id="pilotFindFriends" type="button">Find friends</button><a class="secondary-button" href="#messages-page" data-open-page="messages">Open messages</a><a class="secondary-button" href="#map-page" data-open-page="map">Location controls</a></div>
+          <small>Independent pilot accounts are not verified university identities. Other campus modules are not part of this friends test.</small>
+        </article>
         <article class="card schedule-card searchable" id="schedule" data-search="schedule lecture project seminar gym">
           <div class="card-heading"><h2><span class="heading-icon blue"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg></span> Today's Schedule</h2><a href="#today" data-open-page="today">View all</a></div>
           <ol class="timeline" id="schedule-list">
@@ -142,7 +155,7 @@
 
         <article class="card searchable" id="messages" data-search="messages emily group project tutor">
           <div class="card-heading"><h2><span class="heading-icon navy"><svg class="icon" aria-hidden="true"><use href="#message"/></svg></span> Messages</h2><a href="#messages-page" data-open-page="messages">View all</a></div>
-          <ul class="message-list">
+          <ul class="message-list" id="dashboardMessagesList">
             <li><span class="avatar pink-avatar">EW</span><div><strong>Emily Watson</strong><small>Are you still coming to the library later?</small></div><time>10:24</time><span class="unread">2</span></li>
             <li><span class="avatar navy-avatar">CS</span><div><strong>CS Group Project</strong><small>James: I uploaded the slides…</small></div><time>09:18</time><span class="unread">1</span></li>
             <li><span class="avatar green-avatar">DT</span><div><strong>Dr Taylor</strong><small>Your assignment feedback is now available.</small></div><time>Yesterday</time></li>
@@ -186,13 +199,8 @@
 
         <article class="card map-card searchable" id="map" data-search="campus map nearby accepted connections">
           <div class="card-heading"><h2><span class="heading-icon green"><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg></span> Campus Map</h2><a href="#map-page" data-open-page="map">View all</a></div>
-          <div class="privacy-select"><span>Showing:</span><strong>Accepted connections only</strong></div>
-          <div class="map-canvas" role="img" aria-label="Illustrative campus map showing accepted connections only">
-            <span class="road road-a"></span><span class="road road-b"></span><span class="road road-c"></span>
-            <span class="map-pin you">You</span><span class="map-pin person one">SP</span><span class="map-pin person two">JW</span><span class="map-pin place" aria-label="Campus building"><svg class="icon" aria-hidden="true"><use href="#building"/></svg></span>
-          </div>
-          <div class="map-person"><span class="avatar pink-avatar">SP</span><div><strong>Sophie Patel</strong><small>In Library · 50 m</small></div><button class="message-button" type="button" data-person="Sophie Patel">Message</button></div>
-          <small class="privacy-note">Location is illustrative and would be off by default. Sharing requires explicit consent.</small>
+          <p class="panel-note" id="mapDashboardNote">Location sharing is off by default. Open the map to decide whether to share with accepted connections.</p>
+          <a class="message-button" href="#map-page" data-open-page="map">Open location controls</a>
         </article>
 
         <article class="card assistant-card searchable" id="assistant" data-search="ask unicircle assistant quiet study sports career">
@@ -264,7 +272,20 @@
         <header class="view-hero"><div class="view-title"><span class="view-icon navy"><svg class="icon" aria-hidden="true"><use href="#message"/></svg></span><div><span class="eyebrow">CONVERSATIONS</span><h2 id="messagesTitle">Messages</h2><p>Private conversations with accepted UniCircle connections.</p></div></div><button class="primary-compact" id="studentDirectoryButton" type="button"><svg class="icon" aria-hidden="true"><use href="#users"/></svg> Find students</button></header>
         <div class="message-workspace">
           <aside class="thread-panel"><label class="mini-search"><svg class="icon" aria-hidden="true"><use href="#search"/></svg><span class="sr-only">Search messages</span><input id="conversationSearch" type="search" placeholder="Search conversations"></label><div class="messages-state" id="conversationListStatus" role="status">Sign in to load your private conversations.</div><ul class="thread-list" id="conversationList"></ul></aside>
-          <article class="conversation-panel"><header><span class="avatar navy-avatar" id="conversationAvatar">UC</span><div><h3 id="conversationName">Choose a conversation</h3><span id="conversationTrust"><i class="online-dot"></i> Accepted connections only</span></div><button class="conversation-safety" id="conversationSafetyButton" type="button" hidden><svg class="icon" aria-hidden="true"><use href="#shield"/></svg> Safety</button></header><div class="conversation-body" id="conversationMessages" aria-live="polite"><div class="conversation-empty"><svg class="icon" aria-hidden="true"><use href="#message"/></svg><strong>Your private messages appear here</strong><span>Select a conversation or find a student and connect.</span></div></div><form class="composer" id="messageComposer"><label class="sr-only" for="messageInput">Write a message</label><input id="messageInput" type="text" maxlength="4000" autocomplete="off" placeholder="Select a conversation to write a message" disabled><button id="messageSend" type="submit" disabled aria-label="Send message"><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button></form><p class="panel-note" id="messagePrivacyNote">Messages are stored in the local development database and update across signed-in browser sessions. All displayed people and conversations are fictional test records.</p></article>
+          <article class="conversation-panel">
+            <header>
+              <span class="avatar navy-avatar" id="conversationAvatar">UC</span>
+              <div class="conversation-person"><h3 id="conversationName">Choose a conversation</h3><span id="conversationTrust"><i class="online-dot"></i> Accepted connections only</span></div>
+              <div class="conversation-call-actions" id="conversationCallActions" hidden>
+                <button class="call-header-button" id="audioCallButton" type="button" aria-label="Start voice call" title="Voice call"><svg class="icon" aria-hidden="true"><use href="#phone"/></svg></button>
+                <button class="call-header-button" id="videoCallButton" type="button" aria-label="Start video call" title="Video call"><svg class="icon" aria-hidden="true"><use href="#video"/></svg></button>
+              </div>
+              <button class="conversation-safety" id="conversationSafetyButton" type="button" hidden><svg class="icon" aria-hidden="true"><use href="#shield"/></svg> Safety</button>
+            </header>
+            <div class="conversation-body" id="conversationMessages" aria-live="polite"><div class="conversation-empty"><svg class="icon" aria-hidden="true"><use href="#message"/></svg><strong>Your private messages appear here</strong><span>Select a conversation or find a student and connect.</span></div></div>
+            <form class="composer" id="messageComposer"><label class="sr-only" for="messageInput">Write a message</label><input id="messageInput" type="text" maxlength="4000" autocomplete="off" placeholder="Select a conversation to write a message" disabled><button id="messageSend" type="submit" disabled aria-label="Send message"><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button></form>
+            <p class="panel-note" id="messagePrivacyNote">Messages are stored in the local development database and update across signed-in browser sessions. Voice and video calls are live, are not recorded by UniCircle, and require both people to have the app open. All displayed people and conversations are fictional test records.</p>
+          </article>
         </div>
       </section>
 
@@ -288,8 +309,8 @@
       </section>
 
       <section class="page-view page-surface" id="map-page" data-page="map" hidden tabindex="-1" aria-labelledby="mapTitle">
-        <header class="view-hero"><div class="view-title"><span class="view-icon green"><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg></span><div><span class="eyebrow">FIND YOUR WAY</span><h2 id="mapTitle">Campus Map</h2><p>Locate buildings and optionally see accepted connections who choose to share.</p></div></div><span class="privacy-badge"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg> Location off by default</span></header>
-        <div class="map-workspace"><article class="campus-map-large" role="img" aria-label="Illustrative map of campus buildings and accepted connections"><span class="road road-a"></span><span class="road road-b"></span><span class="road road-c"></span><span class="map-pin you">You</span><span class="map-pin person one">SP</span><span class="map-pin person two">JW</span><span class="map-pin place"><svg class="icon" aria-hidden="true"><use href="#building"/></svg></span></article><aside class="content-panel map-sidebar"><h3>Map controls</h3><label class="control-row"><span><strong>Show my position</strong><small>Only while this page is open</small></span><input type="checkbox" disabled></label><label class="control-row"><span><strong>Accepted connections</strong><small>Requires explicit sharing permission</small></span><input type="checkbox" checked disabled></label><div class="divider"></div><h3>Nearby places</h3><ul class="detail-list"><li><div><strong>Library</strong><span>2-minute walk</span></div></li><li><div><strong>Student Hub</strong><span>4-minute walk</span></div></li><li><div><strong>Sports Centre</strong><span>7-minute walk</span></div></li></ul><p class="panel-note">This map is illustrative. It does not request or store device location.</p></aside></div>
+        <header class="view-hero"><div class="view-title"><span class="view-icon green"><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg></span><div><span class="eyebrow">CONSENT-BASED FRIEND LOCATION</span><h2 id="mapTitle">Find connected friends</h2><p>See a friend's latest shared position only when you have both accepted a connection and both chosen to share.</p></div></div><span class="privacy-badge"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg> Off by default</span></header>
+        <div class="map-workspace"><article class="content-panel location-panel"><h3>Location sharing</h3><p id="locationStatus" role="status" aria-live="polite">Checking pilot availability…</p><p>Sharing is voluntary, visible only to accepted connections who are also sharing, and expires five minutes after your last update. This is a pilot feature, not a safety or emergency tracker.</p><div class="location-actions"><button class="primary-button" id="locationStart" type="button" disabled>Share my location for 5 minutes</button><button class="secondary-button" id="locationStop" type="button" disabled>Stop sharing now</button></div><p class="panel-note">Your browser will ask for permission. Location is rounded to about 11 metres; device accuracy may be worse. Keep this page open for updates. You can stop at any time.</p></article><aside class="content-panel map-sidebar"><h3>Friends sharing now</h3><div id="friendLocations" aria-live="polite"><p>No one is visible until you choose to share.</p></div><button class="secondary-button" id="locationRefresh" type="button" disabled>Refresh friends</button><p class="panel-note">Opening a friend on OpenStreetMap shares those coordinates with that map provider.</p></aside></div>
       </section>
 
       <section class="page-view page-surface" id="wellbeing-page" data-page="wellbeing" hidden tabindex="-1" aria-labelledby="wellbeingTitle">
@@ -318,7 +339,7 @@
         <div class="assistant-workspace"><aside class="content-panel"><h3>Popular topics</h3><div class="topic-list"><button type="button" data-page-question="Find a quiet study space">Quiet study spaces<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button><button type="button" data-page-question="How do I book a sports facility?">Sports facilities<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button><button type="button" data-page-question="Tell me about career opportunities">Career opportunities<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button></div><p class="panel-note">Responses are limited to the demonstrated questions and are not connected to live university systems.</p></aside><article class="assistant-chat"><div class="assistant-chat-heading"><span class="avatar assistant-avatar">U</span><div><h3>UniCircle campus guide</h3><span>Prototype information assistant</span></div></div><div class="assistant-chat-body" id="pageAssistantResponse" role="status" aria-live="polite"><p class="bubble received">Hello Michael. Choose a topic or ask one of the supported demonstration questions.</p></div><form class="composer" id="pageAssistantForm"><label class="sr-only" for="pageAssistantInput">Ask the campus guide</label><input id="pageAssistantInput" type="text" maxlength="250" placeholder="Ask about spaces, facilities or careers"><button type="submit" aria-label="Send question"><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button></form></article></div>
       </section>
 
-      <footer><span>UniCircle · Sprint 10 staff review</span><a href="/actuator/health">System health</a></footer>
+      <footer><span>UniCircle · Friends pilot · Live connection testing</span><a href="/actuator/health">System health</a></footer>
     </main>
   </div>
 
@@ -435,6 +456,27 @@
       <div class="dialog-actions"><button class="secondary-button" type="button" id="staffReviewCancel">Cancel</button><button class="primary-button" type="submit" id="staffReviewSubmit">Confirm decision</button></div>
       <p class="privacy-note">This is a fictional staff account. Report decisions are audited; claim verification and physical handover require a separate authorised process.</p>
     </form>
+  </section>
+  <section id="callDialog" class="call-dialog modal-surface" role="dialog" aria-modal="true" aria-labelledby="callPeerName" hidden>
+    <div class="call-surface">
+      <div class="call-security"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><span>Private call with an accepted connection</span></div>
+      <div class="call-stage" id="callStage">
+        <video id="remoteCallVideo" autoplay playsinline hidden></video>
+        <div class="call-avatar avatar navy-avatar" id="callPeerAvatar" aria-hidden="true">UC</div>
+        <video class="local-call-video" id="localCallVideo" autoplay muted playsinline hidden></video>
+      </div>
+      <div class="call-copy"><span class="eyebrow" id="callDirection">UNICIRCLE CALL</span><h2 id="callPeerName">Connecting…</h2><p id="callStatus" role="status" aria-live="assertive">Preparing your private call.</p></div>
+      <div class="incoming-call-actions" id="incomingCallActions" hidden>
+        <button class="call-control answer" id="callAccept" type="button"><svg class="icon" aria-hidden="true"><use href="#phone"/></svg><span>Accept</span></button>
+        <button class="call-control end" id="callDecline" type="button"><svg class="icon" aria-hidden="true"><use href="#phone-off"/></svg><span>Decline</span></button>
+      </div>
+      <div class="active-call-actions" id="activeCallActions" hidden>
+        <button class="call-control" id="callMute" type="button" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#mic"/></svg><span>Mute</span></button>
+        <button class="call-control" id="callCamera" type="button" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#video"/></svg><span>Camera</span></button>
+        <button class="call-control end" id="callEnd" type="button"><svg class="icon" aria-hidden="true"><use href="#phone-off"/></svg><span>End</span></button>
+      </div>
+      <p class="call-privacy" id="callNetworkNotice">Your browser will ask before sharing your microphone or camera. UniCircle does not record calls.</p>
+    </div>
   </section>
   <div class="search-empty" id="searchEmpty" hidden role="status">No dashboard items match that search.</div>
 </body>

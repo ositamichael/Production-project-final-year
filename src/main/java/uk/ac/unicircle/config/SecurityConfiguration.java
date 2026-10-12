@@ -16,7 +16,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.RegexRequestMatcher;
 
 @Configuration
-@Profile("!prod")
+@Profile("!prod & !pilot")
 public class SecurityConfiguration {
 
     @Bean

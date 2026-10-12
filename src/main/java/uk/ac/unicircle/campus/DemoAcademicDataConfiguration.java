@@ -14,7 +14,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 @Configuration
-@Profile("!prod")
+@Profile("!prod & !pilot")
 class DemoAcademicDataConfiguration {
 
     private static final UUID UNIVERSITY_ID = UUID.fromString("2c952dd9-5276-4e44-bf20-3fe98b345101");

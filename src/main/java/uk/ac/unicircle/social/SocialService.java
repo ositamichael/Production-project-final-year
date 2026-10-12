@@ -76,7 +76,8 @@ class SocialService {
                          WHEN c.id IS NULL THEN 'NONE'
                          WHEN c.requester_id = ? THEN 'OUTGOING'
                          ELSE 'INCOMING'
-                       END
+                       END,
+                       ua.profile_photo_key
                 FROM user_accounts ua
                 LEFT JOIN connections c
                   ON c.university_id = ua.university_id
@@ -84,14 +85,16 @@ class SocialService {
                    OR (c.requester_id = ua.id AND c.addressee_id = ?))
                  AND c.status IN ('PENDING', 'ACCEPTED', 'BLOCKED')
                 WHERE ua.university_id = ? AND ua.id <> ?
-                  AND ua.profile_visibility <> 'PRIVATE'
+                  AND (ua.profile_visibility = 'UNIVERSITY_ONLY'
+                    OR (ua.profile_visibility = 'CONNECTIONS' AND c.status = 'ACCEPTED'))
                   AND (c.status IS NULL OR c.status <> 'BLOCKED' OR c.blocked_by_id = ?)
                   AND (? = '' OR LOWER(ua.display_name) LIKE ? OR LOWER(COALESCE(ua.course_name, '')) LIKE ?)
                 ORDER BY ua.created_at DESC, ua.display_name
                 """, (result, row) -> new StudentDirectoryResponse(
                         result.getObject(1, UUID.class), result.getString(2), result.getString(3),
                         result.getObject(4, Integer.class), result.getObject(5, OffsetDateTime.class),
-                        result.getObject(6, UUID.class), result.getString(7), result.getString(8)),
+                        result.getObject(6, UUID.class), result.getString(7), result.getString(8),
+                        result.getString(9) != null),
                 current.accountId(), current.accountId(), current.accountId(), current.universityId(),
                 current.accountId(), current.accountId(), cleanQuery, search, search);
     }
