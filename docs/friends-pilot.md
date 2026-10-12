@@ -1,12 +1,12 @@
-# UniCircle friends pilot
+# UniCircle campus pilot
 
 This is an independent, invitation-only test. It is **not** Leeds Beckett sign-in, a verified university directory, an official timetable or an emergency location service. Never ask friends to enter their university password or Authenticator code.
 
-## What friends can test
+## What invited participants can test
 
-Each participant creates a separate account using a private invitation code and their own password. They can find other pilot members, send and accept connection requests, exchange persistent messages, make live voice or video calls, upload a profile photo, block or report contact, and voluntarily share a short-lived location with accepted connections who are also sharing. Calls are permitted only between accepted connections, are not recorded by UniCircle, and work only while both people have UniCircle open. The location is rounded, expires five minutes after the last update, and can be deleted immediately. Browsers require HTTPS for camera, microphone and location permission outside localhost.
+Each participant creates a separate account using a private invitation code and their own password, then adds a self-declared course and year of study. They can find other pilot members, send and accept connection requests, exchange persistent messages, make live voice or video calls, upload a profile photo, block or report contact, and voluntarily share a short-lived location with accepted connections who are also sharing. They can also browse test campus events, register for an event, book a test service slot, explore verified fictional opportunities and record private application progress. Calls are permitted only between accepted connections, are not recorded by UniCircle, and work only while both people have UniCircle open. The location is rounded, expires five minutes after the last update, and can be deleted immediately. Browsers require HTTPS for camera, microphone and location permission outside localhost.
 
-Other dashboard areas remain prototypes or require official university data and staffed services. Do not represent them as live university services.
+Course, module, event, service and opportunity information in this independent pilot is created specifically for testing. It is not supplied or verified by Leeds Beckett University or another institution. Official timetables, university authentication and staffed services still require approved integrations and governance. Do not represent pilot records as live university services.
 
 ## Local rehearsal
 

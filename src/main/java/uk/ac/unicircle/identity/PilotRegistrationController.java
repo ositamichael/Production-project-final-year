@@ -2,7 +2,10 @@ package uk.ac.unicircle.identity;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import org.springframework.context.annotation.Profile;
@@ -33,6 +36,8 @@ class PilotRegistrationController {
     record RegistrationRequest(
             @NotBlank @Email @Size(max = 320) String email,
             @NotBlank @Size(min = 2, max = 80) String displayName,
+            @NotBlank @Size(max = 180) String courseName,
+            @NotNull @Min(1) @Max(12) Integer yearOfStudy,
             @NotBlank @Size(min = 12, max = 128) String password,
             @NotBlank String inviteCode) {
     }

@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Invitation-only UniCircle friends pilot">
-  <title>Friends pilot — UniCircle</title>
+  <meta name="description" content="Invitation-only UniCircle campus pilot">
+  <title>Campus pilot — UniCircle</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/css/auth.css?v=2">
   <script src="/js/pilot-auth.js?v=1" defer></script>
@@ -14,8 +14,8 @@
     <section class="auth-story" aria-labelledby="storyTitle">
       <a class="auth-brand" href="/"><span class="brand-mark" aria-hidden="true"><span></span></span><span>UniCircle</span></a>
       <div class="story-content">
-        <span class="environment-label">INVITATION-ONLY FRIENDS PILOT</span>
-        <h1 id="storyTitle">Connect with your friends, for real.</h1>
+        <span class="environment-label">INVITATION-ONLY UNICIRCLE PILOT</span>
+        <h1 id="storyTitle">Your campus life, connected.</h1>
         <p>Create your own test account, find another pilot member, accept a connection request and chat privately.</p>
         <ul class="trust-list">
           <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg><span>Separate account for each person</span></li>
@@ -44,6 +44,10 @@
           <form id="registrationForm">
             <label for="registerName">Your name</label>
             <div class="input-control"><input id="registerName" type="text" maxlength="80" autocomplete="name" required></div>
+            <label for="registerCourse">Course or area of study</label>
+            <div class="input-control"><input id="registerCourse" type="text" maxlength="180" placeholder="e.g. Computer Science" required></div>
+            <label for="registerYear">Year of study</label>
+            <div class="input-control"><select id="registerYear" required><option value="">Choose your year</option><option value="1">Year 1</option><option value="2">Year 2</option><option value="3">Year 3</option><option value="4">Year 4</option><option value="5">Year 5+</option></select></div>
             <label for="registerEmail">Email</label>
             <div class="input-control"><input id="registerEmail" type="email" maxlength="320" autocomplete="email" required></div>
             <label for="registerPassword">Create a password (12 characters or more)</label>

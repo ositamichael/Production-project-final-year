@@ -21,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 class PilotRegistrationService {
 
     private static final UUID PILOT_UNIVERSITY_ID = UUID.fromString("2c952dd9-5276-4e44-bf20-3fe98b345111");
+    private static final UUID PILOT_PROGRAMME_ID = UUID.fromString("3d063eea-6387-4f55-a031-4af09f451101");
 
     private final UniversityRepository universities;
     private final UserAccountRepository accounts;
@@ -57,10 +58,19 @@ class PilotRegistrationService {
         }
         University pilot = universities.findById(PILOT_UNIVERSITY_ID)
                 .orElseGet(() -> universities.saveAndFlush(new University(PILOT_UNIVERSITY_ID,
-                        "pilot-campus", "UniCircle Friends Pilot", "pilot.unicircle.invalid", null)));
+                        "pilot-campus", "UniCircle Campus Pilot", "pilot.unicircle.invalid", null)));
         UserAccount account = accounts.saveAndFlush(new UserAccount(UUID.randomUUID(), pilot,
                 "pilot-" + UUID.randomUUID(), email, request.displayName().strip(), UserRole.STUDENT));
+        account.updateProfile(request.displayName(), null, request.courseName(), request.yearOfStudy(),
+                ProfileVisibility.UNIVERSITY_ONLY);
+        accounts.saveAndFlush(account);
         jdbc.update("INSERT INTO pilot_credentials (account_id, password_hash) VALUES (?, ?)",
                 account.id(), passwordEncoder.encode(request.password()));
+        jdbc.update("""
+                INSERT INTO enrolments
+                  (id, university_id, user_id, programme_id, year_of_study, status, started_on)
+                VALUES (?, ?, ?, ?, ?, 'ACTIVE', CURRENT_DATE)
+                """, UUID.randomUUID(), PILOT_UNIVERSITY_ID, account.id(), PILOT_PROGRAMME_ID,
+                request.yearOfStudy());
     }
 }

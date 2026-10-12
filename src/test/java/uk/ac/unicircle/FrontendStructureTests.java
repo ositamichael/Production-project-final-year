@@ -31,6 +31,24 @@ class FrontendStructureTests {
     }
 
     @Test
+    void mobileNavigationMatchesTheFivePrimaryPhoneDestinations() throws IOException {
+        var resource = getClass().getResourceAsStream("/static/index.html");
+        assertThat(resource).isNotNull();
+
+        var html = new String(resource.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(html)
+            .contains("class=\"mobile-brand\"")
+            .contains("class=\"mobile-tabbar\"")
+            .contains("id=\"mobileMessageUnreadBadge\"")
+            .contains("id=\"mobileMoreButton\"")
+            .contains(">My Campus</span>")
+            .contains(">Circles</span>")
+            .contains(">Messages</span>")
+            .contains(">Events</span>")
+            .contains(">More</span>");
+    }
+
+    @Test
     void prototypeLimitationsRemainVisible() throws IOException {
         var resource = getClass().getResourceAsStream("/static/index.html");
         assertThat(resource).isNotNull();

@@ -6,8 +6,8 @@
   <meta name="description" content="UniCircle campus connection and services platform prototype">
   <title>UniCircle — My Campus</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/css/app.css?v=17">
-  <script src="/js/app.js?v=17" defer></script>
+  <link rel="stylesheet" href="/css/app.css?v=18">
+  <script src="/js/app.js?v=18" defer></script>
 </head>
 <body>
   <svg class="svg-sprite" aria-hidden="true">
@@ -26,6 +26,7 @@
     <symbol id="lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></symbol>
     <symbol id="star" viewBox="0 0 24 24"><path d="m12 2 3 6 6.5 1-4.7 4.6 1.1 6.4-5.9-3.1L6.1 20l1.1-6.4L2.5 9 9 8Z"/></symbol>
     <symbol id="menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+    <symbol id="more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></symbol>
     <symbol id="check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
     <symbol id="chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
     <symbol id="send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
@@ -60,7 +61,7 @@
   </svg>
   <a class="skip-link" href="#main-content">Skip to dashboard</a>
   <div class="prototype-banner" id="environmentBanner" role="status">
-    Invitation-only friends pilot — social features use independent test accounts; no live university systems are connected.
+    Invitation-only campus pilot — test accounts and real workflows; no live university systems are connected.
   </div>
   <div class="app-shell">
     <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
@@ -96,6 +97,7 @@
     <main id="main-content" tabindex="-1">
       <header class="topbar">
         <button class="menu-button" id="menuButton" type="button" aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation"><svg class="icon" aria-hidden="true"><use href="#menu"/></svg></button>
+        <a class="mobile-brand" href="#campus" data-open-page="campus" aria-label="UniCircle home"><span class="brand-mark" aria-hidden="true"><span></span></span><span>UniCircle</span></a>
         <div class="welcome">
           <svg class="icon sun" aria-hidden="true"><use href="#sun"/></svg>
           <div><h1>Good morning, <span data-current-user-first-name>Student</span></h1><p>Here is what is happening on campus today.</p></div>
@@ -128,11 +130,11 @@
 
       <section class="dashboard-grid page-surface" id="campus" data-page="campus" aria-label="UniCircle dashboard">
         <article class="card pilot-welcome" id="pilotWelcome" hidden>
-          <span class="eyebrow">YOUR FRIENDS PILOT</span>
-          <h2>Make a real connection.</h2>
-          <p>Find someone you invited, send a request, then start a private chat after they accept. You can also choose whether to share a short-lived position with accepted connections.</p>
-          <div class="pilot-welcome-actions"><button class="primary-button" id="pilotFindFriends" type="button">Find friends</button><a class="secondary-button" href="#messages-page" data-open-page="messages">Open messages</a><a class="secondary-button" href="#map-page" data-open-page="map">Location controls</a></div>
-          <small>Independent pilot accounts are not verified university identities. Other campus modules are not part of this friends test.</small>
+          <span class="eyebrow">YOUR UNICIRCLE PILOT</span>
+          <h2>Your campus life, connected.</h2>
+          <p>Find students, message privately, discover events, book campus services, explore opportunities and test consent-based location sharing from one account.</p>
+          <div class="pilot-welcome-actions"><button class="primary-button" id="pilotFindFriends" type="button">Find students</button><a class="secondary-button" href="#events-page" data-open-page="events">Explore events</a><a class="secondary-button" href="#services-page" data-open-page="services">Book a service</a><a class="secondary-button" href="#messages-page" data-open-page="messages">Open messages</a></div>
+          <small>Course and year are self-declared pilot details. Events, services and opportunities are test records—not data supplied by a university.</small>
         </article>
         <article class="card schedule-card searchable" id="schedule" data-search="schedule lecture project seminar gym">
           <div class="card-heading"><h2><span class="heading-icon blue"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg></span> Today's Schedule</h2><a href="#today" data-open-page="today">View all</a></div>
@@ -339,9 +341,17 @@
         <div class="assistant-workspace"><aside class="content-panel"><h3>Popular topics</h3><div class="topic-list"><button type="button" data-page-question="Find a quiet study space">Quiet study spaces<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button><button type="button" data-page-question="How do I book a sports facility?">Sports facilities<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button><button type="button" data-page-question="Tell me about career opportunities">Career opportunities<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button></div><p class="panel-note">Responses are limited to the demonstrated questions and are not connected to live university systems.</p></aside><article class="assistant-chat"><div class="assistant-chat-heading"><span class="avatar assistant-avatar">U</span><div><h3>UniCircle campus guide</h3><span>Prototype information assistant</span></div></div><div class="assistant-chat-body" id="pageAssistantResponse" role="status" aria-live="polite"><p class="bubble received">Hello Michael. Choose a topic or ask one of the supported demonstration questions.</p></div><form class="composer" id="pageAssistantForm"><label class="sr-only" for="pageAssistantInput">Ask the campus guide</label><input id="pageAssistantInput" type="text" maxlength="250" placeholder="Ask about spaces, facilities or careers"><button type="submit" aria-label="Send question"><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button></form></article></div>
       </section>
 
-      <footer><span>UniCircle · Friends pilot · Live connection testing</span><a href="/actuator/health">System health</a></footer>
+      <footer><span>UniCircle · Campus pilot · Multi-user testing</span><a href="/actuator/health">System health</a></footer>
     </main>
   </div>
+
+  <nav class="mobile-tabbar" aria-label="Mobile primary navigation">
+    <a class="mobile-tab active" href="#campus" data-page-link="campus" aria-current="page"><svg class="icon" aria-hidden="true"><use href="#home"/></svg><span>My Campus</span></a>
+    <a class="mobile-tab" href="#circles-page" data-page-link="circles"><svg class="icon" aria-hidden="true"><use href="#users"/></svg><span>Circles</span></a>
+    <a class="mobile-tab" href="#messages-page" data-page-link="messages"><span class="mobile-tab-icon"><svg class="icon" aria-hidden="true"><use href="#message"/></svg><span class="mobile-tab-badge" id="mobileMessageUnreadBadge" hidden>0</span></span><span>Messages</span></a>
+    <a class="mobile-tab" href="#events-page" data-page-link="events"><svg class="icon" aria-hidden="true"><use href="#events"/></svg><span>Events</span></a>
+    <button class="mobile-tab" id="mobileMoreButton" type="button" aria-controls="sidebar" aria-expanded="false"><svg class="icon" aria-hidden="true"><use href="#more"/></svg><span>More</span></button>
+  </nav>
 
   <section id="profileDialog" class="profile-dialog modal-surface" role="dialog" aria-modal="true" aria-labelledby="profileDialogTitle" hidden>
     <form id="profileForm">

@@ -157,6 +157,31 @@ class PilotFriendsJourneyTests {
                 .andExpect(jsonPath("$.sharing").value(false));
     }
 
+    @Test
+    void campusPilotExposesProfileContextEventsServicesAndOpportunities() throws Exception {
+        register("michael@example.net", "Michael Carter");
+        MockHttpSession michael = signIn("michael@example.net");
+
+        mockMvc.perform(get("/api/campus/me/context").session(michael))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.dataSource").value("SELF_DECLARED_PILOT_PROFILE"))
+                .andExpect(jsonPath("$.student.programmeTitle").value("Computer Science"))
+                .andExpect(jsonPath("$.student.yearOfStudy").value(3))
+                .andExpect(jsonPath("$.modules.length()").value(3));
+        mockMvc.perform(get("/api/campus-life/events").session(michael))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(4))
+                .andExpect(jsonPath("$[0].title").isNotEmpty());
+        mockMvc.perform(get("/api/campus-life/services").session(michael))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$[0].slots.length()").isNumber());
+        mockMvc.perform(get("/api/opportunities").session(michael))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$[0].publisherVerified").value(true));
+    }
+
     private void register(String email, String name) throws Exception {
         mockMvc.perform(post("/api/pilot/register").with(csrf()).contentType(MediaType.APPLICATION_JSON)
                 .content(registration(email, name, INVITE))).andExpect(status().isCreated());
@@ -181,6 +206,8 @@ class PilotFriendsJourneyTests {
 
     private String registration(String email, String name, String invite) {
         return "{\"email\":\"" + email + "\",\"displayName\":\"" + name
-                + "\",\"password\":\"UniquePilotPassword!2026\",\"inviteCode\":\"" + invite + "\"}";
+                + "\",\"password\":\"UniquePilotPassword!2026\","
+                + "\"courseName\":\"Computer Science\",\"yearOfStudy\":3,"
+                + "\"inviteCode\":\"" + invite + "\"}";
     }
 }
