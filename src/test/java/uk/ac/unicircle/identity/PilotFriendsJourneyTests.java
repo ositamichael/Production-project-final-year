@@ -58,6 +58,14 @@ class PilotFriendsJourneyTests {
     }
 
     @Test
+    void publicCampusPhotographyLoadsBeforePilotSignIn() throws Exception {
+        mockMvc.perform(get("/images/campus-circles-v1.jpg"))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+                        .contentType("image/jpeg"));
+    }
+
+    @Test
     void registrationValidationIdentifiesTheRejectedField() throws Exception {
         mockMvc.perform(post("/api/pilot/register").with(csrf()).contentType(MediaType.APPLICATION_JSON)
                         .content("""
