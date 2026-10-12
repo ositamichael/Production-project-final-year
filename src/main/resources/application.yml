@@ -36,10 +36,12 @@ management:
 info:
   app:
     name: UniCircle
-    stage: Sprint 10 staff review of lost and found
+    stage: Sprint 12 campus information and live learning
     data-status: Prototype fixtures only
 
 unicircle:
+  meetings:
+    provider-base-url: ${UNICIRCLE_MEETING_PROVIDER_BASE_URL:}
   calls:
     stun-urls: ${UNICIRCLE_STUN_URLS:stun:stun.l.google.com:19302}
     turn-urls: ${UNICIRCLE_TURN_URLS:}

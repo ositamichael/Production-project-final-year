@@ -6,7 +6,7 @@ This repository is being rebuilt as a Level 6 final-year software engineering pr
 
 ## Current status
 
-Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, Sprint 7 added transactional campus events and service bookings, Sprint 8 added moderated opportunities and personal application tracking, Sprint 9 added secure lost-and-found reporting, Sprint 10 added a fictional staff review workflow, and Sprint 11 expands the invitation-only pilot into a testable campus experience:
+Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, Sprint 7 added transactional campus events and service bookings, Sprint 8 added moderated opportunities and personal application tracking, Sprint 9 added secure lost-and-found reporting, Sprint 10 added a fictional staff review workflow, Sprint 11 expanded the invitation-only pilot into a testable campus experience, and Sprint 12 adds trusted campus information, private support and live-learning participation:
 
 - Spring Boot 4.1.1 with Java 21 as the target language level.
 - A responsive desktop, tablet and mobile dashboard prototype.
@@ -54,8 +54,14 @@ Sprint 1 established the testable engineering foundation, Sprint 2 added the acc
 - A five-destination mobile navigation bar matching the mobile product design: My Campus, Circles, Messages, Events and More.
 - Self-declared course and year onboarding, privacy-filtered pilot coursemates and clearly labelled non-institutional academic context.
 - Pilot event, service and opportunity catalogues with account-specific registration, booking, saving and tracking workflows.
+- University-scoped announcements for urgent notices, modules, placements and internships, with verified-publisher context and per-student read state.
+- A targeted Campus Updates workspace with category filters and direct routes into support, events, opportunities and live classes.
+- Private support cases routed to the appropriate fictional university team, with reference codes, status tracking and account isolation.
+- Scheduled lectures, project meetings and careers drop-ins with persisted attendance and participant lists.
+- A live-class workspace with class chat, Q&A, raise/lower hand controls, agendas and provider-aware video-room status.
+- A configurable boundary for an approved meeting provider through `UNICIRCLE_MEETING_PROVIDER_BASE_URL`.
 
-The dashboard now contains working local social, event-registration, booking, opportunity-tracking, lost-and-found and fictional staff-review demonstrations, but it is not evidence of a live university integration. Real student identity, official timetables, university booking systems, employer vacancy feeds, staffed lost-property services and location require institutional approval, integration contracts, security review and deployment infrastructure. Messages, registrations, bookings, saved listings, tracker stages, notifications, item reports and claims are stored only in the local development environment. Production push notifications, institutionally governed staff moderation and safeguarding operations, secure media storage and retention policies remain future work.
+The dashboard now contains working local social, event-registration, booking, opportunity-tracking, lost-and-found, fictional staff-review, announcement, support-case and live-learning demonstrations, but it is not evidence of a live university integration. Real student identity, official timetables, staff publishing, university email, booking systems, employer vacancy feeds, staffed support services, multiparty video and location require institutional approval, integration contracts, security review and deployment infrastructure. The pilot records information in its own database; it does not falsely report that an email was sent or a video room was opened when those approved services are absent. Production push notifications, institutionally governed moderation and safeguarding operations, secure media storage and retention policies remain future work.
 
 ## Run in IntelliJ IDEA
 
@@ -110,6 +116,7 @@ UniCircle begins as a modular monolith. This keeps deployment manageable for a f
 - [`docs/sprints/09-lost-found.md`](docs/sprints/09-lost-found.md)
 - [`docs/sprints/10-lost-found-staff-review.md`](docs/sprints/10-lost-found-staff-review.md)
 - [`docs/sprints/11-campus-pilot.md`](docs/sprints/11-campus-pilot.md)
+- [`docs/sprints/12-campus-information-live-learning.md`](docs/sprints/12-campus-information-live-learning.md)
 
 ## Branching and assessment evidence
 
