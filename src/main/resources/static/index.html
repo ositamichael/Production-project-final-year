@@ -6,8 +6,8 @@
   <meta name="description" content="UniCircle campus connection and services platform prototype">
   <title>UniCircle — My Campus</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/css/app.css?v=22">
-  <script src="/js/app.js?v=23" defer></script>
+  <link rel="stylesheet" href="/css/app.css?v=23">
+  <script src="/js/app.js?v=24" defer></script>
 </head>
 <body>
   <svg class="svg-sprite" aria-hidden="true">
@@ -401,8 +401,34 @@
       </section>
 
       <section class="page-view page-surface" id="assistant-page" data-page="assistant" hidden tabindex="-1" aria-labelledby="assistantTitle">
-        <header class="view-hero"><div class="view-title"><span class="view-icon violet"><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><div><span class="eyebrow">CAMPUS GUIDE</span><h2 id="assistantTitle">Ask UniCircle</h2><p>Find approved campus information and the correct university service.</p></div></div><span class="data-badge">Limited prototype guide</span></header>
-        <div class="assistant-workspace"><aside class="content-panel"><h3>Popular topics</h3><div class="topic-list"><button type="button" data-page-question="Find a quiet study space">Quiet study spaces<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button><button type="button" data-page-question="How do I book a sports facility?">Sports facilities<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button><button type="button" data-page-question="Tell me about career opportunities">Career opportunities<svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button></div><p class="panel-note">Responses are limited to the demonstrated questions and are not connected to live university systems.</p></aside><article class="assistant-chat"><div class="assistant-chat-heading"><span class="avatar assistant-avatar">U</span><div><h3>UniCircle campus guide</h3><span>Prototype information assistant</span></div></div><div class="assistant-chat-body" id="pageAssistantResponse" role="status" aria-live="polite"><p class="bubble received">Hello Michael. Choose a topic or ask one of the supported demonstration questions.</p></div><form class="composer" id="pageAssistantForm"><label class="sr-only" for="pageAssistantInput">Ask the campus guide</label><input id="pageAssistantInput" type="text" maxlength="250" placeholder="Ask about spaces, facilities or careers"><button type="submit" aria-label="Send question"><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button></form></article></div>
+        <header class="view-hero"><div class="view-title"><span class="view-icon violet"><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><div><span class="eyebrow">AI STUDY &amp; CAMPUS ASSISTANT</span><h2 id="assistantTitle">Ask UniCircle</h2><p>Research universities, understand coursework, solve coding problems and create original images.</p></div></div><span class="data-badge" id="assistantStatusBadge">Checking AI service…</span></header>
+        <div class="assistant-workspace">
+          <aside class="content-panel assistant-tools-panel">
+            <h3>Choose a workspace</h3>
+            <p class="panel-intro">Select how you want UniCircle to help. You can change mode at any time.</p>
+            <div class="assistant-mode-list" role="group" aria-label="Assistant workspace">
+              <button class="assistant-mode active" type="button" data-assistant-mode="GENERAL" aria-pressed="true"><span><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><strong>Smart help</strong><small>Questions, ideas and practical tasks</small></button>
+              <button class="assistant-mode" type="button" data-assistant-mode="UNIVERSITY_RESEARCH" aria-pressed="false"><span><svg class="icon" aria-hidden="true"><use href="#globe"/></svg></span><strong>University research</strong><small>Current answers with source links</small></button>
+              <button class="assistant-mode" type="button" data-assistant-mode="STUDY_COACH" aria-pressed="false"><span><svg class="icon" aria-hidden="true"><use href="#book-open"/></svg></span><strong>Study coach</strong><small>Explanations, practice and feedback</small></button>
+              <button class="assistant-mode" type="button" data-assistant-mode="CODE_LAB" aria-pressed="false"><span><svg class="icon" aria-hidden="true"><use href="#code"/></svg></span><strong>Code lab</strong><small>Design, debug and test programs</small></button>
+              <button class="assistant-mode" type="button" data-assistant-mode="IMAGE_STUDIO" aria-pressed="false"><span><svg class="icon" aria-hidden="true"><use href="#palette"/></svg></span><strong>Image studio</strong><small>Create an original image from a prompt</small></button>
+            </div>
+            <div class="assistant-starter-prompts">
+              <h4>Try asking</h4>
+              <button type="button" data-page-question="Compare entry requirements and tuition information for computer science at three UK universities. Use official sources." data-question-mode="UNIVERSITY_RESEARCH">Compare universities</button>
+              <button type="button" data-page-question="Explain dependency injection in Spring Boot with a simple example and then quiz me." data-question-mode="STUDY_COACH">Learn a difficult topic</button>
+              <button type="button" data-page-question="Help me design and test a Java method that finds duplicate student IDs." data-question-mode="CODE_LAB">Solve a coding problem</button>
+              <button type="button" data-page-question="Create a clean illustration of students collaborating in a modern university library." data-question-mode="IMAGE_STUDIO">Create an image</button>
+            </div>
+            <p class="panel-note">UniCircle can make mistakes. Important admissions, fees, visa, policy and deadline information must be checked against the cited official source.</p>
+          </aside>
+          <article class="assistant-chat">
+            <div class="assistant-chat-heading"><span class="avatar assistant-avatar"><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><div><h3>UniCircle intelligence</h3><span id="assistantModeLabel">Smart help · secure server-side AI</span></div><span class="assistant-live-indicator" id="assistantLiveIndicator"><i></i>Checking</span></div>
+            <div class="assistant-chat-body" id="pageAssistantResponse" role="log" aria-live="polite" aria-label="Ask UniCircle conversation"><div class="assistant-welcome"><span><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><h3>How can I help?</h3><p>Ask a question, research a university, work through a topic, debug code or describe an image to create.</p></div></div>
+            <form class="assistant-composer" id="pageAssistantForm"><label class="sr-only" for="pageAssistantInput">Ask UniCircle</label><textarea id="pageAssistantInput" rows="1" maxlength="4000" placeholder="Ask UniCircle anything…"></textarea><button type="submit" aria-label="Send question"><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button></form>
+            <p class="assistant-integrity-note"><svg class="icon" aria-hidden="true"><use href="#shield"/></svg> Use AI to understand, practise and improve your own work. Follow your university's assessment rules, and do not enter passwords, personal data or confidential information.</p>
+          </article>
+        </div>
       </section>
 
       <footer><span>UniCircle · Staging Campus · Multi-user acceptance testing</span><a href="/actuator/health">System health</a></footer>

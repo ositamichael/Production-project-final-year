@@ -150,6 +150,32 @@ class FrontendStructureTests {
     }
 
     @Test
+    void askUniCircleProvidesResponsibleAiWorkspacesAndSourcedResults() throws IOException {
+        var htmlResource = getClass().getResourceAsStream("/static/index.html");
+        var scriptResource = getClass().getResourceAsStream("/static/js/app.js");
+        assertThat(htmlResource).isNotNull();
+        assertThat(scriptResource).isNotNull();
+
+        var html = new String(htmlResource.readAllBytes(), StandardCharsets.UTF_8);
+        var script = new String(scriptResource.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(html)
+                .contains("AI STUDY &amp; CAMPUS ASSISTANT")
+                .contains("data-assistant-mode=\"UNIVERSITY_RESEARCH\"")
+                .contains("data-assistant-mode=\"STUDY_COACH\"")
+                .contains("data-assistant-mode=\"CODE_LAB\"")
+                .contains("data-assistant-mode=\"IMAGE_STUDIO\"")
+                .contains("id=\"assistantStatusBadge\"")
+                .contains("id=\"assistantLiveIndicator\"")
+                .contains("Follow your university's assessment rules")
+                .contains("do not enter passwords, personal data or confidential information");
+        assertThat(script)
+                .contains("/api/assistant/status")
+                .contains("/api/assistant/ask")
+                .contains("result.sources")
+                .contains("result.imageDataUrl");
+    }
+
+    @Test
     void fictionalSignInPageIsExplicitlySeparatedFromUniversityAuthentication() throws IOException {
         var resource = getClass().getResourceAsStream("/static/demo-login.html");
         assertThat(resource).isNotNull();

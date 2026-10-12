@@ -6,7 +6,7 @@ This repository is being rebuilt as a Level 6 final-year software engineering pr
 
 ## Current status
 
-Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, Sprint 7 added transactional campus events and service bookings, Sprint 8 added moderated opportunities and personal application tracking, Sprint 9 added secure lost-and-found reporting, Sprint 10 added a fictional staff review workflow, Sprint 11 expanded the invitation-only pilot into a testable campus experience, Sprint 12 added trusted campus information, private support and live-learning participation, and Sprint 13 adds structured multi-user acceptance evidence inside the same complete application:
+Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, Sprint 7 added transactional campus events and service bookings, Sprint 8 added moderated opportunities and personal application tracking, Sprint 9 added secure lost-and-found reporting, Sprint 10 added a fictional staff review workflow, Sprint 11 expanded the invitation-only pilot into a testable campus experience, Sprint 12 added trusted campus information, private support and live-learning participation, Sprint 13 added structured multi-user acceptance evidence, and Sprint 14 adds a responsible AI study and campus assistant inside the same complete application:
 
 - Spring Boot 4.1.1 with Java 21 as the target language level.
 - A responsive desktop, tablet and mobile dashboard prototype.
@@ -62,6 +62,10 @@ Sprint 1 established the testable engineering foundation, Sprint 2 added the acc
 - A configurable boundary for an approved meeting provider through `UNICIRCLE_MEETING_PROVIDER_BASE_URL`.
 - An account-specific Pilot Test Centre covering profiles, discovery, connections, messaging, calls, consent-based location, safety, announcements, bookings, opportunities, support, live classes, lost property and mobile access.
 - Persisted pass, fail, blocked and not-tested results with device and non-sensitive evidence notes for supervised staging evaluation.
+- Five assistant workspaces for broad questions, current university research, guided study, code support and original image generation.
+- Server-side OpenAI Responses API integration with web search, visible source links, code execution and image generation tools.
+- Input moderation, per-account rate limiting, secure server-side credentials and a clear setup state when AI is not enabled.
+- Academic-integrity instructions that support explanation, practice, feedback and debugging without impersonating a student or fabricating research.
 
 The dashboard now contains working local social, event-registration, booking, opportunity-tracking, lost-and-found, fictional staff-review, announcement, support-case and live-learning demonstrations, but it is not evidence of a live university integration. Real student identity, official timetables, staff publishing, university email, booking systems, employer vacancy feeds, staffed support services, multiparty video and location require institutional approval, integration contracts, security review and deployment infrastructure. The pilot records information in its own database; it does not falsely report that an email was sent or a video room was opened when those approved services are absent. Production push notifications, institutionally governed moderation and safeguarding operations, secure media storage and retention policies remain future work.
 
@@ -81,6 +85,14 @@ The sign-in page also offers fictional Aisha, James and Sophie student accounts 
 These credentials are deliberately fictional and exist only in the non-production profile. They can be overridden with `UNICIRCLE_DEMO_USERNAME` and `UNICIRCLE_DEMO_PASSWORD`. Never use a real university password or Authenticator code in this form.
 
 No local PostgreSQL installation is required for the default profile. It uses an in-memory H2 database configured to behave like PostgreSQL for early development. Production uses PostgreSQL and environment variables documented in `.env.example`.
+
+## Ask UniCircle AI setup
+
+The assistant interface and protected API run without a provider key, but live answers, web research, code execution and image generation remain disabled until the deployment has a valid `OPENAI_API_KEY`. Add the key only as a private server-side environment variable in Render or the chosen host; never place it in JavaScript, commit it to Git or ask a student to enter it.
+
+The default main model is `gpt-6.1-sol`, selected as a strong balance of reasoning quality and cost, and the default image tool is `gpt-image-2.5-flare`. Both can be changed without code edits using `UNICIRCLE_ASSISTANT_MODEL` and `UNICIRCLE_ASSISTANT_IMAGE_MODEL`. Provider usage is chargeable and should be protected with account limits, budget alerts and institutional approval before a wider pilot.
+
+Ask UniCircle searches the public web for general and university-research questions and displays the returned source links. It does not have automatic access to every university's private systems, and it cannot guarantee that every answer is correct. Admissions, fees, visas, deadlines and policy decisions must be checked against the cited official university or government source.
 
 For the invitation-only staging-account flow within the complete UniCircle application and Render rehearsal instructions, see [`docs/friends-pilot.md`](docs/friends-pilot.md). Pilot participants must never enter university credentials or Authenticator codes.
 
@@ -120,6 +132,7 @@ UniCircle begins as a modular monolith. This keeps deployment manageable for a f
 - [`docs/sprints/11-campus-pilot.md`](docs/sprints/11-campus-pilot.md)
 - [`docs/sprints/12-campus-information-live-learning.md`](docs/sprints/12-campus-information-live-learning.md)
 - [`docs/sprints/13-staging-acceptance-evidence.md`](docs/sprints/13-staging-acceptance-evidence.md)
+- [`docs/sprints/14-responsible-ai-assistant.md`](docs/sprints/14-responsible-ai-assistant.md)
 
 ## Branching and assessment evidence
 

@@ -36,10 +36,13 @@ management:
 info:
   app:
     name: UniCircle
-    stage: Sprint 12 campus information and live learning
+    stage: Sprint 14 responsible AI assistant
     data-status: Prototype fixtures only
 
 unicircle:
+  assistant:
+    model: ${UNICIRCLE_ASSISTANT_MODEL:gpt-6.1-sol}
+    image-model: ${UNICIRCLE_ASSISTANT_IMAGE_MODEL:gpt-image-2.5-flare}
   meetings:
     provider-base-url: ${UNICIRCLE_MEETING_PROVIDER_BASE_URL:}
   calls:
