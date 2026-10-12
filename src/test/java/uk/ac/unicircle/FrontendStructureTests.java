@@ -87,11 +87,14 @@ class FrontendStructureTests {
     }
 
     @Test
-    void nonProfileVisualsUseContextualSvgIcons() throws IOException {
+    void nonProfileVisualsUseContextualIconsAndCampusPhotography() throws IOException {
         var resource = getClass().getResourceAsStream("/static/index.html");
+        var stylesheetResource = getClass().getResourceAsStream("/static/css/app.css");
         assertThat(resource).isNotNull();
+        assertThat(stylesheetResource).isNotNull();
 
         var html = new String(resource.readAllBytes(), StandardCharsets.UTF_8);
+        var stylesheet = new String(stylesheetResource.readAllBytes(), StandardCharsets.UTF_8);
         assertThat(html)
             .contains("<symbol id=\"laptop\"")
             .contains("<symbol id=\"key\"")
@@ -99,8 +102,13 @@ class FrontendStructureTests {
             .contains("<symbol id=\"mindfulness\"")
             .contains("<symbol id=\"graduation\"")
             .contains("<symbol id=\"presentation\"")
-            .contains("<use href=\"#code\"/>")
+            .contains("class=\"feature-avatar campus-photo circle-computing\"")
             .contains("<use href=\"#graduation\"/>");
+
+        assertThat(stylesheet)
+            .contains("/images/campus-circles-v1.jpg")
+            .contains("/images/campus-circles-more-v1.jpg")
+            .contains("/images/campus-events-v1.jpg");
 
         assertThat(html)
             .doesNotContain("class=\"event-thumb careers\">CF")

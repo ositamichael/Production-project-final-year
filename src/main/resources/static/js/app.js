@@ -361,14 +361,15 @@ function renderDashboardEvents() {
   if (!dashboardEventList) return;
   dashboardEventList.replaceChildren();
   loadedCampusEvents.slice(0, 3).forEach((event) => {
-    const [visualClass, iconName] = eventPresentation(event.category);
+    const [visualClass] = eventPresentation(event.category);
     const item = document.createElement('li');
     const date = document.createElement('time');
     const parsed = new Date(event.startsAt);
     date.innerHTML = `<strong>${parsed.getDate()}</strong><small>${parsed.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}</small>`;
     const visual = document.createElement('div');
-    visual.className = `event-thumb ${visualClass}`;
-    visual.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#${iconName}"/></svg>`;
+    visual.className = `event-thumb event-photo ${visualClass}`;
+    visual.setAttribute('role', 'img');
+    visual.setAttribute('aria-label', `${event.title} campus event photograph`);
     const copy = document.createElement('div');
     const title = document.createElement('strong');
     title.textContent = event.title;
@@ -1859,6 +1860,8 @@ const messageComposer = document.querySelector('#messageComposer');
 const messageInput = document.querySelector('#messageInput');
 const messageSend = document.querySelector('#messageSend');
 const conversationCallActions = document.querySelector('#conversationCallActions');
+const messageWorkspace = document.querySelector('#messages-page .message-workspace');
+const messageBackButton = document.querySelector('#messageBackButton');
 const audioCallButton = document.querySelector('#audioCallButton');
 const videoCallButton = document.querySelector('#videoCallButton');
 const callDialog = document.querySelector('#callDialog');
@@ -2420,6 +2423,7 @@ function renderConversationList() {
     const avatar = document.createElement('span');
     avatar.className = 'avatar navy-avatar';
     avatar.textContent = conversation.participantInitials;
+    showMemberPhoto(avatar, conversation.participantAccountId);
     const details = document.createElement('div');
     const name = document.createElement('strong');
     name.textContent = conversation.participantDisplayName;
@@ -2510,6 +2514,7 @@ async function loadMessagingWorkspace(preferredConversationId = null) {
     const response = await fetch('/api/social/conversations', { headers: { Accept: 'application/json' } });
     if (response.status === 401 || response.status === 403) {
       loadedConversations = [];
+      messageWorkspace?.classList.remove('conversation-open');
       renderConversationList();
       conversationListStatus.textContent = 'Sign in to load your private conversations.';
       emptyConversation('Sign in to use consent-based student messaging.');
@@ -2522,10 +2527,14 @@ async function loadMessagingWorkspace(preferredConversationId = null) {
     const preferred = preferredConversationId || activeConversationId;
     const selected = loadedConversations.find((item) => item.conversationId === preferred)
       || loadedConversations[0];
-    activeConversationId = selected?.conversationId || null;
+    const shouldOpenConversation = !matchMedia('(max-width: 620px)').matches || Boolean(preferred);
+    activeConversationId = shouldOpenConversation ? selected?.conversationId || null : null;
     renderConversationList();
-    if (selected) await selectConversation(selected.conversationId);
-    else emptyConversation();
+    if (selected && shouldOpenConversation) await selectConversation(selected.conversationId);
+    else {
+      messageWorkspace?.classList.remove('conversation-open');
+      emptyConversation(selected ? 'Choose a conversation to open it.' : undefined);
+    }
   } catch (error) {
     conversationListStatus.textContent = error.message;
     emptyConversation('Please refresh the page and try again.');
@@ -2534,6 +2543,7 @@ async function loadMessagingWorkspace(preferredConversationId = null) {
 
 async function selectConversation(conversationId) {
   activeConversationId = conversationId;
+  messageWorkspace?.classList.add('conversation-open');
   renderConversationList();
   conversationMessages.replaceChildren();
   const loading = document.createElement('div');
@@ -2582,6 +2592,13 @@ async function selectConversation(conversationId) {
     emptyConversation(error.message);
   }
 }
+
+messageBackButton?.addEventListener('click', () => {
+  messageWorkspace?.classList.remove('conversation-open');
+  activeConversationId = null;
+  renderConversationList();
+  conversationSearch?.focus();
+});
 
 messageComposer?.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -3279,7 +3296,14 @@ async function loadFriendLocations() {
     map.href = `https://www.openstreetmap.org/?mlat=${friend.latitude}&mlon=${friend.longitude}#map=17/${friend.latitude}/${friend.longitude}`;
     map.target = '_blank';
     map.rel = 'noopener noreferrer';
-    map.textContent = 'Open position on map ↗';
+    map.textContent = 'Open position on map';
+    const mapIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    mapIcon.classList.add('icon');
+    mapIcon.setAttribute('aria-hidden', 'true');
+    const mapUse = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+    mapUse.setAttribute('href', '#chevron-right');
+    mapIcon.append(mapUse);
+    map.append(mapIcon);
     row.append(title, details, map);
     friendLocations.append(row);
   });
