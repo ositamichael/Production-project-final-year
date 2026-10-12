@@ -1,5 +1,6 @@
 package uk.ac.unicircle.assistant;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,7 +25,20 @@ class AssistantController {
 
     @PostMapping("/ask")
     AssistantResponses.Answer ask(Authentication authentication,
+                                  HttpServletRequest httpRequest,
                                   @Valid @RequestBody AssistantRequests.AskRequest request) {
-        return service.ask(authentication.getName(), request);
+        String clientKey = authenticatedClientKey(authentication);
+        if (clientKey == null) {
+            clientKey = "guest:" + httpRequest.getSession(true).getId();
+        }
+        return service.ask(clientKey, request);
+    }
+
+    private String authenticatedClientKey(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getPrincipal())) {
+            return null;
+        }
+        return "account:" + authentication.getName();
     }
 }

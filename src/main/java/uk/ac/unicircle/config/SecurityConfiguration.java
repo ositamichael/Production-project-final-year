@@ -25,7 +25,8 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 "/", "/index.html", "/demo-login.html", "/favicon.svg", "/css/**", "/js/**", "/images/**",
-                                "/error", "/sign-in", "/api/platform/status", "/api/security/csrf", "/actuator/health")
+                                "/error", "/sign-in", "/api/platform/status", "/api/security/csrf", "/api/assistant/**",
+                                "/actuator/health")
                         .permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptions -> exceptions.defaultAuthenticationEntryPointFor(

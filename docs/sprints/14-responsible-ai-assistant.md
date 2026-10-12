@@ -8,7 +8,7 @@ Replace the fixed three-question campus guide with a secure, useful assistant th
 
 - A responsive Ask UniCircle workspace for desktop and mobile.
 - Five explicit modes: Smart Help, University Research, Study Coach, Code Lab and Image Studio.
-- Authenticated `/api/assistant/status` and `/api/assistant/ask` endpoints.
+- Public `/api/assistant/status` and `/api/assistant/ask` endpoints so the assistant works before sign-in, without exposing account or university records.
 - A server-side OpenAI Responses API gateway; the browser never receives the provider key.
 - Hosted web search for current questions, with returned sources shown as clickable links.
 - Code Interpreter for Code Lab and image generation for Image Studio.
@@ -24,7 +24,7 @@ The first pilot does not claim access to private university records. Public-web 
 
 ## Evaluation evidence
 
-- Controller tests cover authentication, disabled-provider behaviour and validation limits.
+- Controller tests cover guest access, disabled-provider behaviour, validation limits and per-account rate limiting.
 - Frontend structure tests cover all five modes, source presentation and the integrity notice.
 - Browser checks confirm responsive desktop and phone layouts and the no-key fallback journey.
 - The full Maven test suite remains the regression gate before deployment.

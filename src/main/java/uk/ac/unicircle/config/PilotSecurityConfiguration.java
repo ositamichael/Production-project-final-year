@@ -26,7 +26,7 @@ public class PilotSecurityConfiguration {
                         .requestMatchers(
                                 "/", "/index.html", "/pilot-login.html", "/favicon.svg", "/css/**", "/js/**", "/images/**",
                                 "/error", "/sign-in", "/api/pilot/register", "/api/platform/status", "/api/security/csrf",
-                                "/actuator/health")
+                                "/api/assistant/**", "/actuator/health")
                         .permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptions -> exceptions.defaultAuthenticationEntryPointFor(
