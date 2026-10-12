@@ -1,95 +1,109 @@
-# ScamShield
+# UniCircle
 
-ScamShield is a final-year computer science project exploring whether an explainable text-classification system can help non-technical users recognise phishing and scam messages, including messages rewritten to sound more convincing.
+**Where campus meets connection.** UniCircle is a multi-university campus platform designed to bring people, schedules, communities, messaging, events, appointments, opportunities and trusted support into one coherent experience.
 
-For a clean first explanation of the project, see [`docs/project_overview.md`](docs/project_overview.md) and the assessor-facing [Project Overview document](outputs/ScamShield_Project_Overview_Updated.docx).
+This repository is being rebuilt as a Level 6 final-year software engineering project. It previously contained the ScamShield prototype. That work remains recoverable in Git history and the `archive/scamshield` reference; the active product direction is now UniCircle.
 
-The formal software-engineering workflow begins with Sprint 1 on 7 October 2026. See the [software engineering plan](docs/software_engineering_plan.md), [requirements traceability matrix](docs/requirements_traceability.md), [architecture record](docs/architecture.md), [Sprint 1 record](docs/sprints/01-engineering-foundation.md), [Sprint 2 record](docs/sprints/02-architecture-data.md), [Sprint 3 record](docs/sprints/03-trustlab.md) and [Sprint 4 record](docs/sprints/04-independent-evaluation.md). These records intentionally distinguish the earlier iterative prototype from the branch-and-pull-request process used from this sprint onward.
+## Current status
 
-## Project boundary
+Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, Sprint 7 added transactional campus events and service bookings, Sprint 8 added moderated opportunities and personal application tracking, Sprint 9 added secure lost-and-found reporting, and Sprint 10 adds a fictional staff review workflow:
 
-This is a controlled academic prototype. It analyses pasted fictional or public message text and user-approved OCR text. It does not connect to email accounts, send messages, make financial decisions or replace human judgement. Its optional public-web checker requests technical response metadata for a supplied public URL; that check is not a safety or reputation verdict.
+- Spring Boot 4.1.1 with Java 21 as the target language level.
+- A responsive desktop, tablet and mobile dashboard prototype.
+- Spring Security with production OIDC configuration for university single sign-on.
+- A multi-university relational schema using explicit `university_id` boundaries.
+- A searchable same-university student directory for new and existing permitted profiles.
+- Persisted connection requests with recipient-only accept and decline decisions.
+- Human-to-human private messaging that activates only after connection consent.
+- Persisted direct conversations and messages with server-enforced membership checks.
+- Authenticated WebSocket events that refresh messages and notifications across signed-in browser sessions.
+- Account-specific, database-backed notifications and unread counts.
+- Immediate account blocking that removes private messaging permission.
+- Confidential safeguarding reports with validated reasons and an auditable review state.
+- A university-scoped event catalogue with account-specific registration, cancellation, remaining-capacity calculation and schedule integration.
+- Service offerings and bookable time slots for appointments, facilities and campus support.
+- Transactional booking controls that reject duplicate, overlapping and fully occupied requests.
+- Account-specific booking history, cancellation and confirmation notifications.
+- A composed personal schedule that combines registered events with confirmed service bookings.
+- University-scoped jobs, placements and volunteering from verified fictional publishers.
+- Server-enforced moderation and publisher-verification gates that prevent unapproved listings appearing.
+- Account-specific saved opportunities and a private application-stage tracker.
+- Search, type filtering, detailed eligibility, skills, working pattern and deadline information.
+- University-scoped lost-and-found reports with type, category and text search.
+- Moderation-gated student reports that remain private until approved.
+- Private identifying details and ownership evidence that never appear in public catalogue responses.
+- Account-specific report history, private claim tracking, withdrawal and reporter notifications.
+- Validated PNG/JPEG item photographs that are re-encoded to strip embedded metadata.
+- A fictional service-desk reviewer with a staff-only queue, audited approve/reject decisions and private reporter feedback.
+- Four separate fictional student sign-ins for demonstrating requests and chat between people.
+- Flyway migrations, PostgreSQL production configuration and an H2 local profile.
+- Health monitoring, modular architecture checks, unit tests and CI.
+- Honest prototype labels wherever live university data is not yet connected.
+- Database-backed profile details and a protected profile API.
+- Validated PNG/JPEG profile-photograph processing that strips embedded metadata before local development storage.
+- A protected academic-context API for programmes, modules and privacy-filtered coursemates.
+- Fictional university fixtures that are visibly separated from future approved institutional data.
+- A development-only fictional student sign-in with a real Spring Security session and secure logout.
+- A dedicated sign-in experience that explicitly prevents the use of Leeds Beckett or Microsoft credentials.
+- API requests return a clear unauthorised response rather than leaking protected profile information or returning a login page.
 
-## Current prototype
+The dashboard now contains working local social, event-registration, booking, opportunity-tracking, lost-and-found and fictional staff-review demonstrations, but it is not evidence of a live university integration. Real student identity, official timetables, university booking systems, employer vacancy feeds, staffed lost-property services and location require institutional approval, integration contracts, security review and deployment infrastructure. Messages, registrations, bookings, saved listings, tracker stages, notifications, item reports and claims are stored only in the local development environment. Production push notifications, institutionally governed staff moderation and safeguarding operations, secure media storage and retention policies remain future work.
 
-The current vertical slice uses a transparent TF-IDF-style classifier implemented with Python and NumPy, together with a contextual rule layer. The rules look for phrases that combine an action with a credential, payment, link, urgency or trusted-service reference. Negated advice such as “never share your password” and quoted scam examples are treated as awareness content rather than requests. Explanations quote the observed phrase and state what it means; the score is a screening signal, not calibrated probability.
+## Run in IntelliJ IDEA
 
-The interface also includes a research dashboard and a multimodal evidence lab. The evidence lab accepts redacted chat screenshots and short screen recordings. Screenshots are read with browser-side OCR; recordings are previewed locally, sampled at four to seven frames and passed through the same browser-side OCR before duplicate lines are combined. The user must review or correct the resulting text before sending that text—not the media file—for analysis. A demonstration library contains 20 random screenshot examples and 12 short recording examples, balanced across synthetic scam and legitimate cases; recording demonstrations use the real sampled-frame OCR path rather than inserting pre-supplied text. The lab also records transparent human annotations for visible warning signs. Its evidence cards link to public UK sources, while its charts are explicitly labelled synthetic demonstration data or official context. This prevents the project from presenting fictional test scenarios as claims about real banks, universities, football clubs or other named organisations. See `docs/data_provenance.md` and `docs/multimodal_evidence_method.md`.
+1. Open this repository's `pom.xml` as a project.
+2. Set the project SDK to Java 21 or newer. IntelliJ's bundled Java 25 runtime can compile the Java 21 target.
+3. Allow IntelliJ to import the Maven project.
+4. Run `UniCircleApplication`.
+5. Open `http://localhost:8080`.
+6. Open the profile and choose **Sign in to fictional sandbox**. The local-only test account is:
+   - Email: `student@demo.unicircle.test`
+   - Password: `CampusDemo!2026`
 
-The current interface is published at https://scamshield-dahk.onrender.com/.
-Deployed verification endpoints are `/health` and `/api/meta`; they expose the non-secret build identifier and model version so a release can be checked without exposing credentials.
+The sign-in page also offers fictional Aisha, James and Sophie student accounts and fictional service-desk reviewer Alex Morgan using the same development-only password. Use separate browser profiles or a private window to demonstrate connection decisions, live messaging and staff review.
 
-### Architecture and optional research metadata
+These credentials are deliberately fictional and exist only in the non-production profile. They can be overridden with `UNICIRCLE_DEMO_USERNAME` and `UNICIRCLE_DEMO_PASSWORD`. Never use a real university password or Authenticator code in this form.
 
-The analysis path uses Evidence Adapters, interchangeable Detector Strategies and an Analysis Repository contract. The deployed default uses a stateless repository, so message text is not retained. For controlled local research only, `SCAMSHIELD_RESEARCH_DB=/path/to/research.sqlite3` enables SQLite metadata recording. That store contains a one-way text digest, length, evidence kind, detector version and result fields—not the raw message or media. See [`docs/data_model.md`](docs/data_model.md).
+No local PostgreSQL installation is required for the default profile. It uses an in-memory H2 database configured to behave like PostgreSQL for early development. Production uses PostgreSQL and environment variables documented in `.env.example`.
 
-### Public-web verification
-
-The Scanner separates two URL checks. **Check patterns** reviews the written address locally. **Check online** asks the server for public DNS, HTTPS, redirect, HTTP-status and content-type metadata. Private/internal destinations and non-standard web ports are blocked, and page bodies are not analysed. This is not malware analysis, domain reputation or proof that a site is safe; official NCSC, FCA and Report Fraud links are provided for independent follow-up.
-
-## Run locally
-
-```bash
-python3 src/server.py
-```
-
-Open `http://127.0.0.1:8000` in a browser.
-
-## Publish with GitHub and Render
-
-1. Use the university project repository: [`ositamichael/Production-project-final-year`](https://github.com/ositamichael/Production-project-final-year).
-2. In Render, choose **New Web Service** and connect that repository.
-3. Render will use `render.yaml`, install `requirements.txt` and start the Python server.
-4. Set the service's port handling if required by the hosting provider before publishing.
-
-The public version should use fictional/public evidence only. Do not enable permanent storage of uploaded private images without a privacy notice, consent and deletion controls.
-
-## Research evidence to collect
-
-- Dataset provenance and cleaning decisions
-- Fixed train/test split
-- Baseline and improved-model metrics
-- Original versus AI-rewritten robustness results
-- Explanation-quality rubric
-- Usability or expert-review evidence
-- Threat model, ethics record and risk updates
-
-See `docs/evaluation_plan.md`, `docs/ethics_and_scope.md` and `docs/model_card.md`.
-
-## Reproduce the held-out evaluation
-
-```bash
-python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
-.venv/bin/python -m src.evaluate
-.venv/bin/python -m unittest -v tests.test_core tests.test_dashboard tests.test_evaluation
-```
-
-For the complete development checks, install `requirements-dev.txt` and follow [`CONTRIBUTING.md`](CONTRIBUTING.md). `scripts/verify_evaluation.py` recalculates both evaluation sets and checks the versioned metrics and case decisions without treating the generated run date as a model result.
-
-## Reproduce the TrustLab development replay
-
-```bash
-.venv/bin/python -m src.trustlab
-.venv/bin/python scripts/verify_trustlab.py
-```
-
-TrustLab deterministically applies neutral padding, polite tone, urgency softening, formatting variation, explicit awareness quotation and denied-request context to the 24-message development challenge set. It compares the contextual detector with the TF-IDF baseline, records prediction stability and correctness separately, and preserves every failure for review. It never transforms the final held-out set. The checked-in `data/trustlab_results.json` stores case identifiers, scores, labels and SHA-256 digests rather than duplicated message text; optional SQLite replay storage follows the same boundary.
-
-The checked-in result is `data/evaluation_results.json`. It contains a small, hand-curated held-out set and must not be presented as real-world accuracy. After correcting the unexplained false-alarm path, the current reproducible run reports precision 1.000, recall 1.000 and F1 1.000 on 12 messages, with 0 false alarms and 0 missed scams. This perfect result is not evidence of real-world reliability; the dashboard explains the small sample and validation limitations.
-
-The current rules build is `contextual-baseline-v5`, using a 36/100 screening-score threshold. The regression suite covers clause-level negation, mixed protective and malicious instructions, helpdesk authentication-code requests, changed-number family impersonation, discouraged verification, protective security advice, complete monetary amounts and exact supporting excerpts. A separate 24-message development challenge set is retained for regression checks. Because known failures have now been corrected against it, it is not described as an independent final test set.
-
-## Final independent evaluation status
-
-The final evaluation is **pending**, not missing by accident. Sprint 4 adds a guarded runner that requires a frozen dataset, matching SHA-256 manifest, written label policy, completed label review, at least 50 cases in each class and no exact or near-duplicate overlap with development data. CI reports the pending state without manufacturing charts or metrics; once a legitimate frozen dataset is present, the same check reproduces the final export and deterministic 95% bootstrap intervals.
+## Command-line checks
 
 ```bash
-.venv/bin/python scripts/verify_final_evaluation.py
+./mvnw clean verify
+./mvnw spring-boot:run
 ```
 
-Templates are provided in `data/independent_evaluation_template.csv` and `data/independent_evaluation_manifest.template.json`. They are process scaffolding, not measured evidence.
+## Product boundaries
 
-## GitHub Stats
+- People messaging is human-to-human. The campus information assistant is a separate, clearly labelled feature.
+- Location sharing will be off by default and limited to people explicitly accepted by the user.
+- UniCircle will never ask users to type their university password into the application. Production sign-in redirects to the university identity provider through OIDC.
+- The project does not claim that Leeds Beckett University or any other institution has approved, deployed or endorsed it.
+- Fixtures shown in the dashboard are demonstration data, not live records.
 
-![Michael's GitHub Stats](https://github-readme-stats.vercel.app/api?username=ositamichael&theme=radical&show_icons=true)
+## Architecture
+
+UniCircle begins as a modular monolith. This keeps deployment manageable for a final-year project while enforcing boundaries that can later support independent services. See:
+
+- [`docs/architecture.md`](docs/architecture.md)
+- [`docs/adr/0001-platform-and-language.md`](docs/adr/0001-platform-and-language.md)
+- [`docs/adr/0002-modular-monolith.md`](docs/adr/0002-modular-monolith.md)
+- [`docs/adr/0003-identity-and-tenancy.md`](docs/adr/0003-identity-and-tenancy.md)
+- [`docs/sprints/01-foundation.md`](docs/sprints/01-foundation.md)
+- [`docs/sprints/02-identity-profile.md`](docs/sprints/02-identity-profile.md)
+- [`docs/sprints/03-university-context.md`](docs/sprints/03-university-context.md)
+- [`docs/sprints/04-demo-sign-in.md`](docs/sprints/04-demo-sign-in.md)
+- [`docs/sprints/05-connections-messaging.md`](docs/sprints/05-connections-messaging.md)
+- [`docs/sprints/06-realtime-safety.md`](docs/sprints/06-realtime-safety.md)
+- [`docs/sprints/07-events-bookings.md`](docs/sprints/07-events-bookings.md)
+- [`docs/sprints/08-opportunities.md`]z§(docs/sprints/08-opportunities.md)
+- [`docs/sprints/09-lost-found.md`](docs/sprints/09-lost-found.md)
+- [`docs/sprints/10-lost-found-staff-review.md`](docs/sprints/10-lost-found-staff-review.md)
+
+## Branching and assessment evidence
+
+Each sprint is developed on a feature branch and merged through a pull request. Commits, tests, architecture decisions, sprint records and verification evidence are retained so the project demonstrates professional software engineering practice rather than only a polished interface.
+
+## Licence and data
+
+No production licence has yet been selected. Do not deploy the project with real personal data until the university has approved the privacy, information-security, accessibility, retention and safeguarding arrangements.
