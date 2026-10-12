@@ -20,7 +20,7 @@ public class ProductionSecurityConfiguration {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 "/", "/index.html", "/favicon.svg", "/css/**", "/js/**",
-                                "/sign-in", "/api/platform/status", "/api/security/csrf", "/actuator/health",
+                                "/error", "/sign-in", "/api/platform/status", "/api/security/csrf", "/actuator/health",
                                 "/oauth2/**", "/login/**")
                         .permitAll()
                         .anyRequest().authenticated())

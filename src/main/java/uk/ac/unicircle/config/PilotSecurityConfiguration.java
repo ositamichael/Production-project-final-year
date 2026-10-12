@@ -25,7 +25,7 @@ public class PilotSecurityConfiguration {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 "/", "/index.html", "/pilot-login.html", "/favicon.svg", "/css/**", "/js/**",
-                                "/sign-in", "/api/pilot/register", "/api/platform/status", "/api/security/csrf",
+                                "/error", "/sign-in", "/api/pilot/register", "/api/platform/status", "/api/security/csrf",
                                 "/actuator/health")
                         .permitAll()
                         .anyRequest().authenticated())
