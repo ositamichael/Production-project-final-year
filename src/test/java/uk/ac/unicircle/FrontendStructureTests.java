@@ -12,7 +12,7 @@ class FrontendStructureTests {
     private static final String[] PAGE_NAMES = {
         "campus", "today", "circles", "messages", "events", "services",
         "opportunities", "map", "updates", "live-classes", "wellbeing",
-        "lost-found", "assistant"
+        "lost-found", "pilot-tests", "assistant"
     };
 
     @Test
@@ -50,13 +50,34 @@ class FrontendStructureTests {
     }
 
     @Test
+    void stagingPilotIncludesAcceptanceEvidenceInsideTheCompleteApplication() throws IOException {
+        var htmlResource = getClass().getResourceAsStream("/static/index.html");
+        var scriptResource = getClass().getResourceAsStream("/static/js/app.js");
+        assertThat(htmlResource).isNotNull();
+        assertThat(scriptResource).isNotNull();
+
+        var html = new String(htmlResource.readAllBytes(), StandardCharsets.UTF_8);
+        var script = new String(scriptResource.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(html)
+                .contains("id=\"pilotTestNav\"")
+                .contains("id=\"pilot-tests-page\"")
+                .contains("Pilot Test Centre")
+                .contains("This is one UniCircle application")
+                .contains("Real testers · fictional campus data");
+        assertThat(script)
+                .contains("/api/pilot-tests")
+                .contains("loadPilotTests")
+                .contains("UniCircle Staging Campus");
+    }
+
+    @Test
     void prototypeLimitationsRemainVisible() throws IOException {
         var resource = getClass().getResourceAsStream("/static/index.html");
         assertThat(resource).isNotNull();
 
         var html = new String(resource.readAllBytes(), StandardCharsets.UTF_8);
         assertThat(html)
-            .contains("no live university systems are connected")
+            .contains("no official university systems are connected")
             .contains("Transactional sandbox booking")
             .contains("Messages are stored in the local development database")
             .contains("Location sharing is off by default")

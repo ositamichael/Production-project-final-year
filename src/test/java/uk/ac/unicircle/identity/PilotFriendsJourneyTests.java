@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -180,6 +181,35 @@ class PilotFriendsJourneyTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(3))
                 .andExpect(jsonPath("$[0].publisherVerified").value(true));
+    }
+
+    @Test
+    void invitedTesterCanRecordAcceptanceEvidenceAgainstTheCompleteApp() throws Exception {
+        register("tester@example.net", "Pilot Tester");
+        MockHttpSession tester = signIn("tester@example.net");
+
+        mockMvc.perform(get("/api/pilot-tests").session(tester))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(15))
+                .andExpect(jsonPath("$.passed").value(0))
+                .andExpect(jsonPath("$.notRun").value(15))
+                .andExpect(jsonPath("$.scenarios[0].code").value("ACCOUNT_PROFILE"));
+
+        mockMvc.perform(put("/api/pilot-tests/{code}", "DISCOVERY_REQUEST")
+                        .session(tester).with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"status":"PASS","deviceLabel":"iPhone and Chrome",
+                                 "evidenceNote":"Second invited account appeared and received one request."}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.passed").value(1))
+                .andExpect(jsonPath("$.notRun").value(14))
+                .andExpect(jsonPath("$.scenarios[1].status").value("PASS"))
+                .andExpect(jsonPath("$.scenarios[1].deviceLabel").value("iPhone and Chrome"));
+
+        Integer stored = jdbc.queryForObject("SELECT COUNT(*) FROM pilot_acceptance_results",
+                Integer.class);
+        org.assertj.core.api.Assertions.assertThat(stored).isEqualTo(1);
     }
 
     private void register(String email, String name) throws Exception {

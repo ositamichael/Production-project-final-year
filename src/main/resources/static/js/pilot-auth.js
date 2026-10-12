@@ -19,7 +19,7 @@ async function preparePilot() {
     signInButton.disabled = false;
     registerButton.disabled = false;
     showMessage(new URLSearchParams(location.search).has('error')
-      ? 'That pilot email or password was not accepted.' : 'Secure pilot sign-in is ready.',
+      ? 'That staging email or password was not accepted.' : 'Secure UniCircle sign-in is ready.',
     new URLSearchParams(location.search).has('error') ? 'error' : 'ready');
   } catch {
     showMessage('Could not prepare the secure forms. Refresh this page.', 'error');
@@ -45,7 +45,7 @@ document.querySelector('#registrationForm')?.addEventListener('submit', async (e
         inviteCode: document.querySelector('#registerInvite').value.trim()
       })
     });
-    if (response.status === 409) throw new Error('This email already has a pilot account. Sign in above.');
+    if (response.status === 409) throw new Error('This email already has a staging account. Sign in above.');
     if (response.status === 400) throw new Error('Check your details and invitation code. Passwords need at least 12 characters.');
     if (!response.ok) throw new Error('Account creation is unavailable. Please try again.');
     document.querySelector('#username').value = email;
