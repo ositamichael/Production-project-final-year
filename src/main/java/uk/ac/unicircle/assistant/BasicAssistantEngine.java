@@ -51,13 +51,24 @@ class BasicAssistantEngine {
         }
 
         String answer = switch (mode) {
-            case GENERAL -> generalAnswer(normal);
-            case UNIVERSITY_RESEARCH -> universityAnswer(normal);
-            case STUDY_COACH -> studyAnswer(normal);
-            case CODE_LAB -> codeAnswer(normal);
+            case GENERAL -> firstAvailable(generalAnswer(normal), codeAnswer(normal),
+                    studyAnswer(normal), universityAnswer(normal));
+            case UNIVERSITY_RESEARCH -> firstAvailable(universityAnswer(normal), generalAnswer(normal),
+                    studyAnswer(normal), codeAnswer(normal));
+            case STUDY_COACH -> firstAvailable(studyAnswer(normal), generalAnswer(normal),
+                    codeAnswer(normal), universityAnswer(normal));
+            case CODE_LAB -> firstAvailable(codeAnswer(normal), generalAnswer(normal),
+                    studyAnswer(normal), universityAnswer(normal));
             case IMAGE_STUDIO -> null;
         };
         return answer == null ? Optional.empty() : Optional.of(response(mode, answer));
+    }
+
+    private String firstAvailable(String... answers) {
+        for (String answer : answers) {
+            if (answer != null) return answer;
+        }
+        return null;
     }
 
     private AssistantResponses.Answer response(AssistantMode mode, String answer) {

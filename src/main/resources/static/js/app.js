@@ -71,6 +71,7 @@ const hashToPage = new Map([
 function showPage(pageName, { updateHistory = true, focus = true } = {}) {
   const requestedPage = pageSurfaces.find((page) => page.dataset.page === pageName);
   const nextPage = requestedPage ?? pageSurfaces.find((page) => page.dataset.page === 'campus');
+  document.body.dataset.activePage = nextPage.dataset.page;
   pageSurfaces.forEach((page) => { page.hidden = page !== nextPage; });
   pageLinks.forEach((link) => {
     const active = link.dataset.pageLink === nextPage.dataset.page;
@@ -95,7 +96,7 @@ function showPage(pageName, { updateHistory = true, focus = true } = {}) {
   if (nextPage.dataset.page === 'lost-found-review' && staffReviewAccess) void loadStaffReview();
   if (nextPage.dataset.page === 'map' && pilotMode) void loadLocationPanel();
   if (nextPage.dataset.page === 'pilot-tests' && pilotMode) void loadPilotTests();
-  if (nextPage.dataset.page === 'assistant') void loadAssistantStatus();
+  if (nextPage.dataset.page === 'assistant') void Promise.all([loadAssistantStatus(), loadAssistantWorkspace()]);
   if (nextPage.dataset.page !== 'map') clearInterval(locationRefreshTimer);
 }
 
@@ -1595,6 +1596,8 @@ bookButton?.addEventListener('click', () => {
 
 let activeAssistantMode = 'GENERAL';
 let assistantStatusLoaded = false;
+let activeAssistantConversationId = null;
+let assistantConversationsLoaded = false;
 const assistantModeLabels = new Map([
   ['GENERAL', 'Smart help · local guidance and public sources'],
   ['UNIVERSITY_RESEARCH', 'University research · planning and source guidance'],
@@ -1694,10 +1697,18 @@ async function answerPageQuestion(question) {
   const submit = form?.querySelector('button');
   if (submit) submit.disabled = true;
   try {
+    if (!activeAssistantConversationId) {
+      const created = await socialPost('/api/assistant/conversations', {
+        title: 'New chat', mode: activeAssistantMode
+      });
+      activeAssistantConversationId = created.conversation.id;
+    }
     const allowPublicLookup = document.querySelector('#assistantPublicLookup')?.checked === true;
-    const result = await socialPost('/api/assistant/ask', { message: question, mode: activeAssistantMode, allowPublicLookup });
-    thinking.remove();
-    appendAssistantResult(responsePanel, result);
+    const detail = await socialPost(`/api/assistant/conversations/${activeAssistantConversationId}/messages`, {
+      message: question, mode: activeAssistantMode, allowPublicLookup
+    });
+    renderAssistantConversation(detail);
+    await loadAssistantConversationList(true);
   } catch (error) {
     thinking.textContent = error.message;
     thinking.classList.remove('assistant-thinking');
@@ -1705,6 +1716,127 @@ async function answerPageQuestion(question) {
     if (submit) submit.disabled = false;
   }
 }
+
+function assistantWelcome() {
+  return '<div class="assistant-welcome"><span><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><h3>How can I help?</h3><p>Ask a question, research a university, work through a topic, debug code or describe an image to create.</p></div>';
+}
+
+function renderAssistantConversation(detail) {
+  const responsePanel = document.querySelector('#pageAssistantResponse');
+  const title = document.querySelector('#assistantChatTitle');
+  responsePanel.replaceChildren();
+  title.textContent = detail.conversation.title;
+  activeAssistantConversationId = detail.conversation.id;
+  selectAssistantMode(detail.conversation.mode);
+  if (!detail.messages.length) {
+    responsePanel.innerHTML = assistantWelcome();
+  } else {
+    detail.messages.forEach((message) => {
+      if (message.role === 'USER') appendAssistantBubble(responsePanel, 'sent', message.content);
+      else appendAssistantResult(responsePanel, {
+        answer: message.content,
+        imageDataUrl: message.imageDataUrl,
+        sources: message.sources,
+        notice: message.notice
+      });
+    });
+  }
+  responsePanel.scrollTop = responsePanel.scrollHeight;
+  document.querySelectorAll('.assistant-conversation-button').forEach((button) => {
+    button.classList.toggle('active', button.dataset.conversationId === activeAssistantConversationId);
+  });
+}
+
+async function fetchAssistantJson(url) {
+  const response = await fetch(url, { headers: { Accept: 'application/json' } });
+  if (!response.ok) throw new Error('Your Ask UniCircle chats could not be loaded. Please try again.');
+  return response.json();
+}
+
+function renderAssistantConversationList(conversations) {
+  const list = document.querySelector('#assistantConversationList');
+  const status = document.querySelector('#assistantConversationStatus');
+  list.replaceChildren();
+  status.hidden = conversations.length > 0;
+  status.textContent = conversations.length ? '' : 'No saved chats yet. Start a new conversation when you are ready.';
+  conversations.forEach((conversation) => {
+    const item = document.createElement('li');
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'assistant-conversation-button';
+    button.dataset.conversationId = conversation.id;
+    button.classList.toggle('active', conversation.id === activeAssistantConversationId);
+    const title = document.createElement('strong');
+    title.textContent = conversation.title;
+    const preview = document.createElement('span');
+    preview.textContent = conversation.preview || assistantModeLabels.get(conversation.mode);
+    const time = document.createElement('time');
+    time.dateTime = conversation.updatedAt;
+    time.textContent = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' })
+      .format(new Date(conversation.updatedAt));
+    button.append(title, preview, time);
+    button.addEventListener('click', () => void openAssistantConversation(conversation.id));
+    item.append(button);
+    list.append(item);
+  });
+}
+
+async function loadAssistantConversationList(force = false) {
+  if (assistantConversationsLoaded && !force) return [];
+  const conversations = await fetchAssistantJson('/api/assistant/conversations');
+  assistantConversationsLoaded = true;
+  renderAssistantConversationList(conversations);
+  return conversations;
+}
+
+async function openAssistantConversation(conversationId) {
+  const status = document.querySelector('#assistantConversationStatus');
+  status.hidden = false;
+  status.textContent = 'Opening conversation…';
+  try {
+    const detail = await fetchAssistantJson(`/api/assistant/conversations/${conversationId}`);
+    status.hidden = true;
+    renderAssistantConversation(detail);
+  } catch (error) {
+    status.hidden = false;
+    status.textContent = error.message;
+  }
+}
+
+async function createAssistantConversation() {
+  const button = document.querySelector('#assistantNewChat');
+  button.disabled = true;
+  try {
+    const detail = await socialPost('/api/assistant/conversations', {
+      title: 'New chat', mode: activeAssistantMode
+    });
+    assistantConversationsLoaded = false;
+    renderAssistantConversation(detail);
+    await loadAssistantConversationList(true);
+    document.querySelector('#pageAssistantInput')?.focus();
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function loadAssistantWorkspace() {
+  try {
+    const conversations = await loadAssistantConversationList(true);
+    if (activeAssistantConversationId) {
+      await openAssistantConversation(activeAssistantConversationId);
+    } else if (conversations.length) {
+      await openAssistantConversation(conversations[0].id);
+    }
+  } catch (error) {
+    const status = document.querySelector('#assistantConversationStatus');
+    status.hidden = false;
+    status.textContent = error.message;
+  }
+}
+
+document.querySelector('#assistantNewChat')?.addEventListener('click', () => void createAssistantConversation());
 
 async function loadAssistantStatus() {
   if (assistantStatusLoaded) return;
@@ -3902,8 +4034,6 @@ fetch('/api/platform/status')
       document.body.classList.add('pilot-mode');
       document.querySelector('#pilotWelcome').hidden = false;
       document.querySelector('#pilotTestNav').hidden = false;
-      document.querySelector('#environmentBanner').textContent =
-        'UniCircle Staging Campus — real test accounts and workflows using fictional campus data; no official university systems are connected.';
       document.querySelector('#notificationStorageNote').textContent =
         'Account-specific pilot updates. Do not share sensitive information while testing.';
       document.querySelector('#messagePrivacyNote').textContent =

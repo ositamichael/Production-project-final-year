@@ -77,6 +77,12 @@ class AssistantControllerTests {
 
         mockMvc.perform(post("/api/assistant/ask").with(csrf())
                         .contentType("application/json")
+                        .content("{\"message\":\"What is Spring Boot?\",\"mode\":\"GENERAL\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.answer").value(org.hamcrest.Matchers.containsString("Java framework")));
+
+        mockMvc.perform(post("/api/assistant/ask").with(csrf())
+                        .contentType("application/json")
                         .content("{\"message\":\"What is 12 * 7?\",\"mode\":\"GENERAL\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.answer").value("12 * 7 = 84."));
@@ -181,6 +187,42 @@ class AssistantControllerTests {
                         .contentType("application/json")
                         .content("{\"message\":\"" + oversized + "\",\"mode\":\"GENERAL\"}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void conversationsPersistQuestionsAnswersAndArePrivateToTheirOwner() throws Exception {
+        var created = mockMvc.perform(post("/api/assistant/conversations")
+                        .with(user("history-owner@example.test")).with(csrf())
+                        .contentType("application/json")
+                        .content("{\"title\":\"New chat\",\"mode\":\"GENERAL\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.conversation.title").value("New chat"))
+                .andExpect(jsonPath("$.messages.length()").value(0))
+                .andReturn();
+
+        String conversationId = objectMapper.readTree(created.getResponse().getContentAsString())
+                .path("conversation").path("id").asText();
+
+        mockMvc.perform(post("/api/assistant/conversations/{id}/messages", conversationId)
+                        .with(user("history-owner@example.test")).with(csrf())
+                        .contentType("application/json")
+                        .content("{\"message\":\"What is a computer?\",\"mode\":\"GENERAL\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.conversation.title").value("What is a computer?"))
+                .andExpect(jsonPath("$.messages.length()").value(2))
+                .andExpect(jsonPath("$.messages[0].role").value("USER"))
+                .andExpect(jsonPath("$.messages[1].role").value("ASSISTANT"));
+
+        mockMvc.perform(get("/api/assistant/conversations")
+                        .with(user("history-owner@example.test")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].title").value("What is a computer?"))
+                .andExpect(jsonPath("$[0].preview").value(org.hamcrest.Matchers.containsString(
+                        "electronic device")));
+
+        mockMvc.perform(get("/api/assistant/conversations/{id}", conversationId)
+                        .with(user("different-owner@example.test")))
+                .andExpect(status().isNotFound());
     }
 
     @Test

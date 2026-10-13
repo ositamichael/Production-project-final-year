@@ -593,6 +593,86 @@ dialog.dialog-fallback[open] { position: fixed !important; inset: 50% auto auto 
   #messages-page .conversation-panel > .panel-note { display: none; }
 }
 
+/* Release 30: focused workspaces, persistent assistant history and mobile app polish. */
+.assistant-workspace { grid-template-columns: minmax(220px,.58fr) minmax(250px,.68fr) minmax(0,1.7fr); align-items: start; }
+.assistant-history-panel { align-self: start; padding: 14px; }
+.assistant-history-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.assistant-history-heading h3 { margin: 3px 0 0; font-size: .82rem; }
+.assistant-new-chat { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 0 11px; border: 0; border-radius: 10px; background: var(--navy-900); color: #fff; font: inherit; font-size: .58rem; font-weight: 850; cursor: pointer; }
+.assistant-new-chat:disabled { cursor: wait; opacity: .6; }
+.assistant-new-chat .icon { width: 15px; height: 15px; }
+.assistant-conversation-status { padding: 16px 8px; color: var(--muted); font-size: .59rem; line-height: 1.5; }
+.assistant-conversation-list { display: grid; gap: 6px; max-height: 520px; margin: 0; padding: 0; overflow-y: auto; list-style: none; }
+.assistant-conversation-button { position: relative; display: grid; gap: 4px; width: 100%; min-width: 0; padding: 11px 38px 11px 11px; border: 1px solid transparent; border-radius: 11px; background: transparent; color: var(--ink); text-align: left; cursor: pointer; }
+.assistant-conversation-button:hover { background: #f5f8fd; }
+.assistant-conversation-button.active { border-color: #b9d0f0; background: #edf4ff; }
+.assistant-conversation-button strong, .assistant-conversation-button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.assistant-conversation-button strong { font-size: .64rem; }
+.assistant-conversation-button span { color: var(--muted); font-size: .53rem; }
+.assistant-conversation-button time { position: absolute; top: 12px; right: 10px; color: #7890ab; font-size: .48rem; }
+.assistant-chat-heading > div { min-width: 0; }
+.assistant-chat-heading h3, .assistant-chat-heading span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 1180px) {
+  .assistant-workspace { grid-template-columns: minmax(210px,.58fr) minmax(0,1.55fr); }
+  .assistant-tools-panel { grid-column: 1; }
+  .assistant-history-panel { grid-column: 1; grid-row: 1; }
+  .assistant-tools-panel { grid-row: 2; }
+  .assistant-chat { grid-column: 2; grid-row: 1 / span 2; }
+}
+
+@media (max-width: 900px) {
+  .assistant-workspace { grid-template-columns: 1fr; }
+  .assistant-history-panel, .assistant-tools-panel, .assistant-chat { grid-column: 1; grid-row: auto; }
+}
+
+@media (max-width: 620px) {
+  body:not([data-active-page="campus"]) .topbar { grid-template-rows: auto; min-height: 64px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  body:not([data-active-page="campus"]) .topbar .welcome,
+  body:not([data-active-page="campus"]) .topbar .search-box { display: none; }
+  body[data-active-page="messages"] .topbar,
+  body[data-active-page="assistant"] .topbar { display: none; }
+  body[data-active-page="messages"] footer,
+  body[data-active-page="assistant"] footer { display: none; }
+
+  body:not([data-active-page="campus"]) .page-view { padding: 10px; }
+  body:not([data-active-page="campus"]) .view-hero { gap: 10px; margin-bottom: 10px; padding: 14px; border-radius: 16px; }
+  body:not([data-active-page="campus"]) .view-title { gap: 11px; }
+  body:not([data-active-page="campus"]) .view-title .view-icon { width: 42px; height: 42px; border-radius: 12px; }
+  body:not([data-active-page="campus"]) .view-title h2 { font-size: 1.36rem; }
+  body:not([data-active-page="campus"]) .view-title p { display: none; }
+  body:not([data-active-page="campus"]) .section-toolbar { gap: 10px; margin-bottom: 10px; padding: 11px; border-radius: 14px; }
+
+  #messages-page { padding: 8px; }
+  #messages-page .view-hero { margin-bottom: 8px; }
+  #messages-page .message-workspace { min-height: calc(100dvh - 170px - env(safe-area-inset-bottom)); }
+  #messages-page .thread-panel { min-height: calc(100dvh - 170px - env(safe-area-inset-bottom)); border-radius: 16px; }
+  #messages-page .thread-list { max-height: calc(100dvh - 255px - env(safe-area-inset-bottom)); }
+  #messages-page .message-workspace.conversation-open .conversation-panel { height: calc(100dvh - 84px - env(safe-area-inset-bottom)); min-height: 0; border-radius: 15px; }
+  #messages-page .conversation-panel > header { position: sticky; top: 0; z-index: 2; min-height: 66px; background: #fff; }
+  #messages-page .conversation-body { overscroll-behavior: contain; }
+  #messages-page .conversation-panel > .panel-note { display: none; }
+
+  #assistant-page { padding: 8px; }
+  #assistant-page .view-hero { margin-bottom: 8px; }
+  .assistant-workspace { gap: 8px; }
+  .assistant-history-panel { order: 1; padding: 11px; border-radius: 15px; }
+  .assistant-history-panel > .panel-intro { display: none; }
+  .assistant-history-heading h3 { font-size: .76rem; }
+  .assistant-conversation-status { padding: 10px 4px; }
+  .assistant-conversation-list { display: flex; gap: 7px; max-height: none; overflow-x: auto; padding-top: 9px; scrollbar-width: none; }
+  .assistant-conversation-list::-webkit-scrollbar { display: none; }
+  .assistant-conversation-list li { flex: 0 0 174px; }
+  .assistant-conversation-button { min-height: 58px; background: #f8faff; }
+  .assistant-tools-panel { order: 3; padding: 11px; border-radius: 15px; }
+  .assistant-chat { order: 2; height: calc(100dvh - 310px - env(safe-area-inset-bottom)); min-height: 430px; border-radius: 15px; grid-template-rows: auto minmax(0,1fr) auto auto auto; }
+  .assistant-chat-heading { padding: 12px; }
+  .assistant-chat-body { min-height: 0; overscroll-behavior: contain; }
+  .assistant-composer { position: relative; z-index: 2; padding: 9px 10px; }
+  .assistant-integrity-note { padding: 8px 12px 11px; font-size: .52rem; }
+  .assistant-public-control small { line-height: 1.35; }
+}
+
 /* Deployment hardening: live communities, installable mobile shell and legal navigation. */
 .circle-card { position: relative; }
 .circle-card .feature-meta span { display: inline-flex; align-items: center; gap: 5px; }
