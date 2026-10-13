@@ -11,7 +11,7 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="stylesheet" href="/css/app.css?v=24">
-  <script src="/js/app.js?v=25" defer></script>
+  <script src="/js/app.js?v=26" defer></script>
 </head>
 <body>
   <svg class="svg-sprite" aria-hidden="true">
@@ -398,17 +398,17 @@
       </section>
 
       <section class="page-view page-surface" id="assistant-page" data-page="assistant" hidden tabindex="-1" aria-labelledby="assistantTitle">
-        <header class="view-hero"><div class="view-title"><span class="view-icon violet"><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><div><span class="eyebrow">AI STUDY &amp; CAMPUS ASSISTANT</span><h2 id="assistantTitle">Ask UniCircle</h2><p>Research universities, understand coursework, solve coding problems and create original images.</p></div></div><span class="data-badge" id="assistantStatusBadge">Checking AI service…</span></header>
+        <header class="view-hero"><div class="view-title"><span class="view-icon violet"><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><div><span class="eyebrow">AI STUDY &amp; CAMPUS ASSISTANT</span><h2 id="assistantTitle">Ask UniCircle</h2><p>Get basic study, computing and campus help now, with optional advanced research and image tools.</p></div></div><span class="data-badge" id="assistantStatusBadge">Checking assistant…</span></header>
         <div class="assistant-workspace">
           <aside class="content-panel assistant-tools-panel">
             <h3>Choose a workspace</h3>
             <p class="panel-intro">Select how you want UniCircle to help. You can change mode at any time.</p>
             <div class="assistant-mode-list" role="group" aria-label="Assistant workspace">
               <button class="assistant-mode active" type="button" data-assistant-mode="GENERAL" aria-pressed="true"><span><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><strong>Smart help</strong><small>Questions, ideas and practical tasks</small></button>
-              <button class="assistant-mode" type="button" data-assistant-mode="UNIVERSITY_RESEARCH" aria-pressed="false"><span><svg class="icon" aria-hidden="true"><use href="#globe"/></svg></span><strong>University research</strong><small>Current answers with source links</small></button>
+              <button class="assistant-mode" type="button" data-assistant-mode="UNIVERSITY_RESEARCH" aria-pressed="false"><span><svg class="icon" aria-hidden="true"><use href="#globe"/></svg></span><strong>University research</strong><small>Research planning and source guidance</small></button>
               <button class="assistant-mode" type="button" data-assistant-mode="STUDY_COACH" aria-pressed="false"><span><svg class="icon" aria-hidden="true"><use href="#book-open"/></svg></span><strong>Study coach</strong><small>Explanations, practice and feedback</small></button>
               <button class="assistant-mode" type="button" data-assistant-mode="CODE_LAB" aria-pressed="false"><span><svg class="icon" aria-hidden="true"><use href="#code"/></svg></span><strong>Code lab</strong><small>Design, debug and test programs</small></button>
-              <button class="assistant-mode" type="button" data-assistant-mode="IMAGE_STUDIO" aria-pressed="false"><span><svg class="icon" aria-hidden="true"><use href="#palette"/></svg></span><strong>Image studio</strong><small>Create an original image from a prompt</small></button>
+              <button class="assistant-mode" type="button" data-assistant-mode="IMAGE_STUDIO" aria-pressed="false"><span><svg class="icon" aria-hidden="true"><use href="#palette"/></svg></span><strong>Image studio</strong><small>Develop an effective image brief</small></button>
             </div>
             <div class="assistant-starter-prompts">
               <h4>Try asking</h4>
@@ -420,7 +420,7 @@
             <p class="panel-note">UniCircle can make mistakes. Important admissions, fees, visa, policy and deadline information must be checked against the cited official source.</p>
           </aside>
           <article class="assistant-chat">
-            <div class="assistant-chat-heading"><span class="avatar assistant-avatar"><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><div><h3>UniCircle intelligence</h3><span id="assistantModeLabel">Smart help · secure server-side AI</span></div><span class="assistant-live-indicator" id="assistantLiveIndicator"><i></i>Checking</span></div>
+            <div class="assistant-chat-heading"><span class="avatar assistant-avatar"><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><div><h3>UniCircle intelligence</h3><span id="assistantModeLabel">Smart help · no-cost basic assistant</span></div><span class="assistant-live-indicator" id="assistantLiveIndicator"><i></i>Checking</span></div>
             <div class="assistant-chat-body" id="pageAssistantResponse" role="log" aria-live="polite" aria-label="Ask UniCircle conversation"><div class="assistant-welcome"><span><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><h3>How can I help?</h3><p>Ask a question, research a university, work through a topic, debug code or describe an image to create.</p></div></div>
             <form class="assistant-composer" id="pageAssistantForm"><label class="sr-only" for="pageAssistantInput">Ask UniCircle</label><textarea id="pageAssistantInput" rows="1" maxlength="4000" placeholder="Ask UniCircle anything…"></textarea><button type="submit" aria-label="Send question"><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button></form>
             <p class="assistant-integrity-note"><svg class="icon" aria-hidden="true"><use href="#shield"/></svg> Use AI to understand, practise and improve your own work. Follow your university's assessment rules, and do not enter passwords, personal data or confidential information.</p>

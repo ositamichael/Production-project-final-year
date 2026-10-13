@@ -25,7 +25,8 @@ class AssistantControllerTests {
     void assistantIsAvailableToGuestsWithoutExposingPrivateAccountData() throws Exception {
         mockMvc.perform(get("/api/assistant/status"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.enabled").value(false));
+                .andExpect(jsonPath("$.enabled").value(true))
+                .andExpect(jsonPath("$.level").value("BASIC"));
 
         mockMvc.perform(post("/api/assistant/ask").with(csrf())
                         .contentType("application/json")
@@ -36,26 +37,54 @@ class AssistantControllerTests {
     }
 
     @Test
-    void statusExplainsWhenServerSideAiConfigurationIsMissing() throws Exception {
+    void statusExplainsThatTheNoCostBasicAssistantIsActive() throws Exception {
         mockMvc.perform(get("/api/assistant/status").with(user("student@example.test")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.enabled").value(false))
+                .andExpect(jsonPath("$.enabled").value(true))
+                .andExpect(jsonPath("$.level").value("BASIC"))
                 .andExpect(jsonPath("$.modes.length()").value(5))
-                .andExpect(jsonPath("$.message").value(
-                        "The AI workspace is installed but needs a server-side OpenAI API key."));
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString(
+                        "no-cost basic assistant is active")));
     }
 
     @Test
-    void configuredWorkspaceShapeIsReturnedWithoutExposingASecret() throws Exception {
+    void basicAssistantAnswersACommonComputingQuestionWithoutAProviderKey() throws Exception {
         mockMvc.perform(post("/api/assistant/ask")
                         .with(user("student@example.test")).with(csrf())
                         .contentType("application/json")
-                        .content("{\"message\":\"Explain dependency injection\",\"mode\":\"STUDY_COACH\"}"))
+                        .content("{\"message\":\"What is a computer?\",\"mode\":\"GENERAL\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.mode").value("STUDY_COACH"))
+                .andExpect(jsonPath("$.mode").value("GENERAL"))
                 .andExpect(jsonPath("$.live").value(false))
-                .andExpect(jsonPath("$.answer").value(org.hamcrest.Matchers.containsString("server-side OpenAI API key")))
+                .andExpect(jsonPath("$.answer").value(org.hamcrest.Matchers.containsString("electronic device")))
                 .andExpect(jsonPath("$.imageDataUrl").doesNotExist());
+    }
+
+    @Test
+    void basicAssistantExplainsSpringBootAndPerformsSimpleArithmetic() throws Exception {
+        mockMvc.perform(post("/api/assistant/ask").with(csrf())
+                        .contentType("application/json")
+                        .content("{\"message\":\"Explain Spring Boot\",\"mode\":\"CODE_LAB\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.answer").value(org.hamcrest.Matchers.containsString("Java framework")));
+
+        mockMvc.perform(post("/api/assistant/ask").with(csrf())
+                        .contentType("application/json")
+                        .content("{\"message\":\"What is 12 * 7?\",\"mode\":\"GENERAL\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.answer").value("12 * 7 = 84."));
+    }
+
+    @Test
+    void basicAssistantAnswersSupportedBeginnerCodeQuestions() throws Exception {
+        mockMvc.perform(post("/api/assistant/ask").with(csrf())
+                        .contentType("application/json")
+                        .content("{\"message\":\"Show me a Java for loop\",\"mode\":\"CODE_LAB\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.live").value(false))
+                .andExpect(jsonPath("$.answer").value(org.hamcrest.Matchers.allOf(
+                        org.hamcrest.Matchers.containsString("for (int i = 0"),
+                        org.hamcrest.Matchers.containsString("prints 0 to 4"))));
     }
 
     @Test

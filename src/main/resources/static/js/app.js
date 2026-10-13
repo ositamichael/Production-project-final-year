@@ -1592,10 +1592,10 @@ let activeAssistantMode = 'GENERAL';
 let assistantStatusLoaded = false;
 const assistantModeLabels = new Map([
   ['GENERAL', 'Smart help · questions, ideas and practical tasks'],
-  ['UNIVERSITY_RESEARCH', 'University research · current answers with sources'],
+  ['UNIVERSITY_RESEARCH', 'University research · planning and source guidance'],
   ['STUDY_COACH', 'Study coach · explanations, practice and feedback'],
   ['CODE_LAB', 'Code lab · design, debug and test programs'],
-  ['IMAGE_STUDIO', 'Image studio · original image generation']
+  ['IMAGE_STUDIO', 'Image studio · image brief and optional generation']
 ]);
 const assistantPlaceholders = new Map([
   ['GENERAL', 'Ask UniCircle anything…'],
@@ -1683,7 +1683,7 @@ async function answerPageQuestion(question) {
   const responsePanel = document.querySelector('#pageAssistantResponse');
   responsePanel.querySelector('.assistant-welcome')?.remove();
   appendAssistantBubble(responsePanel, 'sent', question);
-  const thinking = appendAssistantBubble(responsePanel, 'received assistant-thinking', 'Thinking and checking the best sources…');
+  const thinking = appendAssistantBubble(responsePanel, 'received assistant-thinking', 'Thinking through your question…');
   const form = document.querySelector('#pageAssistantForm');
   const submit = form?.querySelector('button');
   if (submit) submit.disabled = true;
@@ -1713,9 +1713,10 @@ async function loadAssistantStatus() {
     if (!response.ok) throw new Error();
     const status = await response.json();
     assistantStatusLoaded = true;
-    badge.textContent = status.enabled ? 'Live AI workspace' : 'AI setup required';
-    indicator.classList.toggle('offline', !status.enabled);
-    indicator.innerHTML = `<i></i>${status.enabled ? 'Live' : 'Setup needed'}`;
+    const advanced = status.level === 'ADVANCED';
+    badge.textContent = advanced ? 'Advanced AI workspace' : 'Basic assistant active';
+    indicator.classList.toggle('offline', !advanced);
+    indicator.innerHTML = `<i></i>${advanced ? 'Advanced' : 'Basic'}`;
   } catch {
     badge.textContent = 'Service unavailable';
     indicator.classList.add('offline');
