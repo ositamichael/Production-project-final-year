@@ -10,6 +10,7 @@ final class AssistantRequests {
 
     record AskRequest(
             @NotBlank @Size(max = 4_000) String message,
-            @NotNull AssistantMode mode) {
+            @NotNull AssistantMode mode,
+            Boolean allowPublicLookup) {
     }
 }

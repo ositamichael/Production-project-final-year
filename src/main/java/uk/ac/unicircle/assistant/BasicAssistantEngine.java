@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,21 +23,25 @@ class BasicAssistantEngine {
             "(?:what is|calculate|work out)?\\s*(-?\\d+(?:\\.\\d+)?)\\s*([+\\-*/x×÷])\\s*(-?\\d+(?:\\.\\d+)?)\\s*[?]?",
             Pattern.CASE_INSENSITIVE);
 
-    AssistantResponses.Answer answer(AssistantMode mode, String message) {
+    Optional<AssistantResponses.Answer> answerIfKnown(AssistantMode mode, String message) {
         String question = message.trim();
         String normal = question.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9+\\-*/x×÷. ]", " ")
                 .replaceAll("\\s+", " ").trim();
 
         if (containsAny(normal, "password", "authenticator code", "one time code", "otp code")) {
-            return response(mode, "Never share a password or Authenticator code with UniCircle. Use only the university's official sign-in page, and contact the university IT service if you think an account may be at risk.");
+            return Optional.of(response(mode, "Never share a password or Authenticator code with UniCircle. Use only the university's official sign-in page, and contact the university IT service if you think an account may be at risk."));
         }
         if (containsAny(normal, "write my assignment", "do my assignment", "complete my assignment", "cheat")) {
-            return response(mode, "I cannot complete assessed work for you. I can help you understand the question, create a plan, explain difficult ideas, review your draft and prepare practice questions so the final work remains yours.");
+            return Optional.of(response(mode, "I cannot complete assessed work for you. I can help you understand the question, create a plan, explain difficult ideas, review your draft and prepare practice questions so the final work remains yours."));
         }
 
         Matcher calculation = CALCULATION.matcher(normal);
         if (calculation.matches()) {
-            return response(mode, calculate(calculation));
+            return Optional.of(response(mode, calculate(calculation)));
+        }
+
+        if (containsAny(normal, "best programming language", "best coding language")) {
+            return Optional.of(response(mode, "There is no single best programming language for every job. Python is approachable for beginners, automation and data work; Java and C# are strong for large business systems; JavaScript or TypeScript is central to interactive web development; C and C++ suit systems and performance-critical work; and Kotlin or Swift are common choices for native mobile development. Choose by the problem, available libraries, deployment platform, team skills and maintainability rather than popularity alone."));
         }
 
         String answer = switch (mode) {
@@ -46,7 +51,7 @@ class BasicAssistantEngine {
             case CODE_LAB -> codeAnswer(normal);
             case IMAGE_STUDIO -> imageAnswer(question);
         };
-        return response(mode, answer);
+        return answer == null ? Optional.empty() : Optional.of(response(mode, answer));
     }
 
     private AssistantResponses.Answer response(AssistantMode mode, String answer) {
@@ -87,7 +92,7 @@ class BasicAssistantEngine {
         if (containsAny(question, "unicircle", "find student", "friend request", "message student")) {
             return "UniCircle is a university-community platform. Sign in with a staging account, open Messages and choose Find students to discover another test account. Send a connection request; after the other person accepts it, private messaging becomes available. Location sharing remains off until each accepted connection chooses to enable it.";
         }
-        return "I do not yet have a reliable offline answer for that question. Try asking about computers, AI, algorithms, databases, APIs, cloud computing, cybersecurity, Spring Boot, testing, Agile development, final-year-project planning or how to use UniCircle. Live research and unrestricted questions need a larger locally hosted model or an approved AI provider.";
+        return null;
     }
 
     private String universityAnswer(String question) {
@@ -103,7 +108,7 @@ class BasicAssistantEngine {
         if (containsAny(question, "fees", "tuition")) {
             return "Tuition fees differ by course, study year and fee status. Use the exact course page for the intended intake, then confirm what the fee includes, payment dates, scholarships and any additional course costs with the university.";
         }
-        return "For university research, write down the exact institution, course, intake year and question. Check the institution's official course page first, then an appropriate government or regulator source. This basic offline assistant cannot verify changing admissions, fees, visa, deadline or policy information live.";
+        return null;
     }
 
     private String studyAnswer(String question) {
@@ -128,7 +133,10 @@ class BasicAssistantEngine {
         if (containsAny(question, "final year project", "project aim", "project objective")) {
             return "A strong final-year-project aim states the problem, intended users and measurable outcome in one sentence. Objectives then describe the research, design, implementation, testing and evaluation needed to achieve that aim. Each objective should produce evidence that an assessor can inspect.";
         }
-        return "Use this study method: first state what you already understand; split the topic into three small questions; explain each answer in your own words with one example; then test yourself without notes. Tell me the exact topic and your current understanding, and I can help structure those steps using my available offline knowledge.";
+        if (containsAny(question, "help me study", "help me practise", "study plan", "revision plan")) {
+            return "Use this study method: first state what you already understand; split the topic into three small questions; explain each answer in your own words with one example; then test yourself without notes. Tell me the exact topic and your current understanding, and I can help structure those steps using my available offline knowledge.";
+        }
+        return null;
     }
 
     private String codeAnswer(String question) {
@@ -192,7 +200,7 @@ class BasicAssistantEngine {
         if (containsAny(question, "class", "object")) {
             return "A class is a blueprint that defines data and behaviour; an object is one actual instance created from that blueprint. For example, Student can be a class with name and course fields, while Michael's student record is an object of that class.";
         }
-        return "I can currently help with beginner Java, C#, Python, SQL, HTML, CSS, JavaScript, Spring Boot, REST APIs, object-oriented programming, debugging and testing. Include the language, intended result, actual result, exact error and the smallest relevant code section. I cannot reliably analyse a large unfamiliar program in basic offline mode. Do not include passwords, API keys or personal data.";
+        return null;
     }
 
     private String imageAnswer(String prompt) {

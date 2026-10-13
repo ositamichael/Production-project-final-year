@@ -5,5 +5,5 @@ interface AssistantGateway {
 
     boolean advancedEnabled();
 
-    AssistantResponses.Answer answer(AssistantMode mode, String message);
+    AssistantResponses.Answer answer(AssistantMode mode, String message, boolean allowPublicLookup);
 }

@@ -6,6 +6,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -21,12 +22,18 @@ class AssistantControllerTests {
     @Autowired
     MockMvc mockMvc;
 
+    @Autowired
+    PublicKnowledgeAssistant publicKnowledgeAssistant;
+
+    @Autowired
+    ObjectMapper objectMapper;
+
     @Test
     void assistantIsAvailableToGuestsWithoutExposingPrivateAccountData() throws Exception {
         mockMvc.perform(get("/api/assistant/status"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.enabled").value(true))
-                .andExpect(jsonPath("$.level").value("BASIC"));
+                .andExpect(jsonPath("$.level").value("KNOWLEDGE"));
 
         mockMvc.perform(post("/api/assistant/ask").with(csrf())
                         .contentType("application/json")
@@ -41,10 +48,10 @@ class AssistantControllerTests {
         mockMvc.perform(get("/api/assistant/status").with(user("student@example.test")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.enabled").value(true))
-                .andExpect(jsonPath("$.level").value("BASIC"))
+                .andExpect(jsonPath("$.level").value("KNOWLEDGE"))
                 .andExpect(jsonPath("$.modes.length()").value(5))
                 .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString(
-                        "no-cost basic assistant is active")));
+                        "no-cost knowledge assistant is active")));
     }
 
     @Test
@@ -73,6 +80,13 @@ class AssistantControllerTests {
                         .content("{\"message\":\"What is 12 * 7?\",\"mode\":\"GENERAL\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.answer").value("12 * 7 = 84."));
+
+        mockMvc.perform(post("/api/assistant/ask").with(csrf())
+                        .contentType("application/json")
+                        .content("{\"message\":\"What is the best programming language?\",\"mode\":\"GENERAL\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.answer").value(org.hamcrest.Matchers.containsString(
+                        "no single best programming language")));
     }
 
     @Test
@@ -93,6 +107,48 @@ class AssistantControllerTests {
                 .andExpect(jsonPath("$.answer").value(org.hamcrest.Matchers.allOf(
                         org.hamcrest.Matchers.containsString("high-level programming language"),
                         org.hamcrest.Matchers.containsString("Hello, world!"))));
+    }
+
+    @Test
+    void widerPublicKnowledgeRequiresExplicitConsent() throws Exception {
+        mockMvc.perform(post("/api/assistant/ask").with(csrf())
+                        .contentType("application/json")
+                        .content("{\"message\":\"Who made Java?\",\"mode\":\"CODE_LAB\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.live").value(false))
+                .andExpect(jsonPath("$.answer").value(org.hamcrest.Matchers.containsString(
+                        "Use public sources")));
+    }
+
+    @Test
+    void publicLookupBlocksSensitiveStudentIdentifiersBeforeExternalRequest() throws Exception {
+        mockMvc.perform(post("/api/assistant/ask").with(csrf())
+                        .contentType("application/json")
+                        .content("{\"message\":\"Who is c3707780?\",\"mode\":\"GENERAL\","
+                                + "\"allowPublicLookup\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.live").value(false))
+                .andExpect(jsonPath("$.sources.length()").value(0))
+                .andExpect(jsonPath("$.answer").value(org.hamcrest.Matchers.containsString(
+                        "did not send")));
+    }
+
+    @Test
+    void publicKnowledgeResultIsConciseAndHasAVisibleSource() throws Exception {
+        var response = objectMapper.readTree("""
+                {"query":{"pages":[{"title":"Java (programming language)",
+                "extract":"Java is a programming language. Java was designed by James Gosling at Sun Microsystems. It was released in 1995.",
+                "fullurl":"https://en.wikipedia.org/wiki/Java_(programming_language)"}]}}
+                """);
+
+        var answer = publicKnowledgeAssistant.parseResponse(AssistantMode.CODE_LAB, "Who made Java?", response);
+
+        org.junit.jupiter.api.Assertions.assertEquals("Java was designed by James Gosling at Sun Microsystems.",
+                answer.answer());
+        org.junit.jupiter.api.Assertions.assertTrue(answer.live());
+        org.junit.jupiter.api.Assertions.assertEquals(1, answer.sources().size());
+        org.junit.jupiter.api.Assertions.assertEquals("Java programming language",
+                publicKnowledgeAssistant.searchTopic("Who made Java?", AssistantMode.CODE_LAB));
     }
 
     @Test
