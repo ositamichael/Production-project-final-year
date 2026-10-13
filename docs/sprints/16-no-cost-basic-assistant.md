@@ -24,11 +24,11 @@ The public status endpoint reports the active level. The interface uses this res
 - UniCircle connection, messaging and privacy workflows.
 - Simple two-number arithmetic.
 - Research planning and safer source-checking guidance.
-- Image-prompt planning without falsely claiming that an image was rendered.
+- Private procedural SVG illustrations for posters, banners and concept graphics, with an explicit boundary that this is not an unlimited photorealistic model.
 
 ## Safety and honesty
 
-The assistant warns users not to enter passwords or Authenticator codes. It does not complete assessed work on a student's behalf. Public retrieval is off until the user chooses it, obvious personal and secret data is blocked, and the interface explains which public service receives the shortened topic. It does not claim to verify changing university facts, understand arbitrary large programs or generate an image in no-cost mode. Unsupported questions receive a clear boundary rather than an invented answer.
+The assistant warns users not to enter passwords or Authenticator codes. It does not complete assessed work on a student's behalf. Public retrieval is off until the user chooses it, obvious personal and secret data is blocked, and the interface explains which public service receives the shortened topic. It does not claim to verify changing university facts, understand arbitrary large programs or provide photorealistic free-form image generation. Unsupported questions receive a clear boundary rather than an invented answer.
 
 ## Acceptance evidence
 

@@ -28,7 +28,7 @@ class AssistantService {
         return new AssistantResponses.Status(gateway.enabled(), gateway.advancedEnabled() ? "ADVANCED" : "KNOWLEDGE",
                 Arrays.asList(AssistantMode.values()), gateway.advancedEnabled()
                         ? "Advanced AI, sourced web research, code analysis and image creation are available."
-                        : "The no-cost knowledge assistant is active. It combines reviewed local guidance with optional, sourced public-knowledge retrieval; unrestricted reasoning, code execution and image rendering are not enabled.");
+                        : "The no-cost knowledge assistant is active. It combines reviewed local guidance, optional sourced public-knowledge retrieval and private vector illustrations; unrestricted reasoning, code execution and photorealistic image generation are not enabled.");
     }
 
     AssistantResponses.Answer ask(String username, AssistantRequests.AskRequest request) {

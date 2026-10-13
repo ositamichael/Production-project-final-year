@@ -4,6 +4,8 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -44,12 +46,16 @@ class BasicAssistantEngine {
             return Optional.of(response(mode, "There is no single best programming language for every job. Python is approachable for beginners, automation and data work; Java and C# are strong for large business systems; JavaScript or TypeScript is central to interactive web development; C and C++ suit systems and performance-critical work; and Kotlin or Swift are common choices for native mobile development. Choose by the problem, available libraries, deployment platform, team skills and maintainability rather than popularity alone."));
         }
 
+        if (mode == AssistantMode.IMAGE_STUDIO) {
+            return Optional.of(imageResponse(question));
+        }
+
         String answer = switch (mode) {
             case GENERAL -> generalAnswer(normal);
             case UNIVERSITY_RESEARCH -> universityAnswer(normal);
             case STUDY_COACH -> studyAnswer(normal);
             case CODE_LAB -> codeAnswer(normal);
-            case IMAGE_STUDIO -> imageAnswer(question);
+            case IMAGE_STUDIO -> null;
         };
         return answer == null ? Optional.empty() : Optional.of(response(mode, answer));
     }
@@ -203,10 +209,84 @@ class BasicAssistantEngine {
         return null;
     }
 
-    private String imageAnswer(String prompt) {
-        return "The no-cost basic assistant cannot render an original image yet, but it can improve your image brief. Suggested brief: “"
-                + prompt.trim()
-                + "”. Add the subject, setting, composition, lighting, colour palette, visual style, aspect ratio and anything that must not appear. Local image generation can be added later on hardware with enough memory.";
+    private AssistantResponses.Answer imageResponse(String prompt) {
+        String cleanPrompt = prompt.replaceAll("\\s+", " ").trim();
+        if (cleanPrompt.isBlank()) cleanPrompt = "A welcoming university community";
+        String[] palette = illustrationPalette(cleanPrompt.hashCode());
+        String[] title = illustrationTitle(cleanPrompt);
+        String scene = illustrationScene(cleanPrompt.toLowerCase(Locale.ROOT), palette);
+        String svg = """
+                <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-labelledby="title description">
+                  <title id="title">%s</title>
+                  <desc id="description">Original procedural illustration created in UniCircle Image Studio.</desc>
+                  <defs>
+                    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1"><stop stop-color="%s"/><stop offset="1" stop-color="%s"/></linearGradient>
+                    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffffff" stop-opacity=".98"/><stop offset="1" stop-color="#eff6ff" stop-opacity=".94"/></linearGradient>
+                    <filter id="shadow" x="-20%%" y="-20%%" width="140%%" height="160%%"><feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#061b3a" flood-opacity=".2"/></filter>
+                  </defs>
+                  <rect width="1200" height="800" rx="48" fill="url(#background)"/>
+                  <circle cx="1080" cy="80" r="220" fill="%s" opacity=".18"/><circle cx="80" cy="760" r="250" fill="%s" opacity=".16"/>
+                  <path d="M0 630C190 550 315 700 520 620s330-150 680-36v216H0Z" fill="#061b3a" opacity=".16"/>
+                  %s
+                  <g filter="url(#shadow)"><rect x="76" y="70" width="620" height="222" rx="32" fill="url(#card)"/></g>
+                  <text x="116" y="132" fill="%s" font-family="Inter,Arial,sans-serif" font-size="24" font-weight="800" letter-spacing="4">UNICIRCLE ORIGINAL</text>
+                  <text x="116" y="202" fill="#092551" font-family="Inter,Arial,sans-serif" font-size="46" font-weight="850">%s</text>
+                  <text x="116" y="258" fill="#092551" font-family="Inter,Arial,sans-serif" font-size="46" font-weight="850">%s</text>
+                  <g transform="translate(1050 700)"><circle r="54" fill="#ffffff" opacity=".95"/><circle r="31" fill="none" stroke="#2ad4cf" stroke-width="13"/><path d="M21-23A31 31 0 0 1 31 0" fill="none" stroke="#2168ed" stroke-width="13" stroke-linecap="round"/><circle r="7" fill="#092551"/></g>
+                  <text x="78" y="748" fill="#ffffff" font-family="Inter,Arial,sans-serif" font-size="22" font-weight="700">Created locally · private by design · editable vector artwork</text>
+                </svg>
+                """.formatted(
+                xml(cleanPrompt), palette[0], palette[1], palette[2], palette[3], scene,
+                palette[4], xml(title[0]), xml(title[1]));
+        String dataUrl = "data:image/svg+xml;base64," + Base64.getEncoder()
+                .encodeToString(svg.getBytes(StandardCharsets.UTF_8));
+        return new AssistantResponses.Answer(
+                "I created a downloadable vector illustration from your description. This free mode is designed for clean posters, banners and concept graphics. It does not pretend to be a photorealistic, unlimited AI image model.",
+                List.of(), dataUrl, AssistantMode.IMAGE_STUDIO, false,
+                "Created locally from UniCircle drawing rules. Your prompt was not sent to an external image service.");
+    }
+
+    private String[] illustrationPalette(int hash) {
+        String[][] palettes = {
+                {"#082b59", "#2568d9", "#2ad4cf", "#7ee7d8", "#2168ed"},
+                {"#38246f", "#7457ed", "#ff8ab6", "#ffc76b", "#6b55e8"},
+                {"#0c5f55", "#22a879", "#7ee0b5", "#f7ca62", "#117c6c"},
+                {"#71344d", "#db5f73", "#ffb06b", "#ffe39a", "#bb3d64"}
+        };
+        return palettes[Math.floorMod(hash, palettes.length)];
+    }
+
+    private String[] illustrationTitle(String prompt) {
+        String title = prompt.replaceFirst("(?i)^(create|generate|make|design|draw|illustrate)\\s+(an?\\s+)?", "")
+                .replaceFirst("[.!?]+$", "").trim();
+        if (title.length() > 72) title = title.substring(0, 69).stripTrailing() + "…";
+        String[] words = title.split(" ");
+        int split = words.length <= 5 ? words.length : Math.min(5, (words.length + 1) / 2);
+        String first = String.join(" ", java.util.Arrays.copyOfRange(words, 0, split));
+        String second = split < words.length
+                ? String.join(" ", java.util.Arrays.copyOfRange(words, split, words.length)) : "";
+        return new String[]{first, second};
+    }
+
+    private String illustrationScene(String prompt, String[] palette) {
+        if (containsAny(prompt, "code", "computer", "technology", "software", "ai", "robot")) {
+            return """
+                    <g transform="translate(720 250)"><rect x="0" y="0" width="360" height="240" rx="28" fill="#ffffff" opacity=".96"/><rect x="25" y="25" width="310" height="160" rx="15" fill="#092551"/><path d="m95 86-34 28 34 28M265 86l34 28-34 28M210 64l-57 105" fill="none" stroke="%s" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/><path d="M125 240h110M180 185v55" stroke="#ffffff" stroke-width="18" stroke-linecap="round"/><circle cx="42" cy="215" r="35" fill="%s"/><circle cx="318" cy="215" r="35" fill="%s"/></g>
+                    """.formatted(palette[2], palette[3], palette[4]);
+        }
+        if (containsAny(prompt, "library", "book", "study", "class", "student", "university", "campus")) {
+            return """
+                    <g transform="translate(720 235)"><rect x="0" y="0" width="400" height="300" rx="30" fill="#ffffff" opacity=".94"/><path d="M35 88h330M35 150h330M35 212h330" stroke="#c9d9ed" stroke-width="10"/><g fill="%s"><rect x="55" y="35" width="28" height="48" rx="4"/><rect x="89" y="48" width="22" height="35" rx="4"/><rect x="278" y="101" width="31" height="44" rx="4"/><rect x="315" y="92" width="24" height="53" rx="4"/></g><ellipse cx="200" cy="248" rx="122" ry="24" fill="#d7e5f4"/><circle cx="127" cy="199" r="31" fill="%s"/><circle cx="200" cy="184" r="31" fill="%s"/><circle cx="273" cy="199" r="31" fill="%s"/><path d="M105 244c8-37 37-42 50 0M175 235c8-37 42-40 52 0M250 244c8-37 37-42 50 0" fill="none" stroke="#092551" stroke-width="18" stroke-linecap="round"/></g>
+                    """.formatted(palette[4], palette[2], palette[3], palette[4]);
+        }
+        return """
+                <g transform="translate(735 210)"><circle cx="180" cy="180" r="170" fill="#ffffff" opacity=".9"/><path d="M55 238 180 78l125 160Z" fill="%s" opacity=".9"/><circle cx="180" cy="180" r="88" fill="%s" opacity=".9"/><path d="M70 298c58-74 162-74 220 0" fill="none" stroke="%s" stroke-width="34" stroke-linecap="round"/><circle cx="115" cy="260" r="36" fill="#ffffff"/><circle cx="245" cy="260" r="36" fill="#ffffff"/></g>
+                """.formatted(palette[2], palette[3], palette[4]);
+    }
+
+    private String xml(String value) {
+        return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+                .replace("\"", "&quot;").replace("'", "&apos;");
     }
 
     private String calculate(Matcher calculation) {
