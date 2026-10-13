@@ -85,6 +85,14 @@ class AssistantControllerTests {
                 .andExpect(jsonPath("$.answer").value(org.hamcrest.Matchers.allOf(
                         org.hamcrest.Matchers.containsString("for (int i = 0"),
                         org.hamcrest.Matchers.containsString("prints 0 to 4"))));
+
+        mockMvc.perform(post("/api/assistant/ask").with(csrf())
+                        .contentType("application/json")
+                        .content("{\"message\":\"What is Python?\",\"mode\":\"CODE_LAB\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.answer").value(org.hamcrest.Matchers.allOf(
+                        org.hamcrest.Matchers.containsString("high-level programming language"),
+                        org.hamcrest.Matchers.containsString("Hello, world!"))));
     }
 
     @Test

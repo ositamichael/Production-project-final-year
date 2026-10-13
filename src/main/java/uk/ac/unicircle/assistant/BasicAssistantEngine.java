@@ -135,6 +135,21 @@ class BasicAssistantEngine {
         if (containsAny(question, "spring boot")) {
             return "Spring Boot is a Java framework that reduces the setup needed for web applications. A common structure uses controllers for HTTP requests, services for business rules, repositories for database access and configuration classes for security or external services. Keep each responsibility separate and test the service and controller behaviour.";
         }
+        if (containsAny(question, "what is programming", "define programming")) {
+            return "Programming is the process of designing and writing instructions that a computer can follow. A programmer understands a problem, creates an algorithm, expresses it in a language such as Python, Java or C#, tests the result and corrects errors.";
+        }
+        if (containsAny(question, "what is python", "define python", "python programming language")) {
+            return "Python is a high-level programming language designed to be readable and quick to develop with. It is widely used for web development, automation, data analysis, artificial intelligence and teaching. Python uses indentation to group code. A simple example is: print(\"Hello, world!\").";
+        }
+        if (containsAny(question, "what is java", "define java", "java programming language")) {
+            return "Java is an object-oriented programming language used for web back ends, Android-related development, enterprise systems and many other applications. Java code is compiled to bytecode that runs on the Java Virtual Machine, which helps the same program run on different operating systems. Spring Boot is a popular Java framework.";
+        }
+        if (containsAny(question, "what is c#", "what is c sharp", "define c#", "define c sharp")) {
+            return "C# is a modern object-oriented programming language created for the .NET platform. It is used for desktop applications, web services, cloud systems and games made with Unity. A simple output statement is: Console.WriteLine(\"Hello, world!\");";
+        }
+        if (containsAny(question, "what is javascript", "define javascript")) {
+            return "JavaScript is a programming language mainly used to make web pages interactive. It runs in browsers and can also run on servers through environments such as Node.js. It can respond to clicks, update page content, validate forms and communicate with an API.";
+        }
         if (containsAny(question, "java for loop", "for loop in java", "java loop")) {
             return "A Java for loop repeats code while a condition remains true. Example: for (int i = 0; i < 5; i++) { System.out.println(i); } This starts i at 0, runs while i is below 5 and adds 1 after each repetition, so it prints 0 to 4.";
         }
@@ -149,6 +164,9 @@ class BasicAssistantEngine {
         }
         if (containsAny(question, "array", "list")) {
             return "An array or list stores several related values under one name. Arrays normally have a fixed size, while list collections can usually grow and shrink. Choose a meaningful element type, remember that many languages start indexing at 0, and check bounds before accessing an index.";
+        }
+        if (containsAny(question, "what is sql", "define sql")) {
+            return "SQL means Structured Query Language. It is used to create, read, update and delete information in relational databases. For example, SELECT name FROM students; reads the name column from the students table.";
         }
         if (containsAny(question, "sql", "select query", "database query")) {
             return "SQL is used to work with relational databases. A basic read is: SELECT name, course FROM students WHERE active = true ORDER BY name; Use parameterised queries rather than joining user input into SQL, define keys and constraints, and test that users can access only the records they are permitted to see.";
