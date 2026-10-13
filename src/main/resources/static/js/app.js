@@ -88,6 +88,11 @@ function showPage(pageName, { updateHistory = true, focus = true } = {}) {
   }
   window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   if (focus && nextPage !== document.querySelector('#campus')) nextPage.focus({ preventScroll: true });
+  if (nextPage.dataset.page === 'today') void loadCampusSchedule();
+  if (nextPage.dataset.page === 'events') void loadCampusEvents();
+  if (nextPage.dataset.page === 'services') void Promise.all([loadCampusServices(), loadCampusBookings()]);
+  if (nextPage.dataset.page === 'opportunities') void loadOpportunities();
+  if (nextPage.dataset.page === 'lost-found') void loadLostFound();
   if (nextPage.dataset.page === 'messages') void loadMessagingWorkspace();
   if (nextPage.dataset.page === 'circles') void loadCircles();
   if (nextPage.dataset.page === 'updates') void loadAnnouncements();

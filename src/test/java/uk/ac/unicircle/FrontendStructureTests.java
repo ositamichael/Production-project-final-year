@@ -32,6 +32,20 @@ class FrontendStructureTests {
     }
 
     @Test
+    void openingAFeatureWorkspaceAlwaysResolvesItsLiveOrSignedOutState() throws IOException {
+        var resource = getClass().getResourceAsStream("/static/js/app.js");
+        assertThat(resource).isNotNull();
+
+        var script = new String(resource.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(script)
+                .contains("nextPage.dataset.page === 'today') void loadCampusSchedule()")
+                .contains("nextPage.dataset.page === 'events') void loadCampusEvents()")
+                .contains("nextPage.dataset.page === 'services') void Promise.all([loadCampusServices(), loadCampusBookings()])")
+                .contains("nextPage.dataset.page === 'opportunities') void loadOpportunities()")
+                .contains("nextPage.dataset.page === 'lost-found') void loadLostFound()");
+    }
+
+    @Test
     void mobileNavigationMatchesTheFivePrimaryPhoneDestinations() throws IOException {
         var resource = getClass().getResourceAsStream("/static/index.html");
         assertThat(resource).isNotNull();
