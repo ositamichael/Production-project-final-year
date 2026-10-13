@@ -10,8 +10,8 @@
   <title>UniCircle — My Campus</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="stylesheet" href="/css/app.css?v=24">
-  <script src="/js/app.js?v=26" defer></script>
+  <link rel="stylesheet" href="/css/app.css?v=29">
+  <script src="/js/app.js?v=29" defer></script>
 </head>
 <body>
   <svg class="svg-sprite" aria-hidden="true">
@@ -76,6 +76,7 @@
   </div>
   <div class="app-shell">
     <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+      <button class="sidebar-close" id="sidebarClose" type="button" aria-label="Close navigation"><svg class="icon" aria-hidden="true"><use href="#close"/></svg></button>
       <a class="brand" href="/" aria-label="UniCircle home">
         <span class="brand-mark" aria-hidden="true"><span></span></span>
         <span>UniCircle</span>
@@ -107,6 +108,7 @@
         <span class="verified-dot" aria-hidden="true"><svg class="icon"><use href="#check"/></svg></span>
       </button>
     </aside>
+    <button class="sidebar-scrim" id="sidebarScrim" type="button" aria-label="Close navigation" hidden></button>
 
     <main id="main-content" tabindex="-1">
       <header class="topbar">
@@ -408,14 +410,14 @@
               <button class="assistant-mode" type="button" data-assistant-mode="UNIVERSITY_RESEARCH" aria-pressed="false"><span><svg class="icon" aria-hidden="true"><use href="#globe"/></svg></span><strong>University research</strong><small>Research planning and source guidance</small></button>
               <button class="assistant-mode" type="button" data-assistant-mode="STUDY_COACH" aria-pressed="false"><span><svg class="icon" aria-hidden="true"><use href="#book-open"/></svg></span><strong>Study coach</strong><small>Explanations, practice and feedback</small></button>
               <button class="assistant-mode" type="button" data-assistant-mode="CODE_LAB" aria-pressed="false"><span><svg class="icon" aria-hidden="true"><use href="#code"/></svg></span><strong>Code lab</strong><small>Design, debug and test programs</small></button>
-              <button class="assistant-mode" type="button" data-assistant-mode="IMAGE_STUDIO" aria-pressed="false"><span><svg class="icon" aria-hidden="true"><use href="#palette"/></svg></span><strong>Image studio</strong><small>Develop an effective image brief</small></button>
+              <button class="assistant-mode" type="button" data-assistant-mode="IMAGE_STUDIO" aria-pressed="false"><span><svg class="icon" aria-hidden="true"><use href="#palette"/></svg></span><strong>Image studio</strong><small>Create downloadable illustrations</small></button>
             </div>
             <div class="assistant-starter-prompts">
               <h4>Try asking</h4>
               <button type="button" data-page-question="Compare entry requirements and tuition information for computer science at three UK universities. Use official sources." data-question-mode="UNIVERSITY_RESEARCH">Compare universities</button>
               <button type="button" data-page-question="Explain dependency injection in Spring Boot with a simple example and then quiz me." data-question-mode="STUDY_COACH">Learn a difficult topic</button>
               <button type="button" data-page-question="Help me design and test a Java method that finds duplicate student IDs." data-question-mode="CODE_LAB">Solve a coding problem</button>
-              <button type="button" data-page-question="Create a clean illustration of students collaborating in a modern university library." data-question-mode="IMAGE_STUDIO">Create an image</button>
+              <button type="button" data-page-question="Create a clean illustration of students collaborating in a modern university library." data-question-mode="IMAGE_STUDIO">Create an illustration</button>
             </div>
             <p class="panel-note">UniCircle can make mistakes. Important admissions, fees, visa, policy and deadline information must be checked against the cited official source.</p>
           </aside>

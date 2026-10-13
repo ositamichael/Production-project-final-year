@@ -110,6 +110,22 @@ class AssistantControllerTests {
     }
 
     @Test
+    void noCostImageStudioCreatesADownloadablePrivateVectorIllustration() throws Exception {
+        mockMvc.perform(post("/api/assistant/ask").with(csrf())
+                        .contentType("application/json")
+                        .content("{\"message\":\"Create students studying in a modern library\","
+                                + "\"mode\":\"IMAGE_STUDIO\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.live").value(false))
+                .andExpect(jsonPath("$.answer").value(org.hamcrest.Matchers.containsString(
+                        "downloadable vector illustration")))
+                .andExpect(jsonPath("$.imageDataUrl").value(org.hamcrest.Matchers.startsWith(
+                        "data:image/svg+xml;base64,")))
+                .andExpect(jsonPath("$.notice").value(org.hamcrest.Matchers.containsString(
+                        "not sent to an external image service")));
+    }
+
+    @Test
     void widerPublicKnowledgeRequiresExplicitConsent() throws Exception {
         mockMvc.perform(post("/api/assistant/ask").with(csrf())
                         .contentType("application/json")

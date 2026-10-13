@@ -40,6 +40,8 @@ class FrontendStructureTests {
         assertThat(html)
             .contains("class=\"mobile-brand\"")
             .contains("class=\"mobile-tabbar\"")
+            .contains("id=\"sidebarClose\"")
+            .contains("id=\"sidebarScrim\"")
             .contains("id=\"mobileMessageUnreadBadge\"")
             .contains("id=\"mobileMoreButton\"")
             .contains(">My Campus</span>")
@@ -196,10 +198,12 @@ class FrontendStructureTests {
                 .contains("Follow your university's assessment rules")
                 .contains("do not enter passwords, personal data or confidential information");
         assertThat(script)
+                .contains("setNavigationOpen")
                 .contains("/api/assistant/status")
                 .contains("/api/assistant/ask")
                 .contains("result.sources")
-                .contains("result.imageDataUrl");
+                .contains("result.imageDataUrl")
+                .contains("unicircle-illustration.svg");
     }
 
     @Test
