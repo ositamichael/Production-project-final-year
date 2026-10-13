@@ -6,7 +6,7 @@ This repository is being rebuilt as a Level 6 final-year software engineering pr
 
 ## Current status
 
-Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, Sprint 7 added transactional campus events and service bookings, Sprint 8 added moderated opportunities and personal application tracking, Sprint 9 added secure lost-and-found reporting, Sprint 10 added a fictional staff review workflow, Sprint 11 expanded the invitation-only pilot into a testable campus experience, Sprint 12 added trusted campus information, private support and live-learning participation, Sprint 13 added structured multi-user acceptance evidence, and Sprint 14 adds a responsible AI study and campus assistant inside the same complete application:
+Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, Sprint 7 added transactional campus events and service bookings, Sprint 8 added moderated opportunities and personal application tracking, Sprint 9 added secure lost-and-found reporting, Sprint 10 added a fictional staff review workflow, Sprint 11 expanded the invitation-only pilot into a testable campus experience, Sprint 12 added trusted campus information, private support and live-learning participation, Sprint 13 added structured multi-user acceptance evidence, Sprint 14 added a responsible AI study and campus assistant, and Sprint 15 hardens the application for a supervised deployment rehearsal:
 
 - Spring Boot 4.1.1 with Java 21 as the target language level.
 - A responsive desktop, tablet and mobile dashboard prototype.
@@ -66,6 +66,11 @@ Sprint 1 established the testable engineering foundation, Sprint 2 added the acc
 - Server-side OpenAI Responses API integration with web search, visible source links, code execution and image generation tools.
 - Input moderation, per-account rate limiting, secure server-side credentials and a clear setup state when AI is not enabled.
 - Academic-integrity instructions that support explanation, practice, feedback and debugging without impersonating a student or fabricating research.
+- Database-backed campus circles with university isolation, search, filtering, creation and real join/leave membership.
+- Downloadable standards-based calendar files for registered events and confirmed bookings.
+- An installable mobile web-app shell with an honest offline screen that never caches private API data.
+- Public privacy, acceptable-use and accessibility information for the staging pilot.
+- Content Security Policy, Permissions Policy and strict referrer controls on browser responses.
 
 The dashboard now contains working local social, event-registration, booking, opportunity-tracking, lost-and-found, fictional staff-review, announcement, support-case and live-learning demonstrations, but it is not evidence of a live university integration. Real student identity, official timetables, staff publishing, university email, booking systems, employer vacancy feeds, staffed support services, multiparty video and location require institutional approval, integration contracts, security review and deployment infrastructure. The pilot records information in its own database; it does not falsely report that an email was sent or a video room was opened when those approved services are absent. Production push notifications, institutionally governed moderation and safeguarding operations, secure media storage and retention policies remain future work.
 
@@ -133,6 +138,7 @@ UniCircle begins as a modular monolith. This keeps deployment manageable for a f
 - [`docs/sprints/12-campus-information-live-learning.md`](docs/sprints/12-campus-information-live-learning.md)
 - [`docs/sprints/13-staging-acceptance-evidence.md`](docs/sprints/13-staging-acceptance-evidence.md)
 - [`docs/sprints/14-responsible-ai-assistant.md`](docs/sprints/14-responsible-ai-assistant.md)
+- [`docs/sprints/15-deployment-hardening.md`](docs/sprints/15-deployment-hardening.md)
 
 ## Branching and assessment evidence
 
