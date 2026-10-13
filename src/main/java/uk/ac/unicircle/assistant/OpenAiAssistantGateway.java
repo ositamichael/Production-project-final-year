@@ -42,16 +42,19 @@ class OpenAiAssistantGateway implements AssistantGateway {
 
     private final ObjectMapper mapper;
     private final HttpClient client;
+    private final BasicAssistantEngine basicAssistant;
     private final String apiKey;
     private final String model;
     private final String imageModel;
 
     OpenAiAssistantGateway(
             ObjectMapper mapper,
+            BasicAssistantEngine basicAssistant,
             @Value("${OPENAI_API_KEY:}") String apiKey,
             @Value("${unicircle.assistant.model:gpt-6.1-sol}") String model,
             @Value("${unicircle.assistant.image-model:gpt-image-2.5-flare}") String imageModel) {
         this.mapper = mapper;
+        this.basicAssistant = basicAssistant;
         this.apiKey = apiKey == null ? "" : apiKey.trim();
         this.model = model;
         this.imageModel = imageModel;
@@ -60,17 +63,18 @@ class OpenAiAssistantGateway implements AssistantGateway {
 
     @Override
     public boolean enabled() {
+        return true;
+    }
+
+    @Override
+    public boolean advancedEnabled() {
         return !apiKey.isBlank();
     }
 
     @Override
     public AssistantResponses.Answer answer(AssistantMode mode, String message) {
-        if (!enabled()) {
-            return new AssistantResponses.Answer(
-                    "The secure AI service has been built but is not enabled on this deployment yet. "
-                            + "A server-side OpenAI API key must be added before live AI answers and image creation can run.",
-                    List.of(), null, mode, false,
-                    "No university password or Authenticator code is ever required.");
+        if (!advancedEnabled()) {
+            return basicAssistant.answer(mode, message);
         }
         if (isFlagged(message)) {
             return new AssistantResponses.Answer(

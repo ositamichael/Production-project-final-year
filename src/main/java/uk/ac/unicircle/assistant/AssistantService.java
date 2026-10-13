@@ -25,10 +25,10 @@ class AssistantService {
     }
 
     AssistantResponses.Status status() {
-        return new AssistantResponses.Status(gateway.enabled(), Arrays.asList(AssistantMode.values()),
-                gateway.enabled()
-                        ? "Live AI, sourced web research, code analysis and image creation are available."
-                        : "The AI workspace is installed but needs a server-side OpenAI API key.");
+        return new AssistantResponses.Status(gateway.enabled(), gateway.advancedEnabled() ? "ADVANCED" : "BASIC",
+                Arrays.asList(AssistantMode.values()), gateway.advancedEnabled()
+                        ? "Advanced AI, sourced web research, code analysis and image creation are available."
+                        : "The no-cost basic assistant is active for common computing, study and UniCircle questions. Live web research, code execution and image rendering are not enabled.");
     }
 
     AssistantResponses.Answer ask(String username, AssistantRequests.AskRequest request) {

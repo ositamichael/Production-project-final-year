@@ -18,6 +18,6 @@ final class AssistantResponses {
             String notice) {
     }
 
-    record Status(boolean enabled, List<AssistantMode> modes, String message) {
+    record Status(boolean enabled, String level, List<AssistantMode> modes, String message) {
     }
 }

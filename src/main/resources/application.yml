@@ -36,7 +36,7 @@ management:
 info:
   app:
     name: UniCircle
-    stage: Sprint 14 responsible AI assistant
+    stage: Sprint 16 no-cost basic assistant
     data-status: Prototype fixtures only
 
 unicircle:
