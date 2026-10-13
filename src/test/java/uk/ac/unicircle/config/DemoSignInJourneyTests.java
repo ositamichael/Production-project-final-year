@@ -49,6 +49,31 @@ class DemoSignInJourneyTests {
     }
 
     @Test
+    void installableShellAndSafetyPagesLoadBeforeSignIn() throws Exception {
+        mockMvc.perform(get("/manifest.webmanifest"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("UniCircle Campus")));
+        mockMvc.perform(get("/service-worker.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("SHELL_CACHE")));
+        mockMvc.perform(get("/privacy.html"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Your privacy in UniCircle")));
+    }
+
+    @Test
+    void publicPagesReceiveBrowserSecurityHeaders() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Security-Policy",
+                        org.hamcrest.Matchers.containsString("default-src 'self'")))
+                .andExpect(header().string("Referrer-Policy", "strict-origin-when-cross-origin"))
+                .andExpect(header().string("Permissions-Policy",
+                        org.hamcrest.Matchers.containsString("camera=(self)")))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"));
+    }
+
+    @Test
     void validFictionalCredentialsCreateAProtectedSessionAndExposeTheDemoStudent() throws Exception {
         var login = mockMvc.perform(post("/login")
                         .with(csrf())

@@ -8,6 +8,8 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
 import org.springframework.security.web.util.matcher.RegexRequestMatcher;
 
 @Configuration
@@ -19,7 +21,9 @@ public class ProductionSecurityConfiguration {
         return http
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
-                                "/", "/index.html", "/favicon.svg", "/css/**", "/js/**", "/images/**",
+                                "/", "/index.html", "/favicon.svg", "/manifest.webmanifest", "/service-worker.js",
+                                "/offline.html", "/privacy.html", "/acceptable-use.html", "/accessibility.html",
+                                "/robots.txt", "/css/**", "/js/**", "/images/**",
                                 "/error", "/sign-in", "/api/platform/status", "/api/security/csrf", "/actuator/health",
                                 "/api/assistant/**", "/oauth2/**", "/login/**")
                         .permitAll()
@@ -28,6 +32,12 @@ public class ProductionSecurityConfiguration {
                         new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
                         RegexRequestMatcher.regexMatcher("^/api/.*")))
                 .oauth2Login(Customizer.withDefaults())
+                .headers(headers -> headers
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(SecurityHeaders.CONTENT_SECURITY_POLICY))
+                        .referrerPolicy(referrer -> referrer.policy(
+                                ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .addHeaderWriter(new StaticHeadersWriter("Permissions-Policy",
+                                SecurityHeaders.PERMISSIONS_POLICY)))
                 .logout(logout -> logout.logoutSuccessUrl("/?signed-out=1#campus"))
                 .build();
     }

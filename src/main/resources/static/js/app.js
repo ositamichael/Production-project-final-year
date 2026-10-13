@@ -83,6 +83,7 @@ function showPage(pageName, { updateHistory = true, focus = true } = {}) {
   window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   if (focus && nextPage !== document.querySelector('#campus')) nextPage.focus({ preventScroll: true });
   if (nextPage.dataset.page === 'messages') void loadMessagingWorkspace();
+  if (nextPage.dataset.page === 'circles') void loadCircles();
   if (nextPage.dataset.page === 'updates') void loadAnnouncements();
   if (nextPage.dataset.page === 'live-classes') void loadMeetings();
   if (nextPage.dataset.page === 'wellbeing') void loadSupportCases();
@@ -161,20 +162,6 @@ globalSearch?.addEventListener('input', () => {
     if (matches) visible += 1;
   });
   searchEmpty.hidden = visible !== 0;
-});
-
-document.querySelectorAll('.join-button').forEach((button) => {
-  button.addEventListener('click', () => {
-    const joined = button.classList.toggle('joined');
-    button.textContent = joined ? 'Joined' : button.closest('.feature-card') ? 'Join circle' : 'Join';
-    button.setAttribute('aria-pressed', String(joined));
-    const card = button.closest('[data-category]');
-    if (card) {
-      const categories = new Set((card.dataset.category || '').split(/\s+/).filter(Boolean));
-      if (joined) categories.add('joined'); else categories.delete('joined');
-      card.dataset.category = [...categories].join(' ');
-    }
-  });
 });
 
 document.querySelectorAll('.filter-row').forEach((row) => {
@@ -272,6 +259,11 @@ const lostFoundDetailDialog = document.querySelector('#lostFoundDetailDialog');
 const staffReviewNav = document.querySelector('#staffReviewNav');
 const staffReviewDialog = document.querySelector('#staffReviewDialog');
 const staffReviewList = document.querySelector('#staffReviewList');
+const circleCatalogue = document.querySelector('#circleCatalogue');
+const dashboardCircleList = document.querySelector('#dashboardCircleList');
+const circleDialog = document.querySelector('#circleDialog');
+const circleForm = document.querySelector('#circleForm');
+const circleSearch = document.querySelector('#circleSearch');
 const baseScheduleMarkup = scheduleList?.innerHTML || '';
 let loadedCampusEvents = [];
 let loadedCampusServices = [];
@@ -291,6 +283,195 @@ let activeLostFoundReportId = null;
 let staffReviewAccess = false;
 let staffPendingReports = [];
 let activeStaffReportId = null;
+let loadedCircles = [];
+let selectedCircleCategory = '';
+let joinedCirclesOnly = false;
+let circleSearchTimer;
+let loadedScheduleActivity = [];
+
+function circlePresentation(category) {
+  const presentation = {
+    ACADEMIC: ['circle-computing', 'info', 'book-open'],
+    SOCIAL: ['circle-games', 'warning', 'dice'],
+    COMMUNITY: ['circle-sustainability', 'success', 'leaf'],
+    CAREERS: ['circle-creative', 'warning', 'briefcase'],
+    PROJECTS: ['circle-projects', 'neutral', 'puzzle']
+  };
+  return presentation[category] || presentation.COMMUNITY;
+}
+
+function readableCircleCategory(category) {
+  return category.charAt(0) + category.slice(1).toLowerCase();
+}
+
+function renderDashboardCircles() {
+  if (!dashboardCircleList) return;
+  dashboardCircleList.replaceChildren();
+  loadedCircles.slice(0, 3).forEach((circle) => {
+    const [photoClass] = circlePresentation(circle.category);
+    const row = document.createElement('li');
+    const photo = document.createElement('div');
+    photo.className = `circle-photo campus-photo ${photoClass}`;
+    photo.setAttribute('role', 'img');
+    photo.setAttribute('aria-label', `${circle.name} community`);
+    const copy = document.createElement('div');
+    const title = document.createElement('strong');
+    title.textContent = circle.name;
+    const meta = document.createElement('small');
+    meta.textContent = `${circle.memberCount} member${circle.memberCount === 1 ? '' : 's'} · ${readableCircleCategory(circle.category)}`;
+    copy.append(title, meta);
+    const action = document.createElement('button');
+    action.className = circle.joined ? 'small-action joined' : 'small-action';
+    action.type = 'button';
+    action.textContent = circle.owner ? 'Owner' : circle.joined ? 'Joined' : 'Join';
+    action.disabled = circle.owner;
+    action.addEventListener('click', () => updateCircleMembership(circle, action));
+    row.append(photo, copy, action);
+    dashboardCircleList.append(row);
+  });
+  if (!loadedCircles.length) {
+    const row = document.createElement('li');
+    row.className = 'loading-note';
+    row.textContent = 'No circles match your current filters.';
+    dashboardCircleList.append(row);
+  }
+}
+
+function renderCircles() {
+  if (!circleCatalogue) return;
+  circleCatalogue.replaceChildren();
+  loadedCircles.forEach((circle) => {
+    const [photoClass, pillClass, iconName] = circlePresentation(circle.category);
+    const card = document.createElement('article');
+    card.className = 'feature-card circle-card';
+    const visual = document.createElement('div');
+    visual.className = `feature-avatar campus-photo ${photoClass}`;
+    visual.setAttribute('role', 'img');
+    visual.setAttribute('aria-label', `${circle.name} community`);
+    const pill = document.createElement('span');
+    pill.className = `pill ${pillClass}`;
+    pill.textContent = readableCircleCategory(circle.category);
+    const title = document.createElement('h3');
+    title.textContent = circle.name;
+    const description = document.createElement('p');
+    description.textContent = circle.description;
+    const meta = document.createElement('div');
+    meta.className = 'feature-meta';
+    const members = document.createElement('span');
+    members.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#users"/></svg>`;
+    members.append(document.createTextNode(`${circle.memberCount} member${circle.memberCount === 1 ? '' : 's'}`));
+    const status = document.createElement('span');
+    status.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#${iconName}"/></svg>`;
+    status.append(document.createTextNode(circle.owner ? 'You created this' : circle.joined ? 'Member' : 'Open to join'));
+    meta.append(members, status);
+    const action = document.createElement('button');
+    action.className = circle.joined ? 'secondary-button joined' : 'primary-compact';
+    action.type = 'button';
+    action.textContent = circle.owner ? 'Circle owner' : circle.joined ? 'Leave circle' : 'Join circle';
+    action.disabled = circle.owner;
+    action.setAttribute('aria-pressed', String(circle.joined));
+    action.addEventListener('click', () => updateCircleMembership(circle, action));
+    card.append(visual, pill, title, description, meta, action);
+    circleCatalogue.append(card);
+  });
+  if (!loadedCircles.length) {
+    circleCatalogue.innerHTML = '<div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#search"/></svg><h3>No matching circles</h3><p>Try another search or create a new community.</p></div>';
+  }
+  renderDashboardCircles();
+}
+
+async function loadCircles() {
+  if (!circleCatalogue && !dashboardCircleList) return;
+  const parameters = new URLSearchParams();
+  const query = circleSearch?.value.trim();
+  if (query) parameters.set('query', query);
+  if (selectedCircleCategory) parameters.set('category', selectedCircleCategory);
+  if (joinedCirclesOnly) parameters.set('joined', 'true');
+  try {
+    const response = await fetch(`/api/community/circles?${parameters}`, { headers: { Accept: 'application/json' } });
+    if (response.status === 401 || response.status === 403) {
+      if (circleCatalogue) circleCatalogue.innerHTML = '<div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><h3>Sign in to join campus circles</h3><p>Circles are kept within each university community.</p><a class="primary-button" href="/sign-in">Sign in</a></div>';
+      if (dashboardCircleList) dashboardCircleList.innerHTML = '<li class="loading-note">Sign in to discover campus circles.</li>';
+      return;
+    }
+    if (!response.ok) throw new Error('Campus circles are temporarily unavailable.');
+    loadedCircles = await response.json();
+    renderCircles();
+  } catch (error) {
+    if (circleCatalogue) circleCatalogue.innerHTML = '<div class="empty-state compact"><h3>Circles are temporarily unavailable</h3><p>Please try again shortly.</p></div>';
+    if (dashboardCircleList) dashboardCircleList.innerHTML = '<li class="loading-note">Circles are temporarily unavailable.</li>';
+  }
+}
+
+async function updateCircleMembership(circle, button) {
+  button.disabled = true;
+  try {
+    await socialPost(`/api/community/circles/${circle.id}/${circle.joined ? 'leave' : 'join'}`);
+    showToast(circle.joined ? `You left ${circle.name}.` : `You joined ${circle.name}.`);
+    await loadCircles();
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+document.querySelector('#circleCreateButton')?.addEventListener('click', async () => {
+  try {
+    const response = await fetch('/api/profile/me', { headers: { Accept: 'application/json' } });
+    if (!response.ok) {
+      window.location.assign('/sign-in');
+      return;
+    }
+    document.querySelector('#circleFormStatus').textContent = '';
+    openModal(circleDialog);
+    document.querySelector('#circleName')?.focus();
+  } catch {
+    window.location.assign('/sign-in');
+  }
+});
+
+['#circleDialogClose', '#circleDialogCancel'].forEach((selector) => {
+  document.querySelector(selector)?.addEventListener('click', () => closeModal(circleDialog));
+});
+
+circleForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const submit = circleForm.querySelector('button[type="submit"]');
+  const status = document.querySelector('#circleFormStatus');
+  submit.disabled = true;
+  status.textContent = 'Creating your circle…';
+  try {
+    await socialPost('/api/community/circles', {
+      name: document.querySelector('#circleName').value,
+      description: document.querySelector('#circleDescription').value,
+      category: document.querySelector('#circleCategory').value
+    });
+    circleForm.reset();
+    closeModal(circleDialog);
+    showToast('Your new campus circle is ready.');
+    await loadCircles();
+  } catch (error) {
+    status.textContent = error.message;
+  } finally {
+    submit.disabled = false;
+  }
+});
+
+circleSearch?.addEventListener('input', () => {
+  clearTimeout(circleSearchTimer);
+  circleSearchTimer = setTimeout(() => void loadCircles(), 250);
+});
+
+document.querySelectorAll('#circleFilters [data-circle-category], #circleFilters [data-circle-view]').forEach((button) => {
+  button.addEventListener('click', () => {
+    document.querySelectorAll('#circleFilters .filter-chip').forEach((other) => other.classList.remove('active'));
+    button.classList.add('active');
+    selectedCircleCategory = button.dataset.circleCategory || '';
+    joinedCirclesOnly = button.dataset.circleView === 'joined';
+    void loadCircles();
+  });
+});
 
 function selectBookingTab(tab) {
   bookingTabs.forEach((other) => {
@@ -663,6 +844,7 @@ async function loadCampusSchedule() {
     const response = await fetch('/api/campus-life/schedule', { headers: { Accept: 'application/json' } });
     if (!response.ok) return;
     const activity = await response.json();
+    loadedScheduleActivity = activity;
     if (scheduleList) scheduleList.innerHTML = baseScheduleMarkup;
     if (todayCommitmentList) todayCommitmentList.replaceChildren();
     if (todayPlannedCount) todayPlannedCount.textContent = String(4 + activity.length);
@@ -713,6 +895,32 @@ async function loadCampusSchedule() {
     if (todayCommitmentList) todayCommitmentList.innerHTML = '<div class="empty-state compact"><h3>Your UniCircle schedule is temporarily unavailable</h3><p>Please try again shortly.</p></div>';
   }
 }
+
+document.querySelector('#calendarDownloadButton')?.addEventListener('click', async (event) => {
+  const button = event.currentTarget;
+  button.disabled = true;
+  try {
+    const response = await fetch('/api/campus-life/schedule', { headers: { Accept: 'application/json' } });
+    if (response.status === 401 || response.status === 403) {
+      window.location.assign('/sign-in');
+      return;
+    }
+    if (!response.ok) throw new Error('Your calendar could not be prepared.');
+    loadedScheduleActivity = await response.json();
+    if (!loadedScheduleActivity.length) throw new Error('Register for an event or book a service before downloading your calendar.');
+    const download = document.createElement('a');
+    download.href = '/api/campus-life/schedule.ics';
+    download.hidden = true;
+    document.body.append(download);
+    download.click();
+    setTimeout(() => download.remove(), 1000);
+    showToast('Your UniCircle calendar has been downloaded.');
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    button.disabled = false;
+  }
+});
 
 function opportunityPresentation(type) {
   if (type === 'PLACEMENT') return ['code', 'navy-photo', 'Placement'];
@@ -3345,6 +3553,15 @@ document.querySelector('#supportFormFocus')?.addEventListener('click', () => {
   document.querySelector('#supportCategory')?.focus();
 });
 
+document.querySelectorAll('.support-route').forEach((button) => {
+  button.addEventListener('click', () => {
+    const category = document.querySelector('#supportCategory');
+    if (category) category.value = button.dataset.supportCategory || '';
+    document.querySelector('#supportSubject')?.focus();
+    document.querySelector('#supportCaseForm')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+});
+
 document.querySelector('#supportRefresh')?.addEventListener('click', () => void loadSupportCases());
 
 document.querySelector('#supportCaseForm')?.addEventListener('submit', async (event) => {
@@ -3683,4 +3900,12 @@ if (journeyParams.has('signed-in')) {
   history.replaceState(null, '', `${location.pathname}${location.hash || '#campus'}`);
 } else {
   restoreSessionIdentity();
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js').catch(() => {
+      // The full online experience remains available if installation is unsupported.
+    });
+  });
 }

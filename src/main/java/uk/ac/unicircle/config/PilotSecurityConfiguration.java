@@ -13,6 +13,8 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
 import org.springframework.security.web.util.matcher.RegexRequestMatcher;
 
 @Configuration
@@ -24,7 +26,9 @@ public class PilotSecurityConfiguration {
         return http
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
-                                "/", "/index.html", "/pilot-login.html", "/favicon.svg", "/css/**", "/js/**", "/images/**",
+                                "/", "/index.html", "/pilot-login.html", "/favicon.svg", "/manifest.webmanifest",
+                                "/service-worker.js", "/offline.html", "/privacy.html", "/acceptable-use.html",
+                                "/accessibility.html", "/robots.txt", "/css/**", "/js/**", "/images/**",
                                 "/error", "/sign-in", "/api/pilot/register", "/api/platform/status", "/api/security/csrf",
                                 "/api/assistant/**", "/actuator/health")
                         .permitAll()
@@ -38,6 +42,12 @@ public class PilotSecurityConfiguration {
                         .defaultSuccessUrl("/?signed-in=1#campus", true)
                         .failureUrl("/pilot-login.html?error=1")
                         .permitAll())
+                .headers(headers -> headers
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(SecurityHeaders.CONTENT_SECURITY_POLICY))
+                        .referrerPolicy(referrer -> referrer.policy(
+                                ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .addHeaderWriter(new StaticHeadersWriter("Permissions-Policy",
+                                SecurityHeaders.PERMISSIONS_POLICY)))
                 .logout(logout -> logout.logoutSuccessUrl("/?signed-out=1#campus"))
                 .build();
     }

@@ -7,6 +7,8 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.UUID;
@@ -150,5 +152,17 @@ class EngagementControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].title", hasItem("Spring Careers Fair")))
                 .andExpect(jsonPath("$[*].title", hasItem("Lecturer appointment")));
+    }
+
+    @Test
+    void personalScheduleCanBeDownloadedAsAStandardsBasedCalendar() throws Exception {
+        mockMvc.perform(get("/api/campus-life/schedule.ics").with(user("student")))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition",
+                        "attachment; filename=unicircle-campus-schedule.ics"))
+                .andExpect(content().contentTypeCompatibleWith("text/calendar"))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("BEGIN:VCALENDAR\r\n")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("SUMMARY:Spring Careers Fair")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("END:VCALENDAR\r\n")));
     }
 }

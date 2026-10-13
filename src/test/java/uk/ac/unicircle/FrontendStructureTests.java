@@ -102,7 +102,8 @@ class FrontendStructureTests {
             .contains("<symbol id=\"mindfulness\"")
             .contains("<symbol id=\"graduation\"")
             .contains("<symbol id=\"presentation\"")
-            .contains("class=\"feature-avatar campus-photo circle-computing\"")
+            .contains("id=\"circleCatalogue\"")
+            .contains("id=\"dashboardCircleList\"")
             .contains("<use href=\"#graduation\"/>");
 
         assertThat(stylesheet)
@@ -114,6 +115,32 @@ class FrontendStructureTests {
             .doesNotContain("class=\"event-thumb careers\">CF")
             .doesNotContain("class=\"feature-avatar blue-photo\">CS")
             .doesNotContain("class=\"company-mark blue-photo\">UC");
+    }
+
+    @Test
+    void deploymentShellIsInstallableAndPublishesSafetyInformation() throws IOException {
+        var htmlResource = getClass().getResourceAsStream("/static/index.html");
+        var manifestResource = getClass().getResourceAsStream("/static/manifest.webmanifest");
+        var workerResource = getClass().getResourceAsStream("/static/service-worker.js");
+        var privacyResource = getClass().getResourceAsStream("/static/privacy.html");
+        assertThat(htmlResource).isNotNull();
+        assertThat(manifestResource).isNotNull();
+        assertThat(workerResource).isNotNull();
+        assertThat(privacyResource).isNotNull();
+
+        var html = new String(htmlResource.readAllBytes(), StandardCharsets.UTF_8);
+        var worker = new String(workerResource.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(html)
+                .contains("rel=\"manifest\"")
+                .contains("/privacy.html")
+                .contains("/acceptable-use.html")
+                .contains("/accessibility.html")
+                .contains("id=\"circleCreateButton\"")
+                .contains("id=\"calendarDownloadButton\"");
+        assertThat(worker)
+                .contains("/offline.html")
+                .contains("url.pathname.startsWith('/api/')")
+                .doesNotContain("caches.open(SHELL_CACHE).then((cache) => cache.add('/')");
     }
 
     @Test
