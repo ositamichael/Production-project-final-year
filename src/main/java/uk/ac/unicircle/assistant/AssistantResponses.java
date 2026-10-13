@@ -1,6 +1,8 @@
 package uk.ac.unicircle.assistant;
 
+import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 
 final class AssistantResponses {
     private AssistantResponses() {
@@ -19,5 +21,30 @@ final class AssistantResponses {
     }
 
     record Status(boolean enabled, String level, List<AssistantMode> modes, String message) {
+    }
+
+    record ConversationSummary(
+            UUID id,
+            String title,
+            AssistantMode mode,
+            String preview,
+            OffsetDateTime createdAt,
+            OffsetDateTime updatedAt) {
+    }
+
+    record ConversationMessage(
+            UUID id,
+            String role,
+            String content,
+            AssistantMode mode,
+            String imageDataUrl,
+            List<Source> sources,
+            String notice,
+            OffsetDateTime createdAt) {
+    }
+
+    record ConversationDetail(
+            ConversationSummary conversation,
+            List<ConversationMessage> messages) {
     }
 }

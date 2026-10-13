@@ -6,7 +6,7 @@ This repository is being rebuilt as a Level 6 final-year software engineering pr
 
 ## Current status
 
-Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, Sprint 7 added transactional campus events and service bookings, Sprint 8 added moderated opportunities and personal application tracking, Sprint 9 added secure lost-and-found reporting, Sprint 10 added a fictional staff review workflow, Sprint 11 expanded the invitation-only pilot into a testable campus experience, Sprint 12 added trusted campus information, private support and live-learning participation, Sprint 13 added structured multi-user acceptance evidence, Sprint 14 added a responsible AI study and campus assistant, Sprint 15 hardened the application for a supervised deployment rehearsal, Sprint 16 added a useful no-cost basic assistant, Sprint 17 broadened it with opt-in sourced public knowledge, and Sprint 18 adds a private illustration creator and a phone-style navigation sheet:
+Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, Sprint 7 added transactional campus events and service bookings, Sprint 8 added moderated opportunities and personal application tracking, Sprint 9 added secure lost-and-found reporting, Sprint 10 added a fictional staff review workflow, Sprint 11 expanded the invitation-only pilot into a testable campus experience, Sprint 12 added trusted campus information, private support and live-learning participation, Sprint 13 added structured multi-user acceptance evidence, Sprint 14 added a responsible AI study and campus assistant, Sprint 15 hardened the application for a supervised deployment rehearsal, Sprint 16 added a useful no-cost basic assistant, Sprint 17 broadened it with opt-in sourced public knowledge, Sprint 18 added a private illustration creator and a phone-style navigation sheet, and Sprint 19 adds focused mobile workspaces and persistent Ask UniCircle conversations:
 
 - Spring Boot 4.1.1 with Java 21 as the target language level.
 - A responsive desktop, tablet and mobile dashboard prototype.
@@ -68,6 +68,8 @@ Sprint 1 established the testable engineering foundation, Sprint 2 added the acc
 - Input moderation, per-account rate limiting, secure server-side credentials and a clear setup state when AI is not enabled.
 - A deterministic no-cost assistant that answers supported computing, programming, study, project-planning, campus and simple calculation questions without an external AI account.
 - A private no-cost SVG illustration creator for downloadable posters, banners and concept graphics. It runs inside the UniCircle server and is deliberately not described as photorealistic generative AI.
+- Account- or browser-session-scoped Ask UniCircle conversation history, with a New chat workflow and persisted questions, answers, sources and generated illustrations.
+- Focused phone layouts that remove dashboard-only greeting and search content from feature workspaces and give an open private conversation the available app screen.
 - An optional public-knowledge fallback for wider factual questions, with a visible Wikipedia source and no payment or provider key.
 - Explicit per-question public-lookup consent, shortened search topics and sensitive-input blocking before any external request.
 - Honest boundaries for unsupported questions: no-cost mode does not claim unrestricted reasoning, official live university data, arbitrary code execution or unlimited photorealistic image generation.
@@ -151,6 +153,10 @@ UniCircle begins as a modular monolith. This keeps deployment manageable for a f
 - [`docs/sprints/13-staging-acceptance-evidence.md`](docs/sprints/13-staging-acceptance-evidence.md)
 - [`docs/sprints/14-responsible-ai-assistant.md`](docs/sprints/14-responsible-ai-assistant.md)
 - [`docs/sprints/15-deployment-hardening.md`](docs/sprints/15-deployment-hardening.md)
+- [`docs/sprints/16-no-cost-basic-assistant.md`](docs/sprints/16-no-cost-basic-assistant.md)
+- [`docs/sprints/17-sourced-public-knowledge.md`](docs/sprints/17-sourced-public-knowledge.md)
+- [`docs/sprints/18-mobile-shell-and-private-illustrations.md`](docs/sprints/18-mobile-shell-and-private-illustrations.md)
+- [`docs/sprints/19-focused-mobile-workspaces.md`](docs/sprints/19-focused-mobile-workspaces.md)
 
 ## Branching and assessment evidence
 

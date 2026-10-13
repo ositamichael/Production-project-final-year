@@ -13,4 +13,9 @@ final class AssistantRequests {
             @NotNull AssistantMode mode,
             Boolean allowPublicLookup) {
     }
+
+    record CreateConversationRequest(
+            @Size(max = 120) String title,
+            AssistantMode mode) {
+    }
 }

@@ -195,12 +195,16 @@ class FrontendStructureTests {
                 .contains("data-assistant-mode=\"IMAGE_STUDIO\"")
                 .contains("id=\"assistantStatusBadge\"")
                 .contains("id=\"assistantLiveIndicator\"")
+                .contains("id=\"assistantNewChat\"")
+                .contains("id=\"assistantConversationList\"")
+                .contains("id=\"assistantChatTitle\"")
                 .contains("Follow your university's assessment rules")
                 .contains("do not enter passwords, personal data or confidential information");
         assertThat(script)
                 .contains("setNavigationOpen")
                 .contains("/api/assistant/status")
                 .contains("/api/assistant/ask")
+                .contains("/api/assistant/conversations")
                 .contains("result.sources")
                 .contains("result.imageDataUrl")
                 .contains("unicircle-illustration.svg");
