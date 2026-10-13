@@ -25,15 +25,15 @@ class AssistantService {
     }
 
     AssistantResponses.Status status() {
-        return new AssistantResponses.Status(gateway.enabled(), gateway.advancedEnabled() ? "ADVANCED" : "BASIC",
+        return new AssistantResponses.Status(gateway.enabled(), gateway.advancedEnabled() ? "ADVANCED" : "KNOWLEDGE",
                 Arrays.asList(AssistantMode.values()), gateway.advancedEnabled()
                         ? "Advanced AI, sourced web research, code analysis and image creation are available."
-                        : "The no-cost basic assistant is active for common computing, study and UniCircle questions. Live web research, code execution and image rendering are not enabled.");
+                        : "The no-cost knowledge assistant is active. It combines reviewed local guidance with optional, sourced public-knowledge retrieval; unrestricted reasoning, code execution and image rendering are not enabled.");
     }
 
     AssistantResponses.Answer ask(String username, AssistantRequests.AskRequest request) {
         enforceRateLimit(username);
-        return gateway.answer(request.mode(), request.message().trim());
+        return gateway.answer(request.mode(), request.message().trim(), Boolean.TRUE.equals(request.allowPublicLookup()));
     }
 
     private void enforceRateLimit(String username) {

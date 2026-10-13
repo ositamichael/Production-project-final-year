@@ -11,7 +11,9 @@ The server now selects one of two implementations behind the existing assistant 
 - **Basic** uses a deterministic Java knowledge engine stored and reviewed with the application.
 - **Advanced** uses the existing external provider integration only when a private server-side key is configured.
 
-The public status endpoint reports the active level. The interface uses this response to display **Basic assistant active** or **Advanced AI workspace**, so the deployment never claims capabilities it does not have.
+Sprint 17 extends Basic mode with a separate opt-in public-knowledge retriever. It sends only a shortened, screened topic to the English Wikipedia API, returns an attributed extract and never presents a source-free lookup as fact.
+
+The public status endpoint reports the active level. The interface uses this response to display **Knowledge assistant active** or **Advanced AI workspace**, so the deployment never claims capabilities it does not have.
 
 ## Supported basic guidance
 
@@ -26,7 +28,7 @@ The public status endpoint reports the active level. The interface uses this res
 
 ## Safety and honesty
 
-The assistant warns users not to enter passwords or Authenticator codes. It does not complete assessed work on a student's behalf. It does not claim to search the live web, verify changing university facts, understand arbitrary large programs or generate an image in Basic mode. Unsupported questions receive a clear boundary and suggested supported topics.
+The assistant warns users not to enter passwords or Authenticator codes. It does not complete assessed work on a student's behalf. Public retrieval is off until the user chooses it, obvious personal and secret data is blocked, and the interface explains which public service receives the shortened topic. It does not claim to verify changing university facts, understand arbitrary large programs or generate an image in no-cost mode. Unsupported questions receive a clear boundary rather than an invented answer.
 
 ## Acceptance evidence
 

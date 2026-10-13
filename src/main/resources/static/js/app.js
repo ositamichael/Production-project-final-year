@@ -1591,7 +1591,7 @@ bookButton?.addEventListener('click', () => {
 let activeAssistantMode = 'GENERAL';
 let assistantStatusLoaded = false;
 const assistantModeLabels = new Map([
-  ['GENERAL', 'Smart help · questions, ideas and practical tasks'],
+  ['GENERAL', 'Smart help · local guidance and public sources'],
   ['UNIVERSITY_RESEARCH', 'University research · planning and source guidance'],
   ['STUDY_COACH', 'Study coach · explanations, practice and feedback'],
   ['CODE_LAB', 'Code lab · design, debug and test programs'],
@@ -1609,7 +1609,7 @@ async function answerQuestion(question) {
   const response = document.querySelector('#assistantResponse');
   response.textContent = 'Thinking…';
   try {
-    const result = await socialPost('/api/assistant/ask', { message: question, mode: activeAssistantMode });
+    const result = await socialPost('/api/assistant/ask', { message: question, mode: activeAssistantMode, allowPublicLookup: false });
     response.textContent = result.answer;
   } catch (error) {
     response.textContent = error.message;
@@ -1688,7 +1688,8 @@ async function answerPageQuestion(question) {
   const submit = form?.querySelector('button');
   if (submit) submit.disabled = true;
   try {
-    const result = await socialPost('/api/assistant/ask', { message: question, mode: activeAssistantMode });
+    const allowPublicLookup = document.querySelector('#assistantPublicLookup')?.checked === true;
+    const result = await socialPost('/api/assistant/ask', { message: question, mode: activeAssistantMode, allowPublicLookup });
     thinking.remove();
     appendAssistantResult(responsePanel, result);
   } catch (error) {
@@ -1714,9 +1715,9 @@ async function loadAssistantStatus() {
     const status = await response.json();
     assistantStatusLoaded = true;
     const advanced = status.level === 'ADVANCED';
-    badge.textContent = advanced ? 'Advanced AI workspace' : 'Basic assistant active';
-    indicator.classList.toggle('offline', !advanced);
-    indicator.innerHTML = `<i></i>${advanced ? 'Advanced' : 'Basic'}`;
+    badge.textContent = advanced ? 'Advanced AI workspace' : 'Knowledge assistant active';
+    indicator.classList.toggle('offline', false);
+    indicator.innerHTML = `<i></i>${advanced ? 'Advanced' : 'Sourced'}`;
   } catch {
     badge.textContent = 'Service unavailable';
     indicator.classList.add('offline');

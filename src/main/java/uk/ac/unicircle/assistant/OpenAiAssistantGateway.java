@@ -43,6 +43,7 @@ class OpenAiAssistantGateway implements AssistantGateway {
     private final ObjectMapper mapper;
     private final HttpClient client;
     private final BasicAssistantEngine basicAssistant;
+    private final PublicKnowledgeAssistant publicKnowledgeAssistant;
     private final String apiKey;
     private final String model;
     private final String imageModel;
@@ -50,11 +51,13 @@ class OpenAiAssistantGateway implements AssistantGateway {
     OpenAiAssistantGateway(
             ObjectMapper mapper,
             BasicAssistantEngine basicAssistant,
+            PublicKnowledgeAssistant publicKnowledgeAssistant,
             @Value("${OPENAI_API_KEY:}") String apiKey,
             @Value("${unicircle.assistant.model:gpt-6.1-sol}") String model,
             @Value("${unicircle.assistant.image-model:gpt-image-2.5-flare}") String imageModel) {
         this.mapper = mapper;
         this.basicAssistant = basicAssistant;
+        this.publicKnowledgeAssistant = publicKnowledgeAssistant;
         this.apiKey = apiKey == null ? "" : apiKey.trim();
         this.model = model;
         this.imageModel = imageModel;
@@ -72,10 +75,11 @@ class OpenAiAssistantGateway implements AssistantGateway {
     }
 
     @Override
-    public AssistantResponses.Answer answer(AssistantMode mode, String message) {
-        if (!advancedEnabled()) {
-            return basicAssistant.answer(mode, message);
-        }
+    public AssistantResponses.Answer answer(AssistantMode mode, String message, boolean allowPublicLookup) {
+        var reviewedAnswer = basicAssistant.answerIfKnown(mode, message);
+        if (reviewedAnswer.isPresent()) return reviewedAnswer.get();
+        if (!advancedEnabled()) return publicKnowledgeAssistant.answer(mode, message, allowPublicLookup);
+        if (!allowPublicLookup) return publicKnowledgeAssistant.answer(mode, message, false);
         if (isFlagged(message)) {
             return new AssistantResponses.Answer(
                     "I cannot help with that request as written. I can still help with a safe learning, wellbeing or campus-support alternative.",

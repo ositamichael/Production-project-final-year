@@ -6,7 +6,7 @@ This repository is being rebuilt as a Level 6 final-year software engineering pr
 
 ## Current status
 
-Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, Sprint 7 added transactional campus events and service bookings, Sprint 8 added moderated opportunities and personal application tracking, Sprint 9 added secure lost-and-found reporting, Sprint 10 added a fictional staff review workflow, Sprint 11 expanded the invitation-only pilot into a testable campus experience, Sprint 12 added trusted campus information, private support and live-learning participation, Sprint 13 added structured multi-user acceptance evidence, Sprint 14 added a responsible AI study and campus assistant, Sprint 15 hardened the application for a supervised deployment rehearsal, and Sprint 16 adds a useful no-cost basic assistant:
+Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, Sprint 7 added transactional campus events and service bookings, Sprint 8 added moderated opportunities and personal application tracking, Sprint 9 added secure lost-and-found reporting, Sprint 10 added a fictional staff review workflow, Sprint 11 expanded the invitation-only pilot into a testable campus experience, Sprint 12 added trusted campus information, private support and live-learning participation, Sprint 13 added structured multi-user acceptance evidence, Sprint 14 added a responsible AI study and campus assistant, Sprint 15 hardened the application for a supervised deployment rehearsal, Sprint 16 added a useful no-cost basic assistant, and Sprint 17 broadens it with opt-in sourced public knowledge:
 
 - Spring Boot 4.1.1 with Java 21 as the target language level.
 - A responsive desktop, tablet and mobile dashboard prototype.
@@ -66,7 +66,9 @@ Sprint 1 established the testable engineering foundation, Sprint 2 added the acc
 - Server-side OpenAI Responses API integration with web search, visible source links, code execution and image generation tools.
 - Input moderation, per-account rate limiting, secure server-side credentials and a clear setup state when AI is not enabled.
 - A deterministic no-cost assistant that answers supported computing, programming, study, project-planning, campus and simple calculation questions without an external AI account.
-- Honest boundaries for unsupported questions: basic mode does not claim live web research, unrestricted code analysis or image rendering.
+- An optional public-knowledge fallback for wider factual questions, with a visible Wikipedia source and no payment or provider key.
+- Explicit per-question public-lookup consent, shortened search topics and sensitive-input blocking before any external request.
+- Honest boundaries for unsupported questions: no-cost mode does not claim unrestricted reasoning, official live university data, arbitrary code execution or image rendering.
 - Academic-integrity instructions that support explanation, practice, feedback and debugging without impersonating a student or fabricating research.
 - Database-backed campus circles with university isolation, search, filtering, creation and real join/leave membership.
 - Downloadable standards-based calendar files for registered events and confirmed bookings.
@@ -95,9 +97,11 @@ No local PostgreSQL installation is required for the default profile. It uses an
 
 ## Ask UniCircle assistant setup
 
-Ask UniCircle works without an account, payment or external AI key. In **Basic** mode it provides deterministic guidance for common computing concepts, beginner Java, C#, Python, SQL, HTML/CSS/JavaScript, Spring Boot, REST APIs, debugging, testing, Agile, MoSCoW, risk registers, final-year-project planning, UniCircle use and simple arithmetic. Because these answers come from a reviewed local knowledge engine, it remains fast and predictable on the small Render service.
+Ask UniCircle works without an account, payment or external AI key. Its reviewed local engine provides deterministic guidance for common computing concepts, beginner Java, C#, Python, SQL, HTML/CSS/JavaScript, Spring Boot, REST APIs, debugging, testing, Agile, MoSCoW, risk registers, final-year-project planning, UniCircle use and simple arithmetic. Because these answers run inside the application, they remain fast and predictable on the small Render service.
 
-Basic mode is deliberately limited. It does not search the live web, analyse arbitrary large programs, verify changing university information or render images. It gives an honest limitation message instead of inventing an answer. Admissions, fees, visas, policies and deadlines must still be checked on an official source.
+For a wider stable factual question, the user may explicitly enable **Use public sources**. UniCircle screens the text for obvious secrets and personal identifiers, shortens it to a search topic, retrieves a current English Wikipedia introduction and displays the page as a source. The control is off by default, the full conversation is not sent and a source-free failure never becomes an invented answer. This is retrieval, not a claim that Wikipedia is always correct or that UniCircle contains a perfect general-purpose language model.
+
+No-cost mode is deliberately limited. It does not analyse arbitrary large programs, verify changing university information, execute code or render images. Admissions, fees, visas, policies, deadlines and other high-stakes or current facts must still be checked on an official source.
 
 The existing advanced integration remains optional. If a future approved deployment receives a valid `OPENAI_API_KEY`, web research, broader answers, code execution and image generation become available automatically. Add the key only as a private server-side environment variable; never place it in JavaScript, commit it to Git or ask a student to enter it. Guest requests receive the same validation and session-based usage limit as signed-in requests; private profiles, messaging and university data remain account-protected.
 
