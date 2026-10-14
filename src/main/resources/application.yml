@@ -50,6 +50,8 @@ unicircle:
     turn-urls: ${UNICIRCLE_TURN_URLS:}
     turn-username: ${UNICIRCLE_TURN_USERNAME:}
     turn-credential: ${UNICIRCLE_TURN_CREDENTIAL:}
+  pilot:
+    bootstrap-admin-email: ${UNICIRCLE_BOOTSTRAP_ADMIN_EMAIL:}
   demo:
     username: ${UNICIRCLE_DEMO_USERNAME:student@demo.unicircle.test}
     password: ${UNICIRCLE_DEMO_PASSWORD:CampusDemo!2026}

@@ -15,6 +15,7 @@ class DemoIdentityConfiguration {
     private static final UUID UNIVERSITY_ID = UUID.fromString("2c952dd9-5276-4e44-bf20-3fe98b345101");
     private static final UUID ACCOUNT_ID = UUID.fromString("7ccb9282-ebcb-4ea0-94f1-3af1f84be101");
     private static final UUID STAFF_ID = UUID.fromString("7ccb9282-ebcb-4ea0-94f1-3af1f84be105");
+    private static final UUID ADMIN_ID = UUID.fromString("7ccb9282-ebcb-4ea0-94f1-3af1f84be106");
 
     @Bean
     @Order(10)
@@ -59,6 +60,22 @@ class DemoIdentityConfiguration {
                         null,
                         ProfileVisibility.PRIVATE);
                 accounts.save(reviewer);
+            }
+            if (accounts.findById(ADMIN_ID).isEmpty()) {
+                UserAccount administrator = new UserAccount(
+                        ADMIN_ID,
+                        university,
+                        "fictional-test-campus-administrator",
+                        "admin@demo.university.example",
+                        "Jordan Ellis",
+                        UserRole.ADMIN);
+                administrator.updateProfile(
+                        "Jordan Ellis",
+                        "Fictional administrator for the UniCircle Test Campus.",
+                        "Test Campus Operations",
+                        null,
+                        ProfileVisibility.PRIVATE);
+                accounts.save(administrator);
             }
         };
     }

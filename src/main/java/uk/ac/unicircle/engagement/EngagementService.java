@@ -222,12 +222,19 @@ class EngagementService {
                 JOIN service_offerings service ON service.id = slot.service_id
                 WHERE booking.user_id = ? AND booking.university_id = ?
                   AND booking.status = 'CONFIRMED'
+                UNION ALL
+                SELECT meeting.id, 'MEETING', meeting.title, meeting.location_label,
+                       meeting.starts_at, meeting.ends_at, 'ASSIGNED'
+                FROM meeting_assignments assignment
+                JOIN learning_meetings meeting ON meeting.id = assignment.meeting_id
+                WHERE assignment.user_id = ? AND meeting.university_id = ? AND meeting.published = TRUE
                 ORDER BY 5
                 """, (result, row) -> new ScheduleItemResponse(
                         result.getObject(1, UUID.class), result.getString(2), result.getString(3),
                         result.getString(4), result.getObject(5, OffsetDateTime.class),
                         result.getObject(6, OffsetDateTime.class), result.getString(7)),
-                current.accountId(), current.universityId(), current.accountId(), current.universityId());
+                current.accountId(), current.universityId(), current.accountId(), current.universityId(),
+                current.accountId(), current.universityId());
     }
 
     private List<ServiceSlotResponse> serviceSlots(SignedInAccount current, UUID serviceId) {

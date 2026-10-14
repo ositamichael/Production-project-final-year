@@ -94,6 +94,14 @@ class InformationControllerTests {
         mockMvc.perform(get("/api/campus-information/announcements").with(user(MICHAEL)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].title", hasItem("Room change for tomorrow's lecture")));
+
+        Integer notifications = jdbc.queryForObject("""
+                SELECT COUNT(*) FROM notifications notification
+                JOIN user_accounts account ON account.id = notification.recipient_id
+                WHERE account.email = ? AND notification.notification_type = 'ANNOUNCEMENT'
+                  AND notification.title = ?
+                """, Integer.class, MICHAEL, "Room change for tomorrow's lecture");
+        org.assertj.core.api.Assertions.assertThat(notifications).isEqualTo(1);
     }
 
     @Test
