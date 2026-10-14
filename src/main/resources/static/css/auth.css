@@ -19,8 +19,9 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .trust-list li { display: flex; align-items: center; gap: 10px; }
 .trust-list svg { width: 22px; height: 22px; padding: 4px; border-radius: 50%; background: rgba(42,212,207,.16); fill: none; stroke: #68e4dc; stroke-width: 2.2; }
 .story-footnote { position: relative; z-index: 1; margin: 0; color: #8fa9c8; font-size: .7rem; }
-.auth-form-panel { display: grid; place-items: center; padding: 45px 60px; background: linear-gradient(145deg, #fff, #f8fbff); }
-.auth-form-wrap { width: min(100%, 430px); }
+.auth-form-panel { display: grid; min-width: 0; place-items: center; padding: 45px 60px; background: linear-gradient(145deg, #fff, #f8fbff); }
+.auth-form-wrap { width: 100%; max-width: 430px; min-width: 0; }
+.auth-form-wrap form { min-width: 0; }
 .shield { display: grid; place-items: center; width: 54px; height: 54px; margin-bottom: 20px; border-radius: 16px; background: #e8f2ff; color: var(--blue); }
 .shield svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .section-label { color: var(--blue); }
@@ -30,7 +31,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .auth-message.error { border-color: #ffccd1; background: #fff3f4; color: #91323b; }
 .auth-message.ready { border-color: #bfe8d8; background: #eefaf5; color: #146b53; }
 form label { display: block; margin: 13px 0 6px; color: #29415f; font-size: .72rem; font-weight: 800; }
-.input-control { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 13px; border: 1px solid #cbd9e9; border-radius: 11px; background: #fff; transition: border-color .15s, box-shadow .15s; }
+.input-control { display: flex; min-width: 0; align-items: center; gap: 10px; min-height: 48px; padding: 0 13px; border: 1px solid #cbd9e9; border-radius: 11px; background: #fff; transition: border-color .15s, box-shadow .15s; }
 .input-control:focus-within { border-color: #5c94ec; box-shadow: 0 0 0 4px rgba(33,104,237,.09); }
 .input-control svg { flex: 0 0 auto; width: 20px; height: 20px; fill: none; stroke: #6c809c; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .input-control input, .input-control select { min-width: 0; flex: 1; height: 46px; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: .82rem; }
@@ -40,7 +41,7 @@ form label { display: block; margin: 13px 0 6px; color: #29415f; font-size: .72r
 .sign-in-button { width: 100%; min-height: 50px; margin-top: 20px; border: 0; border-radius: 11px; background: linear-gradient(100deg, #123d7b, #2168ed); color: #fff; cursor: pointer; box-shadow: 0 12px 25px rgba(33,104,237,.2); font-weight: 800; }
 .sign-in-button:disabled { cursor: wait; opacity: .55; }
 .fill-account { width: 100%; margin-top: 10px; padding: 9px; border: 0; background: transparent; color: var(--blue); cursor: pointer; font-size: .7rem; font-weight: 800; }
-.demo-account { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; margin-top: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+.demo-account { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 10px; margin-top: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
 .student-avatar { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(145deg, #5d91d8, #0d3264); color: #fff; font-size: .72rem; font-weight: 850; }
 .demo-account strong, .demo-account small { display: block; }
 .demo-account strong { font-size: .75rem; }.demo-account small { margin-top: 2px; color: var(--muted); font-size: .61rem; }
@@ -50,6 +51,7 @@ form label { display: block; margin: 13px 0 6px; color: #29415f; font-size: .72r
 .back-link { display: block; margin-top: 17px; color: #61748e; text-align: center; font-size: .68rem; font-weight: 750; }
 @media (max-width: 900px) { .auth-shell { grid-template-columns: 1fr; }.auth-story { min-height: 350px; padding: 34px; }.story-content { margin: 70px 0; }.story-content h1 { font-size: 2.7rem; }.auth-form-panel { padding: 45px 28px; } }
 @media (max-width: 520px) { .auth-shell { width: 100%; min-height: 100vh; margin: 0; border: 0; border-radius: 0; }.auth-story { min-height: 300px; padding: 26px 22px; }.story-content { margin: 52px 0 38px; }.story-content h1 { font-size: 2.2rem; }.trust-list { display: none; }.auth-form-panel { padding: 36px 22px; } }
+@media (max-width: 360px) { .auth-form-panel { padding-inline: 16px; }.input-control { gap: 8px; padding-inline: 10px; }.demo-account { grid-template-columns: auto minmax(0,1fr); }.demo-badge { grid-column: 2; width: fit-content; }.auth-form-wrap h2 { font-size: 1.75rem; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; } }
 /* Pilot registration follows the existing sign-in visual language. */
 .pilot-register { margin-top: 1.5rem; padding: 1rem 0; border-top: 1px solid rgba(14, 48, 91, .15); }
