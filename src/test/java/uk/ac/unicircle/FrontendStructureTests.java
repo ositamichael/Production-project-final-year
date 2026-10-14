@@ -14,7 +14,7 @@ class FrontendStructureTests {
     private static final String[] PAGE_NAMES = {
         "campus", "today", "circles", "messages", "events", "services",
         "opportunities", "map", "updates", "live-classes", "wellbeing",
-        "lost-found", "pilot-tests", "assistant"
+        "lost-found", "pilot-tests", "admin", "assistant"
     };
 
     @Test
@@ -86,6 +86,32 @@ class FrontendStructureTests {
                 .contains("/api/pilot-tests")
                 .contains("loadPilotTests")
                 .contains("UniCircle Staging Campus");
+    }
+
+    @Test
+    void administratorWorkspaceManagesTestCampusRecordsWithoutClaimingExternalIntegration() throws IOException {
+        var htmlResource = getClass().getResourceAsStream("/static/index.html");
+        var scriptResource = getClass().getResourceAsStream("/static/js/app.js");
+        assertThat(htmlResource).isNotNull();
+        assertThat(scriptResource).isNotNull();
+
+        var html = new String(htmlResource.readAllBytes(), StandardCharsets.UTF_8);
+        var script = new String(scriptResource.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(html)
+                .contains("id=\"adminNav\"")
+                .contains("id=\"admin-page\"")
+                .contains("Test Campus Admin")
+                .contains("This does not control an external university")
+                .contains("id=\"adminEventForm\"")
+                .contains("id=\"adminServiceForm\"")
+                .contains("id=\"adminMeetingForm\"")
+                .contains("id=\"adminOpportunityForm\"")
+                .contains("id=\"adminAuditList\"");
+        assertThat(script)
+                .contains("/api/admin/overview")
+                .contains("/api/admin/users")
+                .contains("loadAdminWorkspace")
+                .contains("profile.role === 'ADMIN'");
     }
 
     @Test
@@ -338,7 +364,8 @@ class FrontendStructureTests {
             .contains("Michael Carter — connected with Aisha")
             .contains("aisha.khan@students.unicircle.test")
             .contains("James Wilson — new student")
-            .contains("Use separate browser sessions to test reports, review decisions and live chat");
+            .contains("Use separate browser sessions to test administration, bookings, reports and live chat")
+            .contains("admin@demo.university.example");
     }
 
     @Test

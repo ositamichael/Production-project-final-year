@@ -76,6 +76,9 @@ public class SecurityConfiguration {
                 .password(passwordEncoder.encode(password)).roles("STUDENT").build();
         var reviewer = User.withUsername("reviewer@demo.university.example")
                 .password(passwordEncoder.encode(password)).roles("STAFF").build();
-        return new InMemoryUserDetailsManager(demoStudent, michael, aisha, james, sophie, reviewer);
+        var administrator = User.withUsername("admin@demo.university.example")
+                .password(passwordEncoder.encode(password)).roles("ADMIN").build();
+        return new InMemoryUserDetailsManager(
+                demoStudent, michael, aisha, james, sophie, reviewer, administrator);
     }
 }

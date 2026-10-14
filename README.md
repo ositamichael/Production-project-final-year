@@ -6,7 +6,7 @@ This repository is being rebuilt as a Level 6 final-year software engineering pr
 
 ## Current status
 
-Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, Sprint 7 added transactional campus events and service bookings, Sprint 8 added moderated opportunities and personal application tracking, Sprint 9 added secure lost-and-found reporting, Sprint 10 added a fictional staff review workflow, Sprint 11 expanded the invitation-only pilot into a testable campus experience, Sprint 12 added trusted campus information, private support and live-learning participation, Sprint 13 added structured multi-user acceptance evidence, Sprint 14 added a responsible AI study and campus assistant, Sprint 15 hardened the application for a supervised deployment rehearsal, Sprint 16 added a useful no-cost basic assistant, Sprint 17 broadened it with opt-in sourced public knowledge, Sprint 18 added a private illustration creator and a phone-style navigation sheet, and Sprint 19 adds focused mobile workspaces and persistent Ask UniCircle conversations:
+Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, Sprint 7 added transactional campus events and service bookings, Sprint 8 added moderated opportunities and personal application tracking, Sprint 9 added secure lost-and-found reporting, Sprint 10 added a fictional staff review workflow, Sprint 11 expanded the invitation-only pilot into a testable campus experience, Sprint 12 added trusted campus information, private support and live-learning participation, Sprint 13 added structured multi-user acceptance evidence, Sprint 14 added a responsible AI study and campus assistant, Sprint 15 hardened the application for a supervised deployment rehearsal, Sprint 16 added a useful no-cost basic assistant, Sprint 17 broadened it with opt-in sourced public knowledge, Sprint 18 added a private illustration creator and a phone-style navigation sheet, Sprint 19 added focused mobile workspaces and persistent Ask UniCircle conversations, and Sprint 20 adds permission-aware Test Campus administration and linked multi-user schedule evidence:
 
 - Spring Boot 4.1.1 with Java 21 as the target language level.
 - A responsive desktop, tablet and mobile dashboard prototype.
@@ -18,6 +18,10 @@ Sprint 1 established the testable engineering foundation, Sprint 2 added the acc
 - Persisted direct conversations and messages with server-enforced membership checks.
 - Authenticated WebSocket events that refresh messages and notifications across signed-in browser sessions.
 - Account-specific, database-backed notifications and unread counts.
+- A university-scoped Test Campus administrator dashboard for tester roles, suspension, activities, availability, support, safety and audit records.
+- Administrator-created events, services, opportunities and assigned live sessions with persistent notifications and personal-schedule propagation.
+- Immediate server-side suspension enforcement, including sessions that were already signed in.
+- Permission-aware campus search across people, events, services, circles and opportunities.
 - Immediate account blocking that removes private messaging permission.
 - Confidential safeguarding reports with validated reasons and an auditable review state.
 - A university-scoped event catalogue with account-specific registration, cancellation, remaining-capacity calculation and schedule integration.
@@ -157,6 +161,8 @@ UniCircle begins as a modular monolith. This keeps deployment manageable for a f
 - [`docs/sprints/17-sourced-public-knowledge.md`](docs/sprints/17-sourced-public-knowledge.md)
 - [`docs/sprints/18-mobile-shell-and-private-illustrations.md`](docs/sprints/18-mobile-shell-and-private-illustrations.md)
 - [`docs/sprints/19-focused-mobile-workspaces.md`](docs/sprints/19-focused-mobile-workspaces.md)
+- [`docs/sprints/20-test-campus-administration.md`](docs/sprints/20-test-campus-administration.md)
+- [`docs/qa/test-campus-evidence-2026-10-14.md`](docs/qa/test-campus-evidence-2026-10-14.md)
 
 ## Branching and assessment evidence
 

@@ -133,6 +133,8 @@ class InformationService {
                 publisher.roleLabel(), request.category(), request.audienceType(), audienceLabel,
                 request.title().strip(), request.body().strip(), clean(request.actionLabel()),
                 clean(request.actionUrl()), request.pinned(), urgent, publishedAt, request.expiresAt());
+        notifyAnnouncementAudience(current, id, request.audienceType(), audienceLabel,
+                request.title().strip(), urgent);
         return new AnnouncementResponse(id, publisher.name(), publisher.roleLabel(), request.category(),
                 request.audienceType(), audienceLabel, request.title().strip(), request.body().strip(),
                 clean(request.actionLabel()), clean(request.actionUrl()), request.pinned(), urgent,
@@ -171,6 +173,9 @@ class InformationService {
                 """, id, current.universityId(), current.accountId(), reference,
                 request.category(), request.subject().strip(), request.description().strip(),
                 priority, team);
+        createNotification(current.universityId(), current.accountId(), "SUPPORT",
+                "Support request created", reference + " is stored in UniCircle for Test Campus follow-up.",
+                "SUPPORT_CASE", id);
         return supportCase(current, id);
     }
 
@@ -357,6 +362,50 @@ class InformationService {
                     "A verified staff publishing account is required.");
         }
         return publishers.getFirst();
+    }
+
+    private void notifyAnnouncementAudience(SignedInAccount publisher, UUID announcementId,
+            String audienceType, String audienceLabel, String title, boolean urgent) {
+        List<UUID> recipients = switch (audienceType) {
+            case "COURSE" -> jdbc.query("""
+                    SELECT id FROM user_accounts
+                    WHERE university_id = ? AND account_status = 'ACTIVE'
+                      AND LOWER(COALESCE(course_name, '')) = LOWER(?)
+                    """, (result, row) -> result.getObject(1, UUID.class),
+                    publisher.universityId(), audienceLabel);
+            case "YEAR" -> jdbc.query("""
+                    SELECT id FROM user_accounts
+                    WHERE university_id = ? AND account_status = 'ACTIVE'
+                      AND CAST(year_of_study AS VARCHAR) = ?
+                    """, (result, row) -> result.getObject(1, UUID.class),
+                    publisher.universityId(), audienceLabel);
+            case "MODULE" -> jdbc.query("""
+                    SELECT DISTINCT account.id
+                    FROM user_accounts account
+                    JOIN enrolments enrolment ON enrolment.user_id = account.id AND enrolment.status = 'ACTIVE'
+                    JOIN programme_modules link ON link.programme_id = enrolment.programme_id
+                    JOIN academic_modules module ON module.id = link.module_id
+                    WHERE account.university_id = ? AND account.account_status = 'ACTIVE'
+                      AND (LOWER(module.code) = LOWER(?) OR LOWER(module.title) = LOWER(?))
+                    """, (result, row) -> result.getObject(1, UUID.class),
+                    publisher.universityId(), audienceLabel, audienceLabel);
+            default -> jdbc.query("""
+                    SELECT id FROM user_accounts
+                    WHERE university_id = ? AND account_status = 'ACTIVE'
+                    """, (result, row) -> result.getObject(1, UUID.class), publisher.universityId());
+        };
+        String body = (urgent ? "Urgent Test Campus update: " : "Test Campus update: ") + title;
+        recipients.forEach(accountId -> createNotification(publisher.universityId(), accountId,
+                "ANNOUNCEMENT", title, body, "ANNOUNCEMENT", announcementId));
+    }
+
+    private void createNotification(UUID universityId, UUID recipientId, String type,
+            String title, String body, String resourceType, UUID resourceId) {
+        jdbc.update("""
+                INSERT INTO notifications
+                  (id, university_id, recipient_id, notification_type, title, body, resource_type, resource_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, UUID.randomUUID(), universityId, recipientId, type, title, body, resourceType, resourceId);
     }
 
     private String clean(String value) {

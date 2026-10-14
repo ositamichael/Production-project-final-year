@@ -13,10 +13,12 @@ const notificationSummary = document.querySelector('#notificationSummary');
 const messageUnreadBadge = document.querySelector('#messageUnreadBadge');
 const mobileMessageUnreadBadge = document.querySelector('#mobileMessageUnreadBadge');
 const globalSearch = document.querySelector('#globalSearch');
+const globalSearchResults = document.querySelector('#globalSearchResults');
 const searchEmpty = document.querySelector('#searchEmpty');
 let pilotMode = false;
 let signedIn = false;
 let locationRefreshTimer;
+let campusRefreshTimer;
 let lastDialogTrigger = null;
 let lastNavigationTrigger = null;
 
@@ -105,6 +107,7 @@ const hashToPage = new Map([
   ['services-page', 'services'], ['opportunities-page', 'opportunities'], ['map-page', 'map'],
   ['wellbeing-page', 'wellbeing'], ['lost-found-page', 'lost-found'],
   ['lost-found-review-page', 'lost-found-review'], ['pilot-tests-page', 'pilot-tests'],
+  ['admin-page', 'admin'],
   ['assistant-page', 'assistant']
 ]);
 
@@ -141,6 +144,7 @@ function showPage(pageName, { updateHistory = true, focus = true } = {}) {
   if (nextPage.dataset.page === 'lost-found-review' && staffReviewAccess) void loadStaffReview();
   if (nextPage.dataset.page === 'map' && pilotMode) void loadLocationPanel();
   if (nextPage.dataset.page === 'pilot-tests' && pilotMode) void loadPilotTests();
+  if (nextPage.dataset.page === 'admin' && adminAccess) void loadAdminWorkspace();
   if (nextPage.dataset.page === 'assistant') void Promise.all([loadAssistantStatus(), loadAssistantWorkspace()]);
   if (nextPage.dataset.page !== 'map') clearInterval(locationRefreshTimer);
 }
@@ -204,8 +208,16 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
+let globalSearchTimer;
 globalSearch?.addEventListener('input', () => {
   const query = globalSearch.value.trim().toLowerCase();
+  if (signedIn && query.length >= 2) {
+    clearTimeout(globalSearchTimer);
+    globalSearchTimer = setTimeout(() => loadGlobalSearch(query), 220);
+  } else if (globalSearchResults) {
+    globalSearchResults.hidden = true;
+    globalSearchResults.replaceChildren();
+  }
   let visible = 0;
   document.querySelectorAll('.searchable').forEach((item) => {
     const matches = !query || item.dataset.search?.includes(query) || item.textContent.toLowerCase().includes(query);
@@ -213,6 +225,52 @@ globalSearch?.addEventListener('input', () => {
     if (matches) visible += 1;
   });
   searchEmpty.hidden = visible !== 0;
+});
+
+async function loadGlobalSearch(query) {
+  try {
+    const response = await fetch(`/api/search?query=${encodeURIComponent(query)}`, { headers: { Accept: 'application/json' } });
+    if (!response.ok) throw new Error();
+    const results = await response.json();
+    if (globalSearch.value.trim().toLowerCase() !== query) return;
+    globalSearchResults.replaceChildren();
+    if (!results.length) {
+      const empty = document.createElement('p');
+      empty.textContent = 'No permitted Test Campus records match this search.';
+      globalSearchResults.append(empty);
+    } else {
+      results.forEach((result) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.setAttribute('role', 'option');
+        const type = document.createElement('span');
+        type.textContent = result.type.toLowerCase().replaceAll('_', ' ');
+        const copy = document.createElement('span');
+        const title = document.createElement('strong');
+        title.textContent = result.title;
+        const subtitle = document.createElement('small');
+        subtitle.textContent = result.subtitle;
+        copy.append(title, subtitle);
+        button.append(type, copy);
+        button.addEventListener('click', () => {
+          const pageName = hashToPage.get(result.destination.slice(1)) ?? 'campus';
+          globalSearchResults.hidden = true;
+          globalSearch.value = '';
+          showPage(pageName);
+        });
+        globalSearchResults.append(button);
+      });
+    }
+    globalSearchResults.hidden = false;
+  } catch {
+    globalSearchResults.hidden = true;
+  }
+}
+
+document.addEventListener('pointerdown', (event) => {
+  if (!globalSearchResults?.hidden && !globalSearchResults.contains(event.target) && !globalSearch.contains(event.target)) {
+    globalSearchResults.hidden = true;
+  }
 });
 
 document.querySelectorAll('.filter-row').forEach((row) => {
@@ -310,6 +368,7 @@ const lostFoundCategoryFilter = document.querySelector('#lostFoundCategoryFilter
 const lostFoundReportDialog = document.querySelector('#lostFoundReportDialog');
 const lostFoundDetailDialog = document.querySelector('#lostFoundDetailDialog');
 const staffReviewNav = document.querySelector('#staffReviewNav');
+const adminNav = document.querySelector('#adminNav');
 const staffReviewDialog = document.querySelector('#staffReviewDialog');
 const staffReviewList = document.querySelector('#staffReviewList');
 const circleCatalogue = document.querySelector('#circleCatalogue');
@@ -372,6 +431,7 @@ let selectedLostFoundType = '';
 let lostFoundView = 'catalogue';
 let activeLostFoundReportId = null;
 let staffReviewAccess = false;
+let adminAccess = false;
 let staffPendingReports = [];
 let activeStaffReportId = null;
 let loadedCircles = [];
@@ -2036,7 +2096,10 @@ function showSignedOutActions() {
   }
   staffReviewAccess = false;
   staffReviewNav.hidden = true;
+  adminAccess = false;
+  adminNav.hidden = true;
   if (announcementPublisherPanel) announcementPublisherPanel.hidden = true;
+  clearInterval(campusRefreshTimer);
 }
 
 function showSignedInActions() {
@@ -2081,7 +2144,9 @@ function updateVisibleIdentity(profile) {
 function populateProfile(profile) {
   renderSignedInAccountStates();
   staffReviewAccess = ['STAFF', 'ADMIN'].includes(profile.role);
+  adminAccess = profile.role === 'ADMIN';
   staffReviewNav.hidden = !staffReviewAccess;
+  adminNav.hidden = !adminAccess;
   if (announcementPublisherPanel) announcementPublisherPanel.hidden = !staffReviewAccess;
   document.querySelector('#profileDisplayName').value = profile.displayName || '';
   document.querySelector('#profileCourse').value = profile.courseName || '';
@@ -2102,6 +2167,8 @@ function populateProfile(profile) {
     document.querySelector('#universityAccountButton .verified-dot').hidden = true;
   }
   connectSocialRealtime();
+  clearInterval(campusRefreshTimer);
+  campusRefreshTimer = setInterval(refreshActiveCampusData, 20000);
   void Promise.all([
     loadNotifications(),
     refreshConversationSummary(),
@@ -2115,9 +2182,27 @@ function populateProfile(profile) {
     loadMeetings(),
     loadSupportCases(),
     loadCircles(),
+    ...(adminAccess ? [loadAdminWorkspace()] : []),
     ...(staffReviewAccess ? [loadStaffReview()] : [])
   ]);
 }
+
+function refreshActiveCampusData() {
+  if (!signedIn || document.hidden) return;
+  void loadNotifications();
+  const page = document.body.dataset.activePage;
+  if (page === 'campus') void Promise.all([loadAnnouncements(), loadCampusSchedule(), loadCampusEvents(), loadOpportunities()]);
+  else if (page === 'today') void loadCampusSchedule();
+  else if (page === 'updates') void loadAnnouncements();
+  else if (page === 'events') void loadCampusEvents();
+  else if (page === 'services') void Promise.all([loadCampusServices(), loadCampusBookings()]);
+  else if (page === 'opportunities') void loadOpportunities();
+  else if (page === 'live-classes') void loadMeetings();
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) refreshActiveCampusData();
+});
 
 function clearUniversityContext() {
   universityContext.hidden = true;
@@ -2242,6 +2327,28 @@ async function socialPost(url, body) {
     if (response.status === 429) throw new Error('You have reached the request limit. Please wait a few minutes and try again.');
     if (response.status === 502) throw new Error('The connected service is temporarily unavailable. Please try again shortly.');
     throw new Error('The request could not be completed. Please refresh and try again.');
+  }
+  const responseBody = await response.text();
+  return responseBody ? JSON.parse(responseBody) : null;
+}
+
+async function socialPatch(url, body) {
+  const csrf = await csrfToken();
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      [csrf.headerName]: csrf.token
+    },
+    body: JSON.stringify(body)
+  });
+  if (!response.ok) {
+    if (response.status === 400) throw new Error('Check the information supplied and try again.');
+    if (response.status === 401) throw new Error('Sign in to continue.');
+    if (response.status === 403) throw new Error('This action requires Test Campus administrator access.');
+    if (response.status === 409) throw new Error('This change conflicts with the current record. Refresh and try again.');
+    throw new Error('The change could not be saved. Please refresh and try again.');
   }
   const responseBody = await response.text();
   return responseBody ? JSON.parse(responseBody) : null;
@@ -4146,6 +4253,260 @@ async function loadPilotTests() {
     pilotTestList.append(state);
   }
 }
+
+const adminMetrics = document.querySelector('#adminMetrics');
+const adminUserList = document.querySelector('#adminUserList');
+const adminSupportList = document.querySelector('#adminSupportList');
+const adminSafetyList = document.querySelector('#adminSafetyList');
+const adminAuditList = document.querySelector('#adminAuditList');
+const adminMeetingAssignees = document.querySelector('#adminMeetingAssignees');
+const adminOpportunityPublisher = document.querySelector('#adminOpportunityPublisher');
+const adminActivityStatus = document.querySelector('#adminActivityStatus');
+let adminUsers = [];
+let adminLoadInProgress = false;
+
+function adminEmpty(title, message) {
+  const state = document.createElement('div');
+  state.className = 'empty-state compact';
+  const heading = document.createElement('h3');
+  heading.textContent = title;
+  const copy = document.createElement('p');
+  copy.textContent = message;
+  state.append(heading, copy);
+  return state;
+}
+
+function adminLabel(value) {
+  return String(value || '').toLowerCase().replaceAll('_', ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function adminDate(value) {
+  return value ? new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : 'Not recorded';
+}
+
+function renderAdminMetrics(overview) {
+  const metrics = [
+    [overview.activeUsers, 'Active testers'], [overview.pendingConnections, 'Pending friend requests'],
+    [overview.upcomingEvents, 'Upcoming events'], [overview.activeServices, 'Bookable services'],
+    [overview.openSupportCases, 'Open support cases'], [overview.openSafetyReports, 'Open safety reports'],
+    [overview.pendingLostFoundReports, 'Lost & Found awaiting review']
+  ];
+  adminMetrics.replaceChildren(...metrics.map(([value, label]) => {
+    const card = document.createElement('article');
+    const strong = document.createElement('strong');
+    strong.textContent = value;
+    const span = document.createElement('span');
+    span.textContent = label;
+    card.append(strong, span);
+    return card;
+  }));
+}
+
+function renderAdminUsers(users) {
+  adminUsers = users;
+  adminUserList.replaceChildren();
+  if (!users.length) {
+    adminUserList.append(adminEmpty('No matching testers', 'Try a different name, email address or course.'));
+    return;
+  }
+  users.forEach((user) => {
+    const card = document.createElement('article');
+    card.className = 'admin-record';
+    const identity = document.createElement('div');
+    identity.className = 'admin-record-copy';
+    const title = document.createElement('h4');
+    title.textContent = user.displayName;
+    const detail = document.createElement('p');
+    detail.textContent = `${user.email} · ${user.courseName || 'Course not supplied'}${user.yearOfStudy ? ` · Year ${user.yearOfStudy}` : ''}`;
+    const created = document.createElement('small');
+    created.textContent = `Created ${adminDate(user.createdAt)}`;
+    identity.append(title, detail, created);
+    const controls = document.createElement('div');
+    controls.className = 'admin-record-controls';
+    const role = document.createElement('select');
+    role.setAttribute('aria-label', `Role for ${user.displayName}`);
+    ['STUDENT', 'STAFF', 'SERVICE_PROVIDER', 'ADMIN'].forEach((value) => role.add(new Option(adminLabel(value), value, false, user.role === value)));
+    const status = document.createElement('select');
+    status.setAttribute('aria-label', `Account status for ${user.displayName}`);
+    ['ACTIVE', 'SUSPENDED'].forEach((value) => status.add(new Option(adminLabel(value), value, false, user.status === value)));
+    const save = document.createElement('button');
+    save.type = 'button';
+    save.className = 'secondary-button';
+    save.textContent = 'Save access';
+    save.addEventListener('click', async () => {
+      save.disabled = true;
+      try {
+        await socialPatch(`/api/admin/users/${user.id}`, { role: role.value, status: status.value });
+        showToast(`${user.displayName}'s Test Campus access was updated.`);
+        await loadAdminWorkspace();
+      } catch (error) {
+        showToast(error.message);
+      } finally { save.disabled = false; }
+    });
+    controls.append(role, status, save);
+    card.append(identity, controls);
+    adminUserList.append(card);
+  });
+  adminMeetingAssignees.replaceChildren(...users.filter((user) => user.status === 'ACTIVE').map((user) => new Option(`${user.displayName} — ${adminLabel(user.role)}`, user.id)));
+}
+
+function adminCaseCard(item, safety = false) {
+  const card = document.createElement('article');
+  card.className = 'admin-record admin-case';
+  const copy = document.createElement('div');
+  copy.className = 'admin-record-copy';
+  const title = document.createElement('h4');
+  title.textContent = safety ? `${adminLabel(item.reason)} report` : `${item.referenceCode} · ${item.subject}`;
+  const reporter = document.createElement('p');
+  reporter.textContent = safety
+    ? `${item.reporterName} reported ${item.reportedAccountName}`
+    : `${item.reporterName} · ${adminLabel(item.category)}`;
+  const description = document.createElement('p');
+  description.textContent = safety ? (item.details || 'No additional details supplied.') : item.description;
+  copy.append(title, reporter, description);
+  const controls = document.createElement('div');
+  controls.className = 'admin-record-controls';
+  const status = document.createElement('select');
+  const options = safety ? ['OPEN', 'REVIEWING', 'RESOLVED', 'DISMISSED'] : ['OPEN', 'IN_PROGRESS', 'WAITING_FOR_STUDENT', 'RESOLVED', 'CLOSED'];
+  options.forEach((value) => status.add(new Option(adminLabel(value), value, false, item.status === value)));
+  const save = document.createElement('button');
+  save.type = 'button';
+  save.className = 'secondary-button';
+  save.textContent = 'Update';
+  save.addEventListener('click', async () => {
+    save.disabled = true;
+    try {
+      if (safety) await socialPatch(`/api/admin/safety-reports/${item.id}`, { status: status.value, note: 'Status updated through the Test Campus administrator dashboard.' });
+      else await socialPatch(`/api/admin/support-cases/${item.id}`, { status: status.value, priority: item.priority, assignedTeam: item.assignedTeam || 'Test Campus Support', reply: '' });
+      showToast('The case was updated and recorded in the audit trail.');
+      await loadAdminWorkspace();
+    } catch (error) { showToast(error.message); }
+    finally { save.disabled = false; }
+  });
+  controls.append(status, save);
+  card.append(copy, controls);
+  return card;
+}
+
+function renderAdminQueues(supportCases, safetyReports) {
+  adminSupportList.replaceChildren(...(supportCases.length ? supportCases.map((item) => adminCaseCard(item)) : [adminEmpty('No open support requests', 'New Test Campus support requests will appear here.') ]));
+  adminSafetyList.replaceChildren(...(safetyReports.length ? safetyReports.map((item) => adminCaseCard(item, true)) : [adminEmpty('No safety reports', 'Reports from real tester interactions will appear here.') ]));
+}
+
+function renderAdminAudit(entries) {
+  adminAuditList.replaceChildren(...(entries.length ? entries.map((entry) => {
+    const card = document.createElement('article');
+    card.className = 'admin-record audit-record';
+    const copy = document.createElement('div');
+    copy.className = 'admin-record-copy';
+    const title = document.createElement('h4');
+    title.textContent = adminLabel(entry.actionType);
+    const detail = document.createElement('p');
+    detail.textContent = entry.summary;
+    const meta = document.createElement('small');
+    meta.textContent = `${entry.actorName} · ${adminLabel(entry.resourceType)} · ${adminDate(entry.createdAt)}`;
+    copy.append(title, detail, meta);
+    card.append(copy);
+    return card;
+  }) : [adminEmpty('No administrator actions yet', 'Sensitive changes will be recorded here.')]));
+}
+
+async function adminJson(url) {
+  const response = await fetch(url, { headers: { Accept: 'application/json' } });
+  if (response.status === 403) throw new Error('This workspace requires Test Campus administrator access.');
+  if (!response.ok) throw new Error('Administrator records are temporarily unavailable.');
+  return response.json();
+}
+
+async function loadAdminWorkspace() {
+  if (!adminAccess || adminLoadInProgress || !adminMetrics) return;
+  adminLoadInProgress = true;
+  try {
+    const [overview, users, supportCases, safetyReports, audit, publishers] = await Promise.all([
+      adminJson('/api/admin/overview'), adminJson('/api/admin/users'), adminJson('/api/admin/support-cases'),
+      adminJson('/api/admin/safety-reports'), adminJson('/api/admin/audit'), adminJson('/api/admin/opportunity-publishers')
+    ]);
+    renderAdminMetrics(overview);
+    renderAdminUsers(users);
+    renderAdminQueues(supportCases, safetyReports);
+    renderAdminAudit(audit);
+    adminOpportunityPublisher.replaceChildren(...publishers.map((publisher) => new Option(`${publisher.name} — ${adminLabel(publisher.type)}`, publisher.id)));
+  } catch (error) {
+    [adminUserList, adminSupportList, adminSafetyList, adminAuditList].forEach((list) => list?.replaceChildren(adminEmpty('Administrator workspace unavailable', error.message)));
+  } finally { adminLoadInProgress = false; }
+}
+
+document.querySelectorAll('[data-admin-tab]').forEach((button) => button.addEventListener('click', () => {
+  document.querySelectorAll('[data-admin-tab]').forEach((item) => item.classList.toggle('active', item === button));
+  document.querySelectorAll('[data-admin-panel]').forEach((panel) => { panel.hidden = panel.dataset.adminPanel !== button.dataset.adminTab; });
+}));
+
+let adminUserSearchTimer;
+document.querySelector('#adminUserSearch')?.addEventListener('input', (event) => {
+  clearTimeout(adminUserSearchTimer);
+  adminUserSearchTimer = setTimeout(async () => {
+    try { renderAdminUsers(await adminJson(`/api/admin/users?query=${encodeURIComponent(event.target.value.trim())}`)); }
+    catch (error) { showToast(error.message); }
+  }, 250);
+});
+document.querySelector('#adminRefresh')?.addEventListener('click', () => loadAdminWorkspace());
+
+function adminIso(id) {
+  const value = document.querySelector(id).value;
+  return value ? new Date(value).toISOString() : null;
+}
+
+async function submitAdminForm(form, button, action) {
+  button.disabled = true;
+  adminActivityStatus.textContent = 'Saving the Test Campus record…';
+  try {
+    const message = await action();
+    adminActivityStatus.textContent = message;
+    form.reset();
+    await loadAdminWorkspace();
+    showToast(message);
+  } catch (error) {
+    adminActivityStatus.textContent = error.message;
+  } finally { button.disabled = false; }
+}
+
+document.querySelector('#adminEventForm')?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  submitAdminForm(form, form.querySelector('[type="submit"]'), async () => {
+    await socialPost('/api/admin/events', { title: document.querySelector('#adminEventTitle').value, summary: document.querySelector('#adminEventSummary').value, category: document.querySelector('#adminEventCategory').value, venue: document.querySelector('#adminEventVenue').value, startsAt: adminIso('#adminEventStarts'), endsAt: adminIso('#adminEventEnds'), capacity: Number(document.querySelector('#adminEventCapacity').value), published: document.querySelector('#adminEventPublished').checked });
+    return 'The Test Campus event was created.';
+  });
+});
+
+document.querySelector('#adminServiceForm')?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  submitAdminForm(form, form.querySelector('[type="submit"]'), async () => {
+    const service = await socialPost('/api/admin/services', { serviceType: document.querySelector('#adminServiceType').value, title: document.querySelector('#adminServiceTitle').value, providerName: document.querySelector('#adminServiceProvider').value, description: document.querySelector('#adminServiceDescription').value, location: document.querySelector('#adminServiceLocation').value });
+    await socialPost(`/api/admin/services/${service.id}/slots`, { startsAt: adminIso('#adminSlotStarts'), endsAt: adminIso('#adminSlotEnds'), capacity: Number(document.querySelector('#adminSlotCapacity').value) });
+    return 'The service and first bookable slot were created.';
+  });
+});
+
+document.querySelector('#adminMeetingForm')?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  submitAdminForm(form, form.querySelector('[type="submit"]'), async () => {
+    await socialPost('/api/admin/meetings', { title: document.querySelector('#adminMeetingTitle').value, moduleCode: document.querySelector('#adminMeetingModule').value, meetingType: document.querySelector('#adminMeetingType').value, startsAt: adminIso('#adminMeetingStarts'), endsAt: adminIso('#adminMeetingEnds'), locationLabel: document.querySelector('#adminMeetingLocation').value, agenda: document.querySelector('#adminMeetingAgenda').value, providerJoinUrl: '', assigneeIds: [...adminMeetingAssignees.selectedOptions].map((option) => option.value), published: document.querySelector('#adminMeetingPublished').checked });
+    return 'The live session was created and assigned schedules were updated.';
+  });
+});
+
+document.querySelector('#adminOpportunityForm')?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  submitAdminForm(form, form.querySelector('[type="submit"]'), async () => {
+    await socialPost('/api/admin/opportunities', { publisherId: adminOpportunityPublisher.value, title: document.querySelector('#adminOpportunityTitle').value, summary: document.querySelector('#adminOpportunitySummary').value, description: document.querySelector('#adminOpportunityDescription').value, opportunityType: document.querySelector('#adminOpportunityType').value, workMode: document.querySelector('#adminOpportunityMode').value, location: document.querySelector('#adminOpportunityLocation').value, hoursLabel: document.querySelector('#adminOpportunityHours').value, compensationLabel: document.querySelector('#adminOpportunityCompensation').value, skillsText: document.querySelector('#adminOpportunitySkills').value, eligibility: document.querySelector('#adminOpportunityEligibility').value, closesAt: document.querySelector('#adminOpportunityCloses').value, published: document.querySelector('#adminOpportunityPublished').checked });
+    return 'The Test Campus opportunity was created.';
+  });
+});
 
 fetch('/api/platform/status')
   .then((response) => {

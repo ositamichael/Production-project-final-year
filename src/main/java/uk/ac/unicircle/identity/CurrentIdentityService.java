@@ -3,6 +3,7 @@ package uk.ac.unicircle.identity;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
@@ -14,10 +15,12 @@ class CurrentIdentityService implements CurrentIdentity {
 
     private final UserAccountRepository accounts;
     private final Environment environment;
+    private final JdbcTemplate jdbc;
 
-    CurrentIdentityService(UserAccountRepository accounts, Environment environment) {
+    CurrentIdentityService(UserAccountRepository accounts, Environment environment, JdbcTemplate jdbc) {
         this.accounts = accounts;
         this.environment = environment;
+        this.jdbc = jdbc;
     }
 
     @Override
@@ -49,6 +52,13 @@ class CurrentIdentityService implements CurrentIdentity {
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
                     "A verified university sign-in is required.");
+        }
+        String status = jdbc.queryForObject(
+                "SELECT account_status FROM user_accounts WHERE id = ?",
+                String.class, account.id());
+        if (!"ACTIVE".equals(status)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "This Test Campus account is suspended. Contact an authorised administrator.");
         }
         return new SignedInAccount(account.id(), account.university().id());
     }

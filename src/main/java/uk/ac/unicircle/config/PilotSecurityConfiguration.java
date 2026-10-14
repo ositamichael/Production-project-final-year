@@ -60,13 +60,16 @@ public class PilotSecurityConfiguration {
     @Bean
     UserDetailsService pilotUsers(JdbcTemplate jdbc) {
         return username -> jdbc.query("""
-                SELECT ua.email, pc.password_hash
+                SELECT ua.email, pc.password_hash, ua.role, ua.account_status
                 FROM pilot_credentials pc
                 JOIN user_accounts ua ON ua.id = pc.account_id
                 JOIN universities u ON u.id = ua.university_id
                 WHERE LOWER(ua.email) = LOWER(?) AND u.slug = 'pilot-campus' AND u.active = TRUE
                 """, (result, row) -> User.withUsername(result.getString(1))
-                        .password(result.getString(2)).roles("STUDENT").build(), username)
+                        .password(result.getString(2))
+                        .roles(result.getString(3))
+                        .disabled(!"ACTIVE".equals(result.getString(4)))
+                        .build(), username)
                 .stream().findFirst()
                 .orElseThrow(() -> new UsernameNotFoundException("Pilot account not found"));
     }
