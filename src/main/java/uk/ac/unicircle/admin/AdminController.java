@@ -1,12 +1,14 @@
 package uk.ac.unicircle.admin;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import jakarta.validation.Valid;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 
 import uk.ac.unicircle.admin.AdminRequests.CreateEventRequest;
 import uk.ac.unicircle.admin.AdminRequests.CreateAnnouncementRequest;
@@ -51,6 +55,13 @@ class AdminController {
 
     AdminController(AdminService admin) {
         this.admin = admin;
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    ResponseEntity<Map<String, String>> rejectedAdminAction(ResponseStatusException error) {
+        String detail = error.getReason() == null ? "The administrator action could not be completed."
+                : error.getReason();
+        return ResponseEntity.status(error.getStatusCode()).body(Map.of("detail", detail));
     }
 
     @GetMapping("/overview")

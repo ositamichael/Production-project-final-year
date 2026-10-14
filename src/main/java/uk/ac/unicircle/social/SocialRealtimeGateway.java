@@ -15,6 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -33,7 +35,7 @@ import uk.ac.unicircle.identity.CurrentIdentity;
  * account id; delivery is bound to the signed-in Spring Security principal.
  */
 @Component
-class SocialRealtimeGateway extends TextWebSocketHandler {
+public class SocialRealtimeGateway extends TextWebSocketHandler {
 
     private static final String ACCOUNT_ATTRIBUTE = "unicircle.account-id";
     private static final String CALL_SIGNAL_TIMES_ATTRIBUTE = "unicircle.call-signal-times";
@@ -149,6 +151,19 @@ class SocialRealtimeGateway extends TextWebSocketHandler {
         String payload = "{\"type\":\"" + eventType + "\",\"resourceId\":" + resource + "}";
 
         sendToAccount(accountId, payload, null);
+    }
+
+    public void publishAfterCommit(UUID accountId, String eventType, UUID resourceId) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            publish(accountId, eventType, resourceId);
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                publish(accountId, eventType, resourceId);
+            }
+        });
     }
 
     private boolean sendToAccount(UUID accountId, String payload, WebSocketSession excluded) {

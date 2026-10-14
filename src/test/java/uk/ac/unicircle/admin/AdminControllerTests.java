@@ -116,6 +116,45 @@ class AdminControllerTests {
     }
 
     @Test
+    void targetedMeetingCannotAppearPublishedWhenNoAccountMatchesTheAudience() throws Exception {
+        OffsetDateTime starts = OffsetDateTime.now(ZoneOffset.UTC).plusDays(7).withSecond(0).withNano(0);
+        mockMvc.perform(post("/api/admin/meetings").with(user(ADMIN)).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content("""
+                                {"title":"No Silent Audience","moduleCode":"TEST6002",
+                                 "meetingType":"LECTURE","startsAt":"%s","endsAt":"%s",
+                                 "locationLabel":"UniCircle live room","agenda":"Audience validation",
+                                 "providerJoinUrl":"","audienceType":"COURSE",
+                                 "audienceLabel":"Course That Does Not Exist",
+                                 "published":true,"assigneeIds":[]}
+                                """.formatted(starts, starts.plusHours(1))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString(
+                        "No active Test Campus users match")));
+    }
+
+    @Test
+    void targetedAnnouncementCannotClaimSuccessWhenNoAccountMatches() throws Exception {
+        mockMvc.perform(post("/api/admin/announcements").with(user(ADMIN)).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"category":"MODULE","audienceType":"COURSE",
+                                 "audienceLabel":"Course That Does Not Exist",
+                                 "title":"No Silent Announcement",
+                                 "body":"This must not appear successfully published to nobody.",
+                                 "actionLabel":"","actionUrl":"",
+                                 "pinned":false,"urgent":false,"expiresAt":null}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString(
+                        "No active Test Campus users match")));
+
+        Integer stored = jdbc.queryForObject("""
+                SELECT COUNT(*) FROM campus_announcements WHERE title = 'No Silent Announcement'
+                """, Integer.class);
+        org.assertj.core.api.Assertions.assertThat(stored).isZero();
+    }
+
+    @Test
     void administratorCanPublishBookableServicesAndOpportunitiesForStudents() throws Exception {
         OffsetDateTime starts = OffsetDateTime.now(ZoneOffset.UTC).plusDays(10).withSecond(0).withNano(0);
         String serviceResponse = mockMvc.perform(post("/api/admin/services").with(user(ADMIN)).with(csrf())
@@ -215,7 +254,8 @@ class AdminControllerTests {
                                  "pinned":true,"urgent":false,"expiresAt":null}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title").value("Administrator Test Announcement"));
+                .andExpect(jsonPath("$.title").value("Administrator Test Announcement"))
+                .andExpect(jsonPath("$.notifiedUsers").isNumber());
 
         mockMvc.perform(get("/api/admin/catalogue").with(user(ADMIN)))
                 .andExpect(status().isOk())

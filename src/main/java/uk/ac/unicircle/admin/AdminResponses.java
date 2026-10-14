@@ -17,7 +17,7 @@ final class AdminResponses {
 
     record AnnouncementAdminResponse(UUID id, String title, String category, String audienceType,
             String audienceLabel, boolean pinned, boolean urgent, OffsetDateTime publishedAt,
-            OffsetDateTime expiresAt) {
+            OffsetDateTime expiresAt, int notifiedUsers) {
     }
 
     record ProgrammeAdminResponse(UUID id, String code, String title, String qualification,
