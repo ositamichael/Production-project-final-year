@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
+import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
 
@@ -437,5 +439,34 @@ class FrontendStructureTests {
             .contains("staffReviewNav.hidden = !staffReviewAccess")
             .contains("REJECTED: 'NOT PUBLISHED'")
             .contains("detailStatus.textContent = report.moderationStatus === 'APPROVED'");
+    }
+
+    @Test
+    void dashboardMarkupDoesNotReuseHtmlIdentifiers() throws IOException {
+        var resource = getClass().getResourceAsStream("/static/index.html");
+        assertThat(resource).isNotNull();
+
+        var html = new String(resource.readAllBytes(), StandardCharsets.UTF_8);
+        var matcher = Pattern.compile("\\bid=\"([^\"]+)\"").matcher(html);
+        var identifiers = new HashSet<String>();
+        var duplicates = new HashSet<String>();
+        while (matcher.find()) {
+            if (!identifiers.add(matcher.group(1))) duplicates.add(matcher.group(1));
+        }
+
+        assertThat(duplicates).as("duplicate HTML identifiers").isEmpty();
+    }
+
+    @Test
+    void authenticationLayoutCanShrinkToTheSmallestSupportedPhone() throws IOException {
+        var resource = getClass().getResourceAsStream("/static/css/auth.css");
+        assertThat(resource).isNotNull();
+
+        var stylesheet = new String(resource.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(stylesheet)
+            .contains(".auth-form-panel { display: grid; min-width: 0;")
+            .contains(".auth-form-wrap { width: 100%; max-width: 430px; min-width: 0;")
+            .contains("@media (max-width: 360px)")
+            .contains("grid-template-columns: auto minmax(0,1fr)");
     }
 }

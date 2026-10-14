@@ -341,6 +341,8 @@ function renderSignedOutAccountStates() {
   if (bookButton) bookButton.disabled = true;
   const dashboardIntro = document.querySelector('[data-dashboard-intro]');
   if (dashboardIntro) dashboardIntro.textContent = 'Explore UniCircle or sign in to see your account activity.';
+  const dashboardAssistantIntro = document.querySelector('#dashboardAssistantIntro');
+  if (dashboardAssistantIntro) dashboardAssistantIntro.textContent = 'Ask for basic study, computing and campus guidance. Account-specific university data is not available to guests.';
 }
 
 function renderSignedInAccountStates() {
@@ -351,6 +353,8 @@ function renderSignedInAccountStates() {
   document.querySelector('#calendarDownloadButton')?.removeAttribute('disabled');
   const dashboardIntro = document.querySelector('[data-dashboard-intro]');
   if (dashboardIntro) dashboardIntro.textContent = 'Here is what is happening in your UniCircle pilot today.';
+  const dashboardAssistantIntro = document.querySelector('#dashboardAssistantIntro');
+  if (dashboardAssistantIntro) dashboardAssistantIntro.textContent = 'Ask for study, computing and campus guidance, then open Ask UniCircle to keep separate conversation histories.';
 }
 let loadedCampusEvents = [];
 let loadedCampusServices = [];
@@ -2110,6 +2114,7 @@ function populateProfile(profile) {
     loadAnnouncements(),
     loadMeetings(),
     loadSupportCases(),
+    loadCircles(),
     ...(staffReviewAccess ? [loadStaffReview()] : [])
   ]);
 }

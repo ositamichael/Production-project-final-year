@@ -10,8 +10,8 @@
   <title>UniCircle — My Campus</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="stylesheet" href="/css/app.css?v=33">
-  <script src="/js/app.js?v=33" defer></script>
+  <link rel="stylesheet" href="/css/app.css?v=34">
+  <script src="/js/app.js?v=34" defer></script>
 </head>
 <body>
   <svg class="svg-sprite" aria-hidden="true">
@@ -188,7 +188,7 @@
           <a class="quick-card violet searchable" href="#assistant-page" data-open-page="assistant" data-search="ask unicircle help assistant"><span><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><strong>Ask UniCircle</strong><small>Find campus information</small></a>
         </section>
 
-        <article class="card events-card searchable" id="events" data-search="events careers fair mindfulness international food festival">
+        <article class="card events-card searchable" id="dashboard-events-card" data-search="events careers fair mindfulness international food festival">
           <div class="card-heading"><h2><span class="heading-icon coral"><svg class="icon" aria-hidden="true"><use href="#events"/></svg></span> Upcoming Events</h2><a href="#events-page" data-open-page="events">View all</a></div>
           <ul class="event-list" id="dashboardEventList"><li class="signed-out-card-state"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><div><strong>Sign in to view pilot events</strong><small>Dates are loaded from the signed-in university-scoped catalogue.</small></div></li></ul>
         </article>
@@ -217,7 +217,7 @@
 
         <article class="card assistant-card searchable" id="assistant" data-search="ask unicircle assistant quiet study sports career">
           <div class="card-heading"><h2><span class="heading-icon violet"><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span> Ask UniCircle</h2></div>
-          <div class="assistant-intro"><span class="avatar assistant-avatar">U</span><p>Ask for basic study, computing and campus guidance. Account-specific university data is not available to guests.</p></div>
+          <div class="assistant-intro"><span class="avatar assistant-avatar">U</span><p id="dashboardAssistantIntro">Ask for basic study, computing and campus guidance. Account-specific university data is not available to guests.</p></div>
           <div class="prompt-list">
             <button type="button">Find a quiet study space</button>
             <button type="button">How do I book a sports facility?</button>

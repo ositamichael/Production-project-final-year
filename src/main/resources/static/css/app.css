@@ -112,6 +112,7 @@ main { min-width: 0; background: var(--canvas); }
 .card-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
 .card-heading h2 { display: flex; align-items: center; gap: 9px; margin: 0; font-size: 1rem; letter-spacing: -.015em; }
 .card-heading a { color: var(--blue); text-decoration: none; font-size: .72rem; font-weight: 750; }
+.card-heading > a, footer a, .assistant-generated-image a { display: inline-flex; min-height: 24px; align-items: center; }
 .heading-icon { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; font-size: .9rem; }.heading-icon .icon { width: 16px; height: 16px; }
 .heading-icon.blue { background: #e7f1ff; color: var(--blue); }
 .heading-icon.navy { background: #edf2fb; color: var(--navy-800); }
@@ -489,6 +490,7 @@ dialog.dialog-fallback[open] { position: fixed !important; inset: 50% auto auto 
 }
 
 @media (max-width: 620px) {
+  .card-heading > a, footer a, .assistant-generated-image a { min-height: 44px; }
   body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
   .sidebar { inset: auto 8px calc(70px + env(safe-area-inset-bottom)) 8px; width: auto; max-height: min(76dvh, 680px); padding: 18px 14px 16px; border: 1px solid rgba(255,255,255,.13); border-radius: 25px; transform: translateY(calc(100% + 96px)); box-shadow: 0 28px 80px rgba(3,19,43,.38); }
   .sidebar.open { transform: translateY(0); box-shadow: 0 28px 80px rgba(3,19,43,.42); }
