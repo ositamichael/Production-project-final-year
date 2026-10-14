@@ -119,6 +119,8 @@ When advanced mode is enabled, Ask UniCircle can search the public web for gener
 
 For the invitation-only staging-account flow within the complete UniCircle application and Render rehearsal instructions, see [`docs/friends-pilot.md`](docs/friends-pilot.md). Pilot participants must never enter university credentials or Authenticator codes.
 
+The staging sign-in page includes a password-recovery form. Recovery requires a high-entropy, single-use code issued by the Test Campus operator, a matching pilot email address and a new password of at least 12 characters. Codes are stored only as SHA-256 hashes, expire, are consumed after one successful change and remain protected by CSRF validation. This operator-assisted staging recovery is not a substitute for institution-approved email delivery in a production deployment.
+
 ## Command-line checks
 
 ```bash

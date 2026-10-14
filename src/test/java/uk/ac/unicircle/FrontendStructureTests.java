@@ -311,6 +311,26 @@ class FrontendStructureTests {
     }
 
     @Test
+    void pilotSignInProvidesSingleUsePasswordRecoveryWithoutRequestingUniversityCredentials() throws IOException {
+        var htmlResource = getClass().getResourceAsStream("/static/pilot-login.html");
+        var scriptResource = getClass().getResourceAsStream("/static/js/pilot-auth.js");
+        assertThat(htmlResource).isNotNull();
+        assertThat(scriptResource).isNotNull();
+
+        var html = new String(htmlResource.readAllBytes(), StandardCharsets.UTF_8);
+        var script = new String(scriptResource.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(html)
+            .contains("Forgot your staging password?")
+            .contains("id=\"passwordResetForm\"")
+            .contains("id=\"recoveryCode\"")
+            .contains("single-use recovery code")
+            .contains("Never enter an email, university or Authenticator password here");
+        assertThat(script)
+            .contains("/api/pilot/password-reset")
+            .contains("Password changed. Sign in above with your new staging password.");
+    }
+
+    @Test
     void messagingWorkspaceSupportsConsentBasedStudentDiscovery() throws IOException {
         var resource = getClass().getResourceAsStream("/static/index.html");
         assertThat(resource).isNotNull();

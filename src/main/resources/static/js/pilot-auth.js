@@ -1,6 +1,7 @@
 const message = document.querySelector('#authMessage');
 const signInButton = document.querySelector('#signInButton');
 const registerButton = document.querySelector('#registerButton');
+const resetPasswordButton = document.querySelector('#resetPasswordButton');
 let csrf;
 
 function showMessage(text, state = '') {
@@ -18,6 +19,7 @@ async function preparePilot() {
     field.value = csrf.token;
     signInButton.disabled = false;
     registerButton.disabled = false;
+    resetPasswordButton.disabled = false;
     showMessage(new URLSearchParams(location.search).has('error')
       ? 'That staging email or password was not accepted.' : 'Secure UniCircle sign-in is ready.',
     new URLSearchParams(location.search).has('error') ? 'error' : 'ready');
@@ -67,6 +69,40 @@ document.querySelector('#registrationForm')?.addEventListener('submit', async (e
     showMessage(error.message, 'error');
   } finally {
     registerButton.disabled = false;
+  }
+});
+
+document.querySelector('#passwordResetForm')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  resetPasswordButton.disabled = true;
+  showMessage('Checking your single-use recovery code…');
+  try {
+    const email = document.querySelector('#recoveryEmail').value.trim().toLowerCase();
+    const newPassword = document.querySelector('#newPassword').value;
+    const confirmPassword = document.querySelector('#confirmPassword').value;
+    if (newPassword !== confirmPassword) throw new Error('The two new passwords must match.');
+    const response = await fetch('/api/pilot/password-reset', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', [csrf.headerName]: csrf.token },
+      body: JSON.stringify({
+        email,
+        recoveryCode: document.querySelector('#recoveryCode').value.trim(),
+        newPassword,
+        confirmPassword
+      })
+    });
+    const problem = response.ok ? null : await response.json().catch(() => null);
+    if (!response.ok) throw new Error(problem?.message || 'The recovery code was not accepted.');
+    document.querySelector('#username').value = email;
+    document.querySelector('#password').value = '';
+    document.querySelector('#passwordResetForm').reset();
+    document.querySelector('#password').focus();
+    showMessage('Password changed. Sign in above with your new staging password.', 'ready');
+  } catch (error) {
+    showMessage(error.message, 'error');
+  } finally {
+    resetPasswordButton.disabled = false;
   }
 });
 

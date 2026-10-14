@@ -6,8 +6,8 @@
   <meta name="description" content="Account access to the complete UniCircle Staging Campus">
   <title>Staging Campus — UniCircle</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/css/auth.css?v=2">
-  <script src="/js/pilot-auth.js?v=2" defer></script>
+  <link rel="stylesheet" href="/css/auth.css?v=3">
+  <script src="/js/pilot-auth.js?v=3" defer></script>
 </head>
 <body>
   <main class="auth-shell">
@@ -39,6 +39,21 @@
           <div class="input-control"><input id="password" name="password" type="password" autocomplete="current-password" required></div>
           <button class="sign-in-button" id="signInButton" type="submit" disabled>Sign in to UniCircle</button>
         </form>
+        <details class="pilot-recovery">
+          <summary>Forgot your staging password?</summary>
+          <p>Use a single-use recovery code supplied by the UniCircle Test Campus administrator. Never enter an email, university or Authenticator password here.</p>
+          <form id="passwordResetForm">
+            <label for="recoveryEmail">Account email</label>
+            <div class="input-control"><input id="recoveryEmail" type="email" maxlength="320" autocomplete="username" required></div>
+            <label for="recoveryCode">Single-use recovery code</label>
+            <div class="input-control"><input id="recoveryCode" type="text" minlength="16" maxlength="128" autocomplete="one-time-code" required></div>
+            <label for="newPassword">New staging password (12 characters or more)</label>
+            <div class="input-control"><input id="newPassword" type="password" minlength="12" maxlength="128" autocomplete="new-password" required></div>
+            <label for="confirmPassword">Confirm new staging password</label>
+            <div class="input-control"><input id="confirmPassword" type="password" minlength="12" maxlength="128" autocomplete="new-password" required></div>
+            <button class="sign-in-button" id="resetPasswordButton" type="submit" disabled>Change staging password</button>
+          </form>
+        </details>
         <details class="pilot-register">
           <summary>New here? Create an account</summary>
           <form id="registrationForm">

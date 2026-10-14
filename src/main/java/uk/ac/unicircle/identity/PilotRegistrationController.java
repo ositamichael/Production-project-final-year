@@ -28,9 +28,12 @@ import org.springframework.web.bind.annotation.RestController;
 class PilotRegistrationController {
 
     private final PilotRegistrationService registration;
+    private final PilotPasswordRecoveryService recovery;
 
-    PilotRegistrationController(PilotRegistrationService registration) {
+    PilotRegistrationController(PilotRegistrationService registration,
+            PilotPasswordRecoveryService recovery) {
         this.registration = registration;
+        this.recovery = recovery;
     }
 
     @PostMapping("/register")
@@ -39,13 +42,26 @@ class PilotRegistrationController {
         registration.register(request);
     }
 
+    @PostMapping("/password-reset")
+    ResponseEntity<RegistrationError> resetPassword(@Valid @RequestBody PasswordResetRequest request) {
+        if (!request.newPassword().equals(request.confirmPassword())) {
+            return ResponseEntity.badRequest().body(new RegistrationError(
+                    "PASSWORD_MISMATCH", "The two new passwords must match.", Map.of()));
+        }
+        if (!recovery.resetPassword(request.email(), request.recoveryCode(), request.newPassword())) {
+            return ResponseEntity.badRequest().body(new RegistrationError(
+                    "RECOVERY_REJECTED", "The recovery code is incorrect, expired or already used.", Map.of()));
+        }
+        return ResponseEntity.noContent().build();
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     ResponseEntity<RegistrationError> invalidDetails(MethodArgumentNotValidException error) {
         Map<String, String> fields = new LinkedHashMap<>();
         error.getBindingResult().getFieldErrors().forEach(field ->
                 fields.putIfAbsent(field.getField(), field.getDefaultMessage()));
         return ResponseEntity.badRequest().body(new RegistrationError(
-                "VALIDATION_ERROR", "Check the highlighted registration details.", fields));
+                "VALIDATION_ERROR", "Check the highlighted details.", fields));
     }
 
     @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
@@ -66,6 +82,13 @@ class PilotRegistrationController {
             @NotBlank @Size(max = 180) String courseName,
             @NotNull @Min(1) @Max(12) Integer yearOfStudy,
             @NotBlank @Size(min = 12, max = 128) String password) {
+    }
+
+    record PasswordResetRequest(
+            @NotBlank @Email @Size(max = 320) String email,
+            @NotBlank @Size(min = 16, max = 128) String recoveryCode,
+            @NotBlank @Size(min = 12, max = 128) String newPassword,
+            @NotBlank @Size(min = 12, max = 128) String confirmPassword) {
     }
 
     record RegistrationError(String code, String message, Map<String, String> fields) {
