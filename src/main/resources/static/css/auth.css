@@ -54,9 +54,10 @@ form label { display: block; margin: 13px 0 6px; color: #29415f; font-size: .72r
 @media (max-width: 360px) { .auth-form-panel { padding-inline: 16px; }.input-control { gap: 8px; padding-inline: 10px; }.demo-account { grid-template-columns: auto minmax(0,1fr); }.demo-badge { grid-column: 2; width: fit-content; }.auth-form-wrap h2 { font-size: 1.75rem; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; } }
 /* Pilot registration follows the existing sign-in visual language. */
-.pilot-register { margin-top: 1.5rem; padding: 1rem 0; border-top: 1px solid rgba(14, 48, 91, .15); }
-.pilot-register summary { cursor: pointer; color: #153c75; font-weight: 700; }
-.pilot-register form { margin-top: 1.25rem; }
-.pilot-register label { display: block; margin: .8rem 0 .35rem; }
-.pilot-register .sign-in-button { margin-top: 1rem; }
+.pilot-register, .pilot-recovery { margin-top: 1.1rem; padding: 1rem 0; border-top: 1px solid rgba(14, 48, 91, .15); }
+.pilot-register summary, .pilot-recovery summary { cursor: pointer; color: #153c75; font-weight: 700; }
+.pilot-register form, .pilot-recovery form { margin-top: 1.25rem; }
+.pilot-register label, .pilot-recovery label { display: block; margin: .8rem 0 .35rem; }
+.pilot-register .sign-in-button, .pilot-recovery .sign-in-button { margin-top: 1rem; }
+.pilot-recovery > p { margin: .75rem 0 0; color: var(--muted); font-size: .68rem; line-height: 1.55; }
 .auth-form-wrap > .separation-notice { display: block; }

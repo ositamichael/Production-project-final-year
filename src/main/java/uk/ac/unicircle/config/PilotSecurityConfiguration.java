@@ -29,7 +29,8 @@ public class PilotSecurityConfiguration {
                                 "/", "/index.html", "/pilot-login.html", "/favicon.svg", "/manifest.webmanifest",
                                 "/service-worker.js", "/offline.html", "/privacy.html", "/acceptable-use.html",
                                 "/accessibility.html", "/robots.txt", "/css/**", "/js/**", "/images/**",
-                                "/error", "/sign-in", "/api/pilot/register", "/api/platform/status", "/api/security/csrf",
+                                "/error", "/sign-in", "/api/pilot/register", "/api/pilot/password-reset",
+                                "/api/platform/status", "/api/security/csrf",
                                 "/api/assistant/**", "/actuator/health")
                         .permitAll()
                         .anyRequest().authenticated())

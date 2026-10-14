@@ -79,6 +79,39 @@ class PilotFriendsJourneyTests {
     }
 
     @Test
+    void passwordRecoveryIsCsrfProtectedSingleUseAndChangesOnlyTheMatchingPilotAccount() throws Exception {
+        register("recovery@example.net", "Recovery Tester");
+        UUID accountId = jdbc.queryForObject("SELECT id FROM user_accounts WHERE email = ?",
+                UUID.class, "recovery@example.net");
+        String recoveryCode = "SingleUseRecoveryCode-2026";
+        jdbc.update("""
+                INSERT INTO pilot_password_reset_tokens (id, account_id, token_hash, expires_at)
+                VALUES (?, ?, ?, ?)
+                """, UUID.randomUUID(), accountId, PilotPasswordRecoveryService.sha256(recoveryCode),
+                java.time.OffsetDateTime.now(java.time.ZoneOffset.UTC).plusMinutes(20));
+        String reset = """
+                {"email":"recovery@example.net","recoveryCode":"%s",
+                 "newPassword":"A-New-Staging-Password!2026",
+                 "confirmPassword":"A-New-Staging-Password!2026"}
+                """.formatted(recoveryCode);
+
+        mockMvc.perform(post("/api/pilot/password-reset").contentType(MediaType.APPLICATION_JSON)
+                        .content(reset))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/pilot/password-reset").with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(reset))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(post("/login").with(csrf()).param("username", "recovery@example.net")
+                        .param("password", "A-New-Staging-Password!2026"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/?signed-in=1#campus"));
+        mockMvc.perform(post("/api/pilot/password-reset").with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(reset))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("RECOVERY_REJECTED"));
+    }
+
+    @Test
     void publicErrorEndpointDoesNotReplaceRegistrationGuidanceWithUnauthorized() throws Exception {
         mockMvc.perform(get("/error").requestAttr("jakarta.servlet.error.status_code", 400)
                         .requestAttr("jakarta.servlet.error.request_uri", "/api/pilot/register")
