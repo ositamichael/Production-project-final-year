@@ -4259,8 +4259,11 @@ const adminUserList = document.querySelector('#adminUserList');
 const adminSupportList = document.querySelector('#adminSupportList');
 const adminSafetyList = document.querySelector('#adminSafetyList');
 const adminAuditList = document.querySelector('#adminAuditList');
+const adminCatalogueList = document.querySelector('#adminCatalogueList');
+const adminOverviewCatalogue = document.querySelector('#adminOverviewCatalogue');
 const adminMeetingAssignees = document.querySelector('#adminMeetingAssignees');
 const adminOpportunityPublisher = document.querySelector('#adminOpportunityPublisher');
+const adminModuleProgramme = document.querySelector('#adminModuleProgramme');
 const adminActivityStatus = document.querySelector('#adminActivityStatus');
 let adminUsers = [];
 let adminLoadInProgress = false;
@@ -4287,10 +4290,11 @@ function adminDate(value) {
 
 function renderAdminMetrics(overview) {
   const metrics = [
-    [overview.activeUsers, 'Active testers'], [overview.pendingConnections, 'Pending friend requests'],
-    [overview.upcomingEvents, 'Upcoming events'], [overview.activeServices, 'Bookable services'],
-    [overview.openSupportCases, 'Open support cases'], [overview.openSafetyReports, 'Open safety reports'],
-    [overview.pendingLostFoundReports, 'Lost & Found awaiting review']
+    [overview.activeUsers, 'Active campus accounts'], [overview.publishedAnnouncements, 'Current announcements'],
+    [overview.upcomingEvents, 'Upcoming events'], [overview.upcomingMeetings, 'Live classes'],
+    [overview.activeServices, 'Bookable services'], [overview.confirmedBookings, 'Confirmed bookings'],
+    [overview.activeOpportunities, 'Open opportunities'],
+    [overview.openSupportCases + overview.openSafetyReports + overview.pendingLostFoundReports, 'Items needing attention']
   ];
   adminMetrics.replaceChildren(...metrics.map(([value, label]) => {
     const card = document.createElement('article');
@@ -4301,6 +4305,34 @@ function renderAdminMetrics(overview) {
     card.append(strong, span);
     return card;
   }));
+}
+
+function adminCatalogueCard(record) {
+  const card = document.createElement('article');
+  card.className = 'admin-record admin-catalogue-record';
+  const copy = document.createElement('div');
+  copy.className = 'admin-record-copy';
+  const type = document.createElement('span');
+  type.className = 'admin-record-type';
+  type.textContent = adminLabel(record.recordType);
+  const title = document.createElement('h4');
+  title.textContent = record.title;
+  const detail = document.createElement('p');
+  detail.textContent = record.detail;
+  const date = document.createElement('small');
+  date.textContent = record.effectiveAt ? `Relevant date: ${adminDate(record.effectiveAt)}` : 'No future date has been added';
+  copy.append(type, title, detail, date);
+  const status = document.createElement('span');
+  status.className = 'admin-record-status';
+  status.textContent = adminLabel(record.status);
+  card.append(copy, status);
+  return card;
+}
+
+function renderAdminCatalogue(records) {
+  const empty = () => adminEmpty('No campus records yet', 'Create an announcement, event, service, session, opportunity or circle to see it here.');
+  adminCatalogueList?.replaceChildren(...(records.length ? records.map(adminCatalogueCard) : [empty()]));
+  adminOverviewCatalogue?.replaceChildren(...(records.length ? records.slice(0, 5).map(adminCatalogueCard) : [empty()]));
 }
 
 function renderAdminUsers(users) {
@@ -4423,23 +4455,36 @@ async function loadAdminWorkspace() {
   if (!adminAccess || adminLoadInProgress || !adminMetrics) return;
   adminLoadInProgress = true;
   try {
-    const [overview, users, supportCases, safetyReports, audit, publishers] = await Promise.all([
+    const [overview, users, supportCases, safetyReports, audit, publishers, programmes, catalogue] = await Promise.all([
       adminJson('/api/admin/overview'), adminJson('/api/admin/users'), adminJson('/api/admin/support-cases'),
-      adminJson('/api/admin/safety-reports'), adminJson('/api/admin/audit'), adminJson('/api/admin/opportunity-publishers')
+      adminJson('/api/admin/safety-reports'), adminJson('/api/admin/audit'), adminJson('/api/admin/opportunity-publishers'),
+      adminJson('/api/admin/programmes'), adminJson('/api/admin/catalogue')
     ]);
     renderAdminMetrics(overview);
     renderAdminUsers(users);
     renderAdminQueues(supportCases, safetyReports);
     renderAdminAudit(audit);
+    renderAdminCatalogue(catalogue);
     adminOpportunityPublisher.replaceChildren(...publishers.map((publisher) => new Option(`${publisher.name} — ${adminLabel(publisher.type)}`, publisher.id)));
+    adminModuleProgramme.replaceChildren(...programmes.map((programme) => new Option(`${programme.code} — ${programme.title}`, programme.id)));
   } catch (error) {
-    [adminUserList, adminSupportList, adminSafetyList, adminAuditList].forEach((list) => list?.replaceChildren(adminEmpty('Administrator workspace unavailable', error.message)));
+    [adminUserList, adminSupportList, adminSafetyList, adminAuditList, adminCatalogueList, adminOverviewCatalogue]
+      .forEach((list) => list?.replaceChildren(adminEmpty('Administrator workspace unavailable', error.message)));
   } finally { adminLoadInProgress = false; }
 }
 
+function openAdminPanel(panelName) {
+  const selected = document.querySelector(`[data-admin-tab="${panelName}"]`);
+  document.querySelectorAll('[data-admin-tab]').forEach((item) => item.classList.toggle('active', item === selected));
+  document.querySelectorAll('[data-admin-panel]').forEach((panel) => { panel.hidden = panel.dataset.adminPanel !== panelName; });
+  selected?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+}
+
 document.querySelectorAll('[data-admin-tab]').forEach((button) => button.addEventListener('click', () => {
-  document.querySelectorAll('[data-admin-tab]').forEach((item) => item.classList.toggle('active', item === button));
-  document.querySelectorAll('[data-admin-panel]').forEach((panel) => { panel.hidden = panel.dataset.adminPanel !== button.dataset.adminTab; });
+  openAdminPanel(button.dataset.adminTab);
+}));
+document.querySelectorAll('[data-admin-open]').forEach((button) => button.addEventListener('click', () => {
+  openAdminPanel(button.dataset.adminOpen);
 }));
 
 let adminUserSearchTimer;
@@ -4464,12 +4509,89 @@ async function submitAdminForm(form, button, action) {
     const message = await action();
     adminActivityStatus.textContent = message;
     form.reset();
+    if (form.id === 'adminAnnouncementForm') syncAdminAnnouncementAudience();
     await loadAdminWorkspace();
     showToast(message);
   } catch (error) {
     adminActivityStatus.textContent = error.message;
   } finally { button.disabled = false; }
 }
+
+const adminAnnouncementAudience = document.querySelector('#adminAnnouncementAudience');
+const adminAnnouncementAudienceLabel = document.querySelector('#adminAnnouncementAudienceLabel');
+function syncAdminAnnouncementAudience() {
+  const targeted = adminAnnouncementAudience.value !== 'UNIVERSITY';
+  adminAnnouncementAudienceLabel.disabled = !targeted;
+  adminAnnouncementAudienceLabel.required = targeted;
+  adminAnnouncementAudienceLabel.placeholder = adminAnnouncementAudience.value === 'COURSE'
+    ? 'Exact course name' : adminAnnouncementAudience.value === 'YEAR'
+      ? 'Year number, for example 3' : adminAnnouncementAudience.value === 'MODULE'
+        ? 'Module code, for example COMP6001' : 'Not needed for all users';
+  if (!targeted) adminAnnouncementAudienceLabel.value = '';
+}
+adminAnnouncementAudience?.addEventListener('change', syncAdminAnnouncementAudience);
+
+document.querySelector('#adminAnnouncementForm')?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  submitAdminForm(form, form.querySelector('[type="submit"]'), async () => {
+    const actionUrl = document.querySelector('#adminAnnouncementAction').value;
+    await socialPost('/api/admin/announcements', {
+      category: document.querySelector('#adminAnnouncementCategory').value,
+      audienceType: adminAnnouncementAudience.value,
+      audienceLabel: adminAnnouncementAudienceLabel.value,
+      title: document.querySelector('#adminAnnouncementTitle').value,
+      body: document.querySelector('#adminAnnouncementBody').value,
+      actionLabel: actionUrl ? 'Open in UniCircle' : '',
+      actionUrl,
+      pinned: document.querySelector('#adminAnnouncementPinned').checked,
+      urgent: document.querySelector('#adminAnnouncementUrgent').checked,
+      expiresAt: adminIso('#adminAnnouncementExpiry')
+    });
+    return 'The announcement was published and the selected audience was notified.';
+  });
+});
+
+document.querySelector('#adminProgrammeForm')?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  submitAdminForm(form, form.querySelector('[type="submit"]'), async () => {
+    await socialPost('/api/admin/programmes', {
+      code: document.querySelector('#adminProgrammeCode').value,
+      title: document.querySelector('#adminProgrammeTitle').value,
+      qualification: document.querySelector('#adminProgrammeQualification').value
+    });
+    return 'The academic programme was created and is ready for modules.';
+  });
+});
+
+document.querySelector('#adminModuleForm')?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  submitAdminForm(form, form.querySelector('[type="submit"]'), async () => {
+    await socialPost('/api/admin/modules', {
+      programmeId: adminModuleProgramme.value,
+      code: document.querySelector('#adminModuleCode').value,
+      title: document.querySelector('#adminModuleTitle').value,
+      studyLevel: Number(document.querySelector('#adminModuleLevel').value),
+      yearOfStudy: Number(document.querySelector('#adminModuleYear').value)
+    });
+    return 'The module was created and linked to the selected programme.';
+  });
+});
+
+document.querySelector('#adminCircleForm')?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  submitAdminForm(form, form.querySelector('[type="submit"]'), async () => {
+    await socialPost('/api/admin/circles', {
+      name: document.querySelector('#adminCircleName').value,
+      description: document.querySelector('#adminCircleDescription').value,
+      category: document.querySelector('#adminCircleCategory').value
+    });
+    return 'The campus circle was created and users were notified.';
+  });
+});
 
 document.querySelector('#adminEventForm')?.addEventListener('submit', (event) => {
   event.preventDefault();

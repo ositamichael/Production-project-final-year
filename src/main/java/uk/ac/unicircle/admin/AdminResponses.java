@@ -10,7 +10,30 @@ final class AdminResponses {
 
     record OverviewResponse(long users, long activeUsers, long pendingConnections,
             long upcomingEvents, long activeServices, long openSupportCases,
-            long openSafetyReports, long pendingLostFoundReports) {
+            long openSafetyReports, long pendingLostFoundReports, long publishedAnnouncements,
+            long upcomingMeetings, long activeOpportunities, long activeCircles,
+            long confirmedBookings, long programmes, long modules) {
+    }
+
+    record AnnouncementAdminResponse(UUID id, String title, String category, String audienceType,
+            String audienceLabel, boolean pinned, boolean urgent, OffsetDateTime publishedAt,
+            OffsetDateTime expiresAt) {
+    }
+
+    record ProgrammeAdminResponse(UUID id, String code, String title, String qualification,
+            int moduleCount, boolean active) {
+    }
+
+    record ModuleAdminResponse(UUID id, String code, String title, int studyLevel,
+            UUID programmeId, String programmeTitle, int yearOfStudy, boolean active) {
+    }
+
+    record CircleAdminResponse(UUID id, String name, String description, String category,
+            int memberCount, boolean active, OffsetDateTime createdAt) {
+    }
+
+    record CatalogueRecordResponse(UUID id, String recordType, String title, String detail,
+            String status, OffsetDateTime effectiveAt) {
     }
 
     record UserResponse(UUID id, String displayName, String email, String role, String status,

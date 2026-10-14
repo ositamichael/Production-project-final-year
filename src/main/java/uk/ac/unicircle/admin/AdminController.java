@@ -16,19 +16,28 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import uk.ac.unicircle.admin.AdminRequests.CreateEventRequest;
+import uk.ac.unicircle.admin.AdminRequests.CreateAnnouncementRequest;
+import uk.ac.unicircle.admin.AdminRequests.CreateCircleRequest;
 import uk.ac.unicircle.admin.AdminRequests.CreateMeetingRequest;
+import uk.ac.unicircle.admin.AdminRequests.CreateModuleRequest;
 import uk.ac.unicircle.admin.AdminRequests.CreateOpportunityRequest;
+import uk.ac.unicircle.admin.AdminRequests.CreateProgrammeRequest;
 import uk.ac.unicircle.admin.AdminRequests.CreateServiceRequest;
 import uk.ac.unicircle.admin.AdminRequests.CreateSlotRequest;
 import uk.ac.unicircle.admin.AdminRequests.UpdateSafetyReportRequest;
 import uk.ac.unicircle.admin.AdminRequests.UpdateSupportCaseRequest;
 import uk.ac.unicircle.admin.AdminRequests.UpdateUserRequest;
 import uk.ac.unicircle.admin.AdminResponses.AuditResponse;
+import uk.ac.unicircle.admin.AdminResponses.AnnouncementAdminResponse;
+import uk.ac.unicircle.admin.AdminResponses.CatalogueRecordResponse;
+import uk.ac.unicircle.admin.AdminResponses.CircleAdminResponse;
 import uk.ac.unicircle.admin.AdminResponses.EventAdminResponse;
 import uk.ac.unicircle.admin.AdminResponses.MeetingAdminResponse;
+import uk.ac.unicircle.admin.AdminResponses.ModuleAdminResponse;
 import uk.ac.unicircle.admin.AdminResponses.OpportunityAdminResponse;
 import uk.ac.unicircle.admin.AdminResponses.OverviewResponse;
 import uk.ac.unicircle.admin.AdminResponses.PublisherResponse;
+import uk.ac.unicircle.admin.AdminResponses.ProgrammeAdminResponse;
 import uk.ac.unicircle.admin.AdminResponses.SafetyAdminResponse;
 import uk.ac.unicircle.admin.AdminResponses.ServiceAdminResponse;
 import uk.ac.unicircle.admin.AdminResponses.SlotAdminResponse;
@@ -59,6 +68,40 @@ class AdminController {
     UserResponse updateUser(Authentication authentication, @PathVariable UUID accountId,
             @Valid @RequestBody UpdateUserRequest request) {
         return admin.updateUser(authentication, accountId, request);
+    }
+
+    @PostMapping("/announcements")
+    AnnouncementAdminResponse createAnnouncement(Authentication authentication,
+            @Valid @RequestBody CreateAnnouncementRequest request) {
+        return admin.createAnnouncement(authentication, request);
+    }
+
+    @GetMapping("/programmes")
+    List<ProgrammeAdminResponse> programmes(Authentication authentication) {
+        return admin.programmes(authentication);
+    }
+
+    @PostMapping("/programmes")
+    ProgrammeAdminResponse createProgramme(Authentication authentication,
+            @Valid @RequestBody CreateProgrammeRequest request) {
+        return admin.createProgramme(authentication, request);
+    }
+
+    @PostMapping("/modules")
+    ModuleAdminResponse createModule(Authentication authentication,
+            @Valid @RequestBody CreateModuleRequest request) {
+        return admin.createModule(authentication, request);
+    }
+
+    @PostMapping("/circles")
+    CircleAdminResponse createCircle(Authentication authentication,
+            @Valid @RequestBody CreateCircleRequest request) {
+        return admin.createCircle(authentication, request);
+    }
+
+    @GetMapping("/catalogue")
+    List<CatalogueRecordResponse> catalogue(Authentication authentication) {
+        return admin.catalogue(authentication);
     }
 
     @PostMapping("/events")
