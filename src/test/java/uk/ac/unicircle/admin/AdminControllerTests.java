@@ -1,6 +1,7 @@
 package uk.ac.unicircle.admin;
 
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -158,6 +159,55 @@ class AdminControllerTests {
         mockMvc.perform(get("/api/opportunities").with(user("student")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].title", hasItem("Test Campus Junior Developer")));
+    }
+
+    @Test
+    void administratorCanBuildAndPublishTheCampusInformationStructure() throws Exception {
+        String programmeResponse = mockMvc.perform(post("/api/admin/programmes").with(user(ADMIN)).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"code":"ADMIN-TEST","title":"Administrator Test Programme",
+                                 "qualification":"BSc Test"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("ADMIN-TEST"))
+                .andReturn().getResponse().getContentAsString();
+        UUID programmeId = UUID.fromString(com.jayway.jsonpath.JsonPath.read(programmeResponse, "$.id"));
+
+        mockMvc.perform(post("/api/admin/modules").with(user(ADMIN)).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"programmeId":"%s","code":"ADMIN6001","title":"Admin Module",
+                                 "studyLevel":6,"yearOfStudy":3}
+                                """.formatted(programmeId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.programmeTitle").value("Administrator Test Programme"));
+
+        mockMvc.perform(post("/api/admin/circles").with(user(ADMIN)).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"Administrator Test Circle",
+                                 "description":"A real multi-account circle created through the administrator workspace.",
+                                 "category":"ACADEMIC"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.memberCount").value(1));
+
+        mockMvc.perform(post("/api/admin/announcements").with(user(ADMIN)).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"category":"UNIVERSITY","audienceType":"UNIVERSITY","audienceLabel":"",
+                                 "title":"Administrator Test Announcement",
+                                 "body":"This announcement verifies persistent campus publishing and notifications.",
+                                 "actionLabel":"","actionUrl":"",
+                                 "pinned":true,"urgent":false,"expiresAt":null}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Administrator Test Announcement"));
+
+        mockMvc.perform(get("/api/admin/catalogue").with(user(ADMIN)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].recordType", hasItems("ANNOUNCEMENT", "CIRCLE")));
     }
 
     @Test

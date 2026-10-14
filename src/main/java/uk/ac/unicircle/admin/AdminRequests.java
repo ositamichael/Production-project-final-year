@@ -22,6 +22,40 @@ final class AdminRequests {
             @NotBlank @Pattern(regexp = "ACTIVE|SUSPENDED") String status) {
     }
 
+    record CreateAnnouncementRequest(
+            @NotBlank @Pattern(regexp = "UNIVERSITY|MODULE|PLACEMENT|INTERNSHIP|CAREERS|EVENT|SOCIETY|URGENT")
+            String category,
+            @NotBlank @Pattern(regexp = "UNIVERSITY|COURSE|YEAR|MODULE") String audienceType,
+            @Size(max = 180) String audienceLabel,
+            @NotBlank @Size(max = 220) String title,
+            @NotBlank @Size(max = 5000) String body,
+            @Size(max = 100) String actionLabel,
+            @Pattern(regexp = "^$|^#[A-Za-z0-9-]+$") String actionUrl,
+            boolean pinned,
+            boolean urgent,
+            OffsetDateTime expiresAt) {
+    }
+
+    record CreateProgrammeRequest(
+            @NotBlank @Size(max = 60) String code,
+            @NotBlank @Size(max = 180) String title,
+            @NotBlank @Size(max = 80) String qualification) {
+    }
+
+    record CreateModuleRequest(
+            @NotBlank @Size(max = 60) String code,
+            @NotBlank @Size(max = 180) String title,
+            @Min(1) @Max(8) int studyLevel,
+            @NotNull UUID programmeId,
+            @Min(1) @Max(12) int yearOfStudy) {
+    }
+
+    record CreateCircleRequest(
+            @NotBlank @Size(min = 3, max = 120) String name,
+            @NotBlank @Size(min = 10, max = 600) String description,
+            @NotBlank @Pattern(regexp = "ACADEMIC|SOCIAL|COMMUNITY|CAREERS|PROJECTS") String category) {
+    }
+
     record CreateEventRequest(
             @NotBlank @Size(max = 180) String title,
             @NotBlank @Size(max = 600) String summary,
