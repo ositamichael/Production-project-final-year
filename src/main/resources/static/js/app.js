@@ -2891,6 +2891,7 @@ function showCallInterface(call, mode) {
 function stopCallMedia(call) {
   clearTimeout(call?.ringTimer);
   clearTimeout(call?.disconnectTimer);
+  clearTimeout(call?.connectTimer);
   call?.localStream?.getTracks().forEach((track) => track.stop());
   if (call?.peerConnection) {
     call.peerConnection.ontrack = null;
@@ -2937,6 +2938,10 @@ async function requestCallMedia(media) {
 
 async function createCallPeer(call) {
   const configuration = await loadCallConfiguration();
+  call.relayConfigured = configuration.relayConfigured;
+  callNetworkNotice.textContent = configuration.relayConfigured
+    ? `${configuration.privacyNotice} A secure relay is available if a direct connection is blocked.`
+    : `${configuration.privacyNotice} This pilot currently uses direct connections only, so some mobile or restricted Wi-Fi networks may block the call.`;
   const peer = new RTCPeerConnection({ iceServers: configuration.iceServers });
   call.peerConnection = peer;
   call.localStream.getTracks().forEach((track) => peer.addTrack(track, call.localStream));
@@ -2963,6 +2968,7 @@ async function createCallPeer(call) {
     if (peer.connectionState === 'connected') {
       clearTimeout(call.ringTimer);
       clearTimeout(call.disconnectTimer);
+      clearTimeout(call.connectTimer);
       call.phase = 'connected';
       callStatus.textContent = 'Connected';
     } else if (peer.connectionState === 'disconnected') {
@@ -2976,10 +2982,23 @@ async function createCallPeer(call) {
       }, 8000);
     } else if (peer.connectionState === 'failed' || peer.connectionState === 'closed') {
       void sendCallSignal('CALL_ENDED').catch(() => {});
-      finishCall('The call connection ended.');
+      finishCall(call.relayConfigured === false
+        ? 'A direct call could not connect across these networks. A TURN relay must be configured for reliable mobile and restricted Wi-Fi calls.'
+        : 'The call connection ended.');
     }
   });
   return peer;
+}
+
+function startCallConnectionDeadline(call) {
+  clearTimeout(call.connectTimer);
+  call.connectTimer = window.setTimeout(() => {
+    if (activeCall !== call || call.phase === 'connected') return;
+    void sendCallSignal('CALL_ENDED').catch(() => {});
+    finishCall(call.relayConfigured === false
+      ? 'The devices could not establish a direct media connection. Try the same Wi-Fi network, or configure a TURN relay for reliable calling.'
+      : 'The secure media connection timed out. Please try again.');
+  }, 20000);
 }
 
 async function flushCallCandidates(call) {
@@ -3050,6 +3069,7 @@ async function acceptIncomingCall() {
     callCamera.hidden = call.media !== 'VIDEO';
     callStatus.textContent = 'Connecting securely…';
     await sendCallSignal('CALL_ANSWER', { sdp: answer.sdp });
+    startCallConnectionDeadline(call);
   } catch (error) {
     await sendCallSignal('CALL_REJECTED').catch(() => {});
     finishCall(error.message || 'The call could not be answered.', 2200);
@@ -3093,6 +3113,7 @@ async function handleCallSignal(signal) {
     callStatus.textContent = 'Connecting securely…';
     await activeCall.peerConnection.setRemoteDescription({ type: 'answer', sdp: signal.sdp });
     await flushCallCandidates(activeCall);
+    startCallConnectionDeadline(activeCall);
   } else if (signal.type === 'CALL_ICE_CANDIDATE') {
     const candidate = new RTCIceCandidate({
       candidate: signal.candidate,

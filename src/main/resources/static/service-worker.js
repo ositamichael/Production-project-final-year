@@ -1,10 +1,10 @@
-const SHELL_CACHE = 'unicircle-shell-v9';
+const SHELL_CACHE = 'unicircle-shell-v10';
 const SHELL_FILES = [
   '/offline.html',
   '/favicon.svg',
   '/css/app.css?v=39',
   '/css/legal.css',
-  '/js/app.js?v=39',
+  '/js/app.js?v=40',
   '/manifest.webmanifest'
 ];
 
