@@ -15,9 +15,28 @@ const mobileMessageUnreadBadge = document.querySelector('#mobileMessageUnreadBad
 const globalSearch = document.querySelector('#globalSearch');
 const searchEmpty = document.querySelector('#searchEmpty');
 let pilotMode = false;
+let signedIn = false;
 let locationRefreshTimer;
+let lastDialogTrigger = null;
+let lastNavigationTrigger = null;
+
+function campusNow() {
+  return new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/London' }));
+}
+
+function updateCurrentDateAndGreeting() {
+  const now = campusNow();
+  const hour = now.getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  document.querySelectorAll('[data-time-greeting]').forEach((node) => { node.textContent = greeting; });
+  const weekday = document.querySelector('#todayWeekday');
+  const date = document.querySelector('#todayDate');
+  if (weekday) weekday.textContent = new Intl.DateTimeFormat('en-GB', { weekday: 'long', timeZone: 'Europe/London' }).format(now).toUpperCase();
+  if (date) date.textContent = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', timeZone: 'Europe/London' }).format(now);
+}
 
 function openModal(dialog) {
+  lastDialogTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   if (dialog.matches('dialog')) {
     if (typeof dialog.showModal === 'function' && !dialog.open) dialog.showModal();
     else dialog.setAttribute('open', '');
@@ -26,6 +45,7 @@ function openModal(dialog) {
   }
   dialog.classList.add('dialog-fallback');
   document.body.classList.add('modal-open');
+  requestAnimationFrame(() => dialog.querySelector('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled])')?.focus());
 }
 
 function closeModal(dialog) {
@@ -37,15 +57,35 @@ function closeModal(dialog) {
   }
   dialog.classList.remove('dialog-fallback');
   if (!document.querySelector('dialog[open], .modal-surface:not([hidden])')) document.body.classList.remove('modal-open');
+  lastDialogTrigger?.focus?.({ preventScroll: true });
+  lastDialogTrigger = null;
 }
 
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Tab') return;
+  const dialog = document.querySelector('dialog[open], .modal-surface:not([hidden])');
+  if (!dialog) return;
+  const focusable = [...dialog.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+    .filter((node) => !node.hidden && node.getClientRects().length);
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+  else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+});
+
 function setNavigationOpen(open) {
+  if (open) lastNavigationTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   sidebar.classList.toggle('open', open);
   sidebarScrim.hidden = !open;
   document.body.classList.toggle('nav-open', open);
   menuButton?.setAttribute('aria-expanded', String(open));
   mobileMoreButton?.setAttribute('aria-expanded', String(open));
   if (open) sidebarClose?.focus({ preventScroll: true });
+  else if (lastNavigationTrigger) {
+    lastNavigationTrigger.focus({ preventScroll: true });
+    lastNavigationTrigger = null;
+  }
 }
 
 menuButton?.addEventListener('click', () => setNavigationOpen(!sidebar.classList.contains('open')));
@@ -257,7 +297,9 @@ const bookingActivity = document.querySelector('#bookingActivity');
 const scheduleList = document.querySelector('#schedule-list');
 const todayCommitmentList = document.querySelector('#todayCommitmentList');
 const todayPlannedCount = document.querySelector('#todayPlannedCount');
+const todayCompletedCount = document.querySelector('#todayCompletedCount');
 const todayCampusCommitmentCount = document.querySelector('#todayCampusCommitmentCount');
+const todayFinishTime = document.querySelector('#todayFinishTime');
 const opportunityCatalogue = document.querySelector('#opportunityCatalogue');
 const dashboardOpportunityList = document.querySelector('#dashboardOpportunityList');
 const opportunitySearch = document.querySelector('#opportunitySearch');
@@ -275,7 +317,41 @@ const dashboardCircleList = document.querySelector('#dashboardCircleList');
 const circleDialog = document.querySelector('#circleDialog');
 const circleForm = document.querySelector('#circleForm');
 const circleSearch = document.querySelector('#circleSearch');
-const baseScheduleMarkup = scheduleList?.innerHTML || '';
+const guestScheduleMarkup = scheduleList?.innerHTML || '';
+const signedInBaseScheduleMarkup = `
+  <li><time>09:00<small>10:00</small></time><span class="time-dot blue-dot"></span><div><strong>Computer Science Lecture</strong><small>Fictional pilot timetable · Engineering Building, EB.2.14</small></div><span class="status attended">Demo record</span></li>
+  <li><time>11:00<small>12:00</small></time><span class="time-dot orange-dot"></span><div><strong>Group Project Meeting</strong><small>Fictional pilot timetable · Library, Study Room 3</small></div><span class="status upcoming">Demo record</span></li>
+  <li><time>14:00<small>15:00</small></time><span class="time-dot orange-dot"></span><div><strong>Data Structures Seminar</strong><small>Fictional pilot timetable · Engineering Building, EB.1.05</small></div><span class="status upcoming">Demo record</span></li>`;
+const agendaList = document.querySelector('#today .agenda-list');
+const signedInAgendaMarkup = agendaList?.innerHTML || '';
+
+function renderSignedOutAccountStates() {
+  signedIn = false;
+  if (scheduleList) scheduleList.innerHTML = guestScheduleMarkup;
+  if (agendaList) agendaList.innerHTML = '<li class="signed-out-agenda"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><div><strong>Sign in to view your day</strong><p>Guest mode never displays a fictional timetable as your personal activity.</p></div></li>';
+  if (todayPlannedCount) todayPlannedCount.textContent = '—';
+  if (todayCompletedCount) todayCompletedCount.textContent = '—';
+  if (todayCampusCommitmentCount) todayCampusCommitmentCount.textContent = '—';
+  if (todayFinishTime) todayFinishTime.textContent = '—';
+  document.querySelector('#calendarDownloadButton')?.setAttribute('disabled', '');
+  const bookingName = document.querySelector('#bookingName');
+  const bookingDetail = document.querySelector('#bookingDetail');
+  if (bookingName) bookingName.textContent = 'Sign in to view services';
+  if (bookingDetail) bookingDetail.textContent = 'No personal booking information is loaded';
+  if (bookButton) bookButton.disabled = true;
+  const dashboardIntro = document.querySelector('[data-dashboard-intro]');
+  if (dashboardIntro) dashboardIntro.textContent = 'Explore UniCircle or sign in to see your account activity.';
+}
+
+function renderSignedInAccountStates() {
+  signedIn = true;
+  if (agendaList) agendaList.innerHTML = signedInAgendaMarkup;
+  if (todayCompletedCount) todayCompletedCount.textContent = '0';
+  if (todayFinishTime) todayFinishTime.textContent = '—';
+  document.querySelector('#calendarDownloadButton')?.removeAttribute('disabled');
+  const dashboardIntro = document.querySelector('[data-dashboard-intro]');
+  if (dashboardIntro) dashboardIntro.textContent = 'Here is what is happening in your UniCircle pilot today.';
+}
 let loadedCampusEvents = [];
 let loadedCampusServices = [];
 let selectedBookingSlotId = null;
@@ -645,6 +721,8 @@ async function loadCampusEvents() {
     });
     if (response.status === 401 || response.status === 403) {
       eventCatalogue.innerHTML = '<div class="empty-state compact"><h3>Sign in to view campus events</h3><p>Events are matched to your verified university account.</p></div>';
+      document.querySelector('#eventCountBadge').textContent = 'Sign in required';
+      if (dashboardEventList) dashboardEventList.innerHTML = '<li class="signed-out-card-state"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><div><strong>Sign in to view pilot events</strong><small>No fictional dates are presented as your upcoming events.</small></div></li>';
       return;
     }
     if (!response.ok) throw new Error();
@@ -653,6 +731,8 @@ async function loadCampusEvents() {
     renderDashboardEvents();
   } catch {
     eventCatalogue.innerHTML = '<div class="empty-state compact"><h3>Events are temporarily unavailable</h3><p>Please try again shortly.</p></div>';
+    document.querySelector('#eventCountBadge').textContent = 'Unavailable';
+    if (dashboardEventList) dashboardEventList.innerHTML = '<li class="signed-out-card-state"><svg class="icon" aria-hidden="true"><use href="#alert"/></svg><div><strong>Events temporarily unavailable</strong><small>Refresh the page or try again shortly.</small></div></li>';
   }
 }
 
@@ -785,6 +865,7 @@ async function loadCampusServices() {
     const response = await fetch('/api/campus-life/services', { headers: { Accept: 'application/json' } });
     if (response.status === 401 || response.status === 403) {
       serviceCatalogue.innerHTML = '<div class="empty-state compact"><h3>Sign in to book a service</h3><p>Availability is account-specific.</p></div>';
+      renderSignedOutAccountStates();
       return;
     }
     if (!response.ok) throw new Error();
@@ -842,9 +923,15 @@ async function loadCampusBookings() {
   if (!bookingActivity) return;
   try {
     const response = await fetch('/api/campus-life/bookings', { headers: { Accept: 'application/json' } });
-    if (!response.ok) return;
+    if (response.status === 401 || response.status === 403) {
+      document.querySelector('#bookingCountBadge').textContent = 'Sign in required';
+      bookingActivity.innerHTML = '<div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><h3>Sign in to view bookings</h3><p>Booking history is private to your account.</p></div>';
+      return;
+    }
+    if (!response.ok) throw new Error('Bookings unavailable');
     renderCampusBookings(await response.json());
   } catch {
+    document.querySelector('#bookingCountBadge').textContent = 'Unavailable';
     bookingActivity.innerHTML = '<div class="empty-state compact"><h3>Booking activity is temporarily unavailable</h3></div>';
   }
 }
@@ -853,13 +940,21 @@ async function loadCampusSchedule() {
   if (!scheduleList && !todayCommitmentList) return;
   try {
     const response = await fetch('/api/campus-life/schedule', { headers: { Accept: 'application/json' } });
-    if (!response.ok) return;
+    if (response.status === 401 || response.status === 403) {
+      renderSignedOutAccountStates();
+      if (todayCommitmentList) todayCommitmentList.innerHTML = '<div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><h3>Sign in to view commitments</h3><p>Your registrations and bookings are private account records.</p></div>';
+      return;
+    }
+    if (!response.ok) throw new Error('Schedule unavailable');
     const activity = await response.json();
     loadedScheduleActivity = activity;
-    if (scheduleList) scheduleList.innerHTML = baseScheduleMarkup;
+    if (scheduleList) scheduleList.innerHTML = signedInBaseScheduleMarkup;
     if (todayCommitmentList) todayCommitmentList.replaceChildren();
-    if (todayPlannedCount) todayPlannedCount.textContent = String(4 + activity.length);
+    if (todayPlannedCount) todayPlannedCount.textContent = String(3 + activity.length);
+    if (todayCompletedCount) todayCompletedCount.textContent = '0';
     if (todayCampusCommitmentCount) todayCampusCommitmentCount.textContent = String(activity.length);
+    const endTimes = activity.map((item) => new Date(item.endsAt)).filter((date) => !Number.isNaN(date.getTime()));
+    if (todayFinishTime) todayFinishTime.textContent = endTimes.length ? campusTime(new Date(Math.max(...endTimes))) : '15:00';
     activity.forEach((item) => {
       if (scheduleList) {
         const row = document.createElement('li');
@@ -902,7 +997,7 @@ async function loadCampusSchedule() {
       todayCommitmentList.innerHTML = '<div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg><h3>No additional commitments</h3><p>Events you register for and services you book will appear here automatically.</p></div>';
     }
   } catch {
-    if (scheduleList) scheduleList.innerHTML = baseScheduleMarkup;
+    if (scheduleList) scheduleList.innerHTML = '<li class="signed-out-card-state"><svg class="icon" aria-hidden="true"><use href="#alert"/></svg><div><strong>Schedule temporarily unavailable</strong><small>Refresh the page or try again shortly.</small></div></li>';
     if (todayCommitmentList) todayCommitmentList.innerHTML = '<div class="empty-state compact"><h3>Your UniCircle schedule is temporarily unavailable</h3><p>Please try again shortly.</p></div>';
   }
 }
@@ -1049,6 +1144,8 @@ async function loadOpportunities() {
     ]);
     if ([catalogueResponse.status, trackerResponse.status].some((status) => status === 401 || status === 403)) {
       opportunityCatalogue.innerHTML = '<div class="empty-state compact"><h3>Sign in to view verified opportunities</h3><p>Listings and tracking are scoped to your university account.</p></div>';
+      document.querySelector('#opportunityCountBadge').textContent = 'Sign in required';
+      if (dashboardOpportunityList) dashboardOpportunityList.innerHTML = '<p class="loading-note">Sign in to load university-scoped opportunities.</p>';
       return;
     }
     if (!catalogueResponse.ok || !trackerResponse.ok) throw new Error();
@@ -1058,6 +1155,8 @@ async function loadOpportunities() {
     renderDashboardOpportunities();
   } catch {
     opportunityCatalogue.innerHTML = '<div class="empty-state compact"><h3>Opportunities are temporarily unavailable</h3><p>Please try again shortly.</p></div>';
+    document.querySelector('#opportunityCountBadge').textContent = 'Unavailable';
+    if (dashboardOpportunityList) dashboardOpportunityList.innerHTML = '<p class="loading-note">Opportunities are temporarily unavailable.</p>';
   }
 }
 
@@ -1604,7 +1703,7 @@ let assistantStatusLoaded = false;
 let activeAssistantConversationId = null;
 let assistantConversationsLoaded = false;
 const assistantModeLabels = new Map([
-  ['GENERAL', 'Smart help · local guidance and public sources'],
+  ['GENERAL', 'Smart help · reviewed local guidance'],
   ['UNIVERSITY_RESEARCH', 'University research · planning and source guidance'],
   ['STUDY_COACH', 'Study coach · explanations, practice and feedback'],
   ['CODE_LAB', 'Code lab · design, debug and test programs'],
@@ -1849,7 +1948,7 @@ async function loadAssistantStatus() {
   const indicator = document.querySelector('#assistantLiveIndicator');
   try {
     const response = await fetch('/api/assistant/status', { headers: { Accept: 'application/json' } });
-    if (response.status === 401) {
+    if (response.status === 401 || response.status === 403) {
       badge.textContent = 'Sign in required';
       indicator.innerHTML = '<i></i>Sign in';
       return;
@@ -1860,7 +1959,7 @@ async function loadAssistantStatus() {
     const advanced = status.level === 'ADVANCED';
     badge.textContent = advanced ? 'Advanced AI workspace' : 'Knowledge assistant active';
     indicator.classList.toggle('offline', false);
-    indicator.innerHTML = `<i></i>${advanced ? 'Advanced' : 'Sourced'}`;
+    indicator.innerHTML = `<i></i>${advanced ? 'Advanced provider' : 'Local guidance'}`;
   } catch {
     badge.textContent = 'Service unavailable';
     indicator.classList.add('offline');
@@ -1924,6 +2023,7 @@ function setProfileStatus(message, state = '') {
 }
 
 function showSignedOutActions() {
+  renderSignedOutAccountStates();
   profileSignIn.hidden = false;
   profileSignOut.hidden = true;
   if (messagesAccountBadge) messagesAccountBadge.hidden = true;
@@ -1975,6 +2075,7 @@ function updateVisibleIdentity(profile) {
 }
 
 function populateProfile(profile) {
+  renderSignedInAccountStates();
   staffReviewAccess = ['STAFF', 'ADMIN'].includes(profile.role);
   staffReviewNav.hidden = !staffReviewAccess;
   if (announcementPublisherPanel) announcementPublisherPanel.hidden = !staffReviewAccess;
@@ -2396,7 +2497,7 @@ function updateNotificationBadge(unread) {
   notificationButton.setAttribute('aria-label', unread
     ? `Notifications, ${unread} unread`
     : 'Notifications, none unread');
-  notificationSummary.textContent = unread ? `${unread} new update${unread === 1 ? '' : 's'}` : 'You are up to date';
+  if (signedIn) notificationSummary.textContent = unread ? `${unread} new update${unread === 1 ? '' : 's'}` : 'You are up to date';
 }
 
 function notificationVisual(type) {
@@ -2413,12 +2514,14 @@ async function loadNotifications() {
     const response = await fetch('/api/social/notifications', { headers: { Accept: 'application/json' } });
     if (response.status === 401 || response.status === 403) {
       notificationList.innerHTML = '<li class="notification-empty">Sign in to load your notifications.</li>';
-      notificationSummary.textContent = 'Sign in to view updates';
       updateNotificationBadge(0);
+      notificationSummary.textContent = 'Sign in to view updates';
+      markAllRead.disabled = true;
       return;
     }
     if (!response.ok) throw new Error();
     const notifications = await response.json();
+    markAllRead.disabled = false;
     const unread = notifications.filter((item) => !item.read).length;
     updateNotificationBadge(unread);
     notificationList.replaceChildren();
@@ -3402,9 +3505,12 @@ async function loadAnnouncements(category = '') {
   if (!announcementFeed && !dashboardAnnouncementList) return;
   try {
     const response = await fetch(`/api/campus-information/announcements?category=${encodeURIComponent(category)}`, { headers: { Accept: 'application/json' } });
-    if (response.status === 401) {
+    if (response.status === 401 || response.status === 403) {
       loadedAnnouncements = [];
       if (announcementFeed) announcementFeed.innerHTML = '<div class="empty-state compact"><h3>Sign in to view campus updates</h3><p>Announcements are targeted to your university account.</p></div>';
+      const badge = document.querySelector('#announcementCountBadge');
+      if (badge) badge.textContent = 'Sign in required';
+      if (dashboardAnnouncementList) dashboardAnnouncementList.innerHTML = '<p class="loading-note">Sign in to load account-specific pilot updates.</p>';
       return;
     }
     if (!response.ok) throw new Error('Campus updates are temporarily unavailable.');
@@ -3412,6 +3518,9 @@ async function loadAnnouncements(category = '') {
     renderAnnouncements();
   } catch (error) {
     if (announcementFeed) announcementFeed.innerHTML = `<div class="empty-state compact"><h3>Updates unavailable</h3><p>${error.message}</p></div>`;
+    const badge = document.querySelector('#announcementCountBadge');
+    if (badge) badge.textContent = 'Unavailable';
+    if (dashboardAnnouncementList) dashboardAnnouncementList.innerHTML = '<p class="loading-note">Campus updates are temporarily unavailable.</p>';
   }
 }
 
@@ -3522,6 +3631,9 @@ async function loadMeetings() {
     const response = await fetch('/api/campus-information/meetings', { headers: { Accept: 'application/json' } });
     if (response.status === 401) {
       if (meetingList) meetingList.innerHTML = '<p class="loading-note">Sign in to view your scheduled classes.</p>';
+      const badge = document.querySelector('#meetingCountBadge');
+      if (badge) badge.textContent = 'Sign in required';
+      if (dashboardMeetingList) dashboardMeetingList.innerHTML = '<p class="loading-note">Sign in to load your scheduled pilot sessions.</p>';
       return;
     }
     if (!response.ok) throw new Error('Scheduled classes are temporarily unavailable.');
@@ -3529,6 +3641,9 @@ async function loadMeetings() {
     renderMeetings();
   } catch (error) {
     if (meetingList) meetingList.innerHTML = `<p class="loading-note">${error.message}</p>`;
+    const badge = document.querySelector('#meetingCountBadge');
+    if (badge) badge.textContent = 'Unavailable';
+    if (dashboardMeetingList) dashboardMeetingList.innerHTML = '<p class="loading-note">Scheduled classes are temporarily unavailable.</p>';
   }
 }
 
@@ -4054,6 +4169,8 @@ fetch('/api/platform/status')
   .catch(() => document.documentElement.dataset.platformStage = 'offline');
 
 const initialPage = hashToPage.get(location.hash.slice(1)) ?? 'campus';
+updateCurrentDateAndGreeting();
+renderSignedOutAccountStates();
 showPage(initialPage, { updateHistory: false, focus: false });
 
 async function restoreSessionIdentity() {

@@ -103,6 +103,49 @@ class FrontendStructureTests {
     }
 
     @Test
+    void guestDashboardDoesNotPresentFictionalRecordsAsPersonalActivity() throws IOException {
+        var htmlResource = getClass().getResourceAsStream("/static/index.html");
+        var scriptResource = getClass().getResourceAsStream("/static/js/app.js");
+        assertThat(htmlResource).isNotNull();
+        assertThat(scriptResource).isNotNull();
+
+        var html = new String(htmlResource.readAllBytes(), StandardCharsets.UTF_8);
+        var script = new String(scriptResource.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(html)
+            .contains("data-time-greeting")
+            .contains("id=\"todayWeekday\"")
+            .contains("id=\"todayDate\"")
+            .contains("Sign in to view your schedule")
+            .contains("Private messages are protected")
+            .contains("Sign in to view pilot events")
+            .doesNotContain("Good morning, <span data-current-user-first-name>Student")
+            .doesNotContain("Hi Michael")
+            .doesNotContain("<h3>8 October</h3>")
+            .doesNotContain("<small>MAR</small>")
+            .doesNotContain("Emily Watson");
+        assertThat(script)
+            .contains("renderSignedOutAccountStates")
+            .contains("Sign in required")
+            .contains("Europe/London")
+            .contains("Fictional pilot timetable")
+            .contains("Local guidance")
+            .doesNotContain("advanced ? 'Advanced' : 'Sourced'");
+    }
+
+    @Test
+    void friendLocationIsNotMisrepresentedAsCampusNavigation() throws IOException {
+        var resource = getClass().getResourceAsStream("/static/index.html");
+        assertThat(resource).isNotNull();
+
+        var html = new String(resource.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(html)
+            .contains("Friend Location</a>")
+            .contains("It is not a campus navigation map or emergency tracker")
+            .contains("Voluntary sharing controls")
+            .doesNotContain("<strong>Campus Map</strong><small>Explore campus</small>");
+    }
+
+    @Test
     void nonProfileVisualsUseContextualIconsAndCampusPhotography() throws IOException {
         var resource = getClass().getResourceAsStream("/static/index.html");
         var stylesheetResource = getClass().getResourceAsStream("/static/css/app.css");

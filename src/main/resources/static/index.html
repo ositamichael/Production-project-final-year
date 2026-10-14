@@ -10,8 +10,8 @@
   <title>UniCircle — My Campus</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="stylesheet" href="/css/app.css?v=32">
-  <script src="/js/app.js?v=32" defer></script>
+  <link rel="stylesheet" href="/css/app.css?v=33">
+  <script src="/js/app.js?v=33" defer></script>
 </head>
 <body>
   <svg class="svg-sprite" aria-hidden="true">
@@ -88,7 +88,7 @@
         <a class="nav-item" href="#events-page" data-page-link="events"><svg class="icon" aria-hidden="true"><use href="#events"/></svg> Events</a>
         <a class="nav-item" href="#services-page" data-page-link="services"><svg class="icon" aria-hidden="true"><use href="#building"/></svg> Book a Service</a>
         <a class="nav-item" href="#opportunities-page" data-page-link="opportunities"><svg class="icon" aria-hidden="true"><use href="#briefcase"/></svg> Opportunities</a>
-        <a class="nav-item" href="#map-page" data-page-link="map"><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg> Campus Map</a>
+        <a class="nav-item" href="#map-page" data-page-link="map"><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg> Friend Location</a>
         <a class="nav-item" href="#wellbeing-page" data-page-link="wellbeing"><svg class="icon" aria-hidden="true"><use href="#heart"/></svg> Wellbeing &amp; Support</a>
         <a class="nav-item" href="#lost-found-page" data-page-link="lost-found"><svg class="icon" aria-hidden="true"><use href="#search"/></svg> Lost and Found</a>
         <a class="nav-item" href="#lost-found-review-page" data-page-link="lost-found-review" id="staffReviewNav" hidden><svg class="icon" aria-hidden="true"><use href="#shield"/></svg> Review queue</a>
@@ -113,12 +113,12 @@
         <a class="mobile-brand" href="#campus" data-open-page="campus" aria-label="UniCircle home"><span class="brand-mark" aria-hidden="true"><span></span></span><span>UniCircle</span></a>
         <div class="welcome">
           <svg class="icon sun" aria-hidden="true"><use href="#sun"/></svg>
-          <div><h1>Good morning, <span data-current-user-first-name>Student</span></h1><p>Here is what is happening on campus today.</p></div>
+          <div><h1><span data-time-greeting>Welcome</span>, <span data-current-user-first-name>guest</span></h1><p data-dashboard-intro>Explore UniCircle or sign in to see your account activity.</p></div>
         </div>
         <label class="search-box">
           <svg class="icon" aria-hidden="true"><use href="#search"/></svg>
           <span class="sr-only">Search dashboard</span>
-          <input id="globalSearch" type="search" placeholder="Search people, events, services…" autocomplete="off">
+          <input id="globalSearch" type="search" placeholder="Filter this dashboard…" autocomplete="off">
         </label>
         <button class="icon-button" id="notificationButton" type="button" aria-expanded="false" aria-controls="notificationPanel" aria-label="Notifications, none unread">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"/><path d="M10 21h4"/></svg>
@@ -151,12 +151,7 @@
         </article>
         <article class="card schedule-card searchable" id="schedule" data-search="schedule lecture project seminar gym">
           <div class="card-heading"><h2><span class="heading-icon blue"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg></span> Today's Schedule</h2><a href="#today" data-open-page="today">View all</a></div>
-          <ol class="timeline" id="schedule-list">
-            <li><time>09:00<small>10:00</small></time><span class="time-dot blue-dot"></span><div><strong>Computer Science Lecture</strong><small>Engineering Building, EB.2.14</small></div><span class="status attended">Attended <svg class="icon" aria-hidden="true"><use href="#check"/></svg></span></li>
-            <li><time>11:00<small>12:00</small></time><span class="time-dot orange-dot"></span><div><strong>Group Project Meeting</strong><small>Library, Study Room 3</small></div><span class="status upcoming">Upcoming</span></li>
-            <li><time>14:00<small>15:00</small></time><span class="time-dot orange-dot"></span><div><strong>Data Structures Seminar</strong><small>Engineering Building, EB.1.05</small></div><span class="status upcoming">Upcoming</span></li>
-            <li><time>16:00<small>17:00</small></time><span class="time-dot green-dot"></span><div><strong>Gym Session</strong><small>Sports Centre</small></div><span class="status upcoming">Upcoming</span></li>
-          </ol>
+          <ol class="timeline" id="schedule-list"><li class="signed-out-card-state"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><div><strong>Sign in to view your schedule</strong><small>No attendance or timetable information is shown to guests.</small></div></li></ol>
         </article>
 
         <article class="card searchable" id="circles" data-search="campus circles computer science society board games sustainable campus">
@@ -168,21 +163,17 @@
 
         <article class="card searchable" id="messages" data-search="messages emily group project tutor">
           <div class="card-heading"><h2><span class="heading-icon navy"><svg class="icon" aria-hidden="true"><use href="#message"/></svg></span> Messages</h2><a href="#messages-page" data-open-page="messages">View all</a></div>
-          <ul class="message-list" id="dashboardMessagesList">
-            <li><span class="avatar pink-avatar">EW</span><div><strong>Emily Watson</strong><small>Are you still coming to the library later?</small></div><time>10:24</time><span class="unread">2</span></li>
-            <li><span class="avatar navy-avatar">CS</span><div><strong>CS Group Project</strong><small>James: I uploaded the slides…</small></div><time>09:18</time><span class="unread">1</span></li>
-            <li><span class="avatar green-avatar">DT</span><div><strong>Dr Taylor</strong><small>Your assignment feedback is now available.</small></div><time>Yesterday</time></li>
-          </ul>
+          <ul class="message-list" id="dashboardMessagesList"><li class="signed-out-card-state"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><div><strong>Private messages are protected</strong><small>Sign in to load your own accepted conversations.</small></div></li></ul>
         </article>
 
         <article class="card campus-updates-card searchable" data-search="announcements module placement internship university updates">
           <div class="card-heading"><h2><span class="heading-icon orange"><svg class="icon" aria-hidden="true"><use href="#megaphone"/></svg></span> Campus Updates</h2><a href="#updates-page" data-open-page="updates">View all</a></div>
-          <div class="dashboard-update-list" id="dashboardAnnouncementList"><p class="loading-note">Loading official updates…</p></div>
+          <div class="dashboard-update-list" id="dashboardAnnouncementList"><p class="loading-note">Sign in to load account-specific pilot updates.</p></div>
         </article>
 
         <article class="card live-class-card searchable" data-search="online class team meeting lecture seminar live">
           <div class="card-heading"><h2><span class="heading-icon blue"><svg class="icon" aria-hidden="true"><use href="#monitor-play"/></svg></span> Live Classes</h2><a href="#live-classes-page" data-open-page="live-classes">View all</a></div>
-          <div class="dashboard-meeting-list" id="dashboardMeetingList"><p class="loading-note">Loading scheduled classes…</p></div>
+          <div class="dashboard-meeting-list" id="dashboardMeetingList"><p class="loading-note">Sign in to load your scheduled pilot sessions.</p></div>
         </article>
 
         <section class="quick-actions" aria-label="Campus services">
@@ -191,7 +182,7 @@
           <a class="quick-card blue searchable" href="#live-classes-page" data-open-page="live-classes" data-search="online classes lectures project meetings"><span><svg class="icon" aria-hidden="true"><use href="#monitor-play"/></svg></span><strong>Live Classes</strong><small>Join, chat, ask and participate</small></a>
           <a class="quick-card blue searchable" href="#services-page" data-open-page="services" data-search="book service rooms appointments"><span><svg class="icon" aria-hidden="true"><use href="#building"/></svg></span><strong>Book a Service</strong><small>Rooms, facilities, appointments</small></a>
           <a class="quick-card orange searchable" href="#opportunities-page" data-open-page="opportunities" data-search="opportunities jobs internships volunteering"><span><svg class="icon" aria-hidden="true"><use href="#briefcase"/></svg></span><strong>Opportunities</strong><small>Jobs, internships, volunteering</small></a>
-          <a class="quick-card mint searchable" href="#map-page" data-open-page="map" data-search="campus map nearby people"><span><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg></span><strong>Campus Map</strong><small>Explore campus</small></a>
+          <a class="quick-card mint searchable" href="#map-page" data-open-page="map" data-search="friend location accepted connections sharing"><span><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg></span><strong>Friend Location</strong><small>Voluntary sharing controls</small></a>
           <a class="quick-card rose searchable" href="#wellbeing-page" data-open-page="wellbeing" data-search="wellbeing support help advice"><span><svg class="icon" aria-hidden="true"><use href="#heart"/></svg></span><strong>Wellbeing &amp; Support</strong><small>Get help and advice</small></a>
           <a class="quick-card peach searchable" href="#lost-found-page" data-open-page="lost-found" data-search="lost found report items"><span><svg class="icon" aria-hidden="true"><use href="#search"/></svg></span><strong>Lost and Found</strong><small>Report or browse items</small></a>
           <a class="quick-card violet searchable" href="#assistant-page" data-open-page="assistant" data-search="ask unicircle help assistant"><span><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><strong>Ask UniCircle</strong><small>Find campus information</small></a>
@@ -199,11 +190,7 @@
 
         <article class="card events-card searchable" id="events" data-search="events careers fair mindfulness international food festival">
           <div class="card-heading"><h2><span class="heading-icon coral"><svg class="icon" aria-hidden="true"><use href="#events"/></svg></span> Upcoming Events</h2><a href="#events-page" data-open-page="events">View all</a></div>
-          <ul class="event-list" id="dashboardEventList">
-            <li><time><strong>12</strong><small>MAR</small></time><div class="event-thumb event-photo careers" role="img" aria-label="Students at a university careers fair"></div><div><strong>Spring Careers Fair</strong><small>Wed 12 Mar, 10:00–16:00</small><small class="meta-with-icon"><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg>Main Hall</small></div><span class="tag green-tag">Careers</span></li>
-            <li><time><strong>14</strong><small>MAR</small></time><div class="event-thumb event-photo wellbeing" role="img" aria-label="Students attending a mindfulness workshop"></div><div><strong>Mindfulness Workshop</strong><small>Fri 14 Mar, 14:00–15:00</small><small class="meta-with-icon"><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg>Wellbeing Centre</small></div><span class="tag green-tag">Wellbeing</span></li>
-            <li><time><strong>18</strong><small>MAR</small></time><div class="event-thumb event-photo social" role="img" aria-label="Students at an international food festival"></div><div><strong>International Food Festival</strong><small>Tue 18 Mar, 12:00–16:00</small><small class="meta-with-icon"><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg>Central Plaza</small></div><span class="tag coral-tag">Social</span></li>
-          </ul>
+          <ul class="event-list" id="dashboardEventList"><li class="signed-out-card-state"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><div><strong>Sign in to view pilot events</strong><small>Dates are loaded from the signed-in university-scoped catalogue.</small></div></li></ul>
         </article>
 
         <article class="card booking-card searchable" id="booking" data-search="book service lecturer appointment room facility">
@@ -223,14 +210,14 @@
         </article>
 
         <article class="card map-card searchable" id="map" data-search="campus map nearby accepted connections">
-          <div class="card-heading"><h2><span class="heading-icon green"><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg></span> Campus Map</h2><a href="#map-page" data-open-page="map">View all</a></div>
+          <div class="card-heading"><h2><span class="heading-icon green"><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg></span> Friend Location</h2><a href="#map-page" data-open-page="map">View controls</a></div>
           <p class="panel-note" id="mapDashboardNote">Location sharing is off by default. Open the map to decide whether to share with accepted connections.</p>
           <a class="message-button" href="#map-page" data-open-page="map">Open location controls</a>
         </article>
 
         <article class="card assistant-card searchable" id="assistant" data-search="ask unicircle assistant quiet study sports career">
           <div class="card-heading"><h2><span class="heading-icon violet"><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span> Ask UniCircle</h2></div>
-          <div class="assistant-intro"><span class="avatar assistant-avatar">U</span><p>Hi Michael. I can help you find campus information in this prototype.</p></div>
+          <div class="assistant-intro"><span class="avatar assistant-avatar">U</span><p>Ask for basic study, computing and campus guidance. Account-specific university data is not available to guests.</p></div>
           <div class="prompt-list">
             <button type="button">Find a quiet study space</button>
             <button type="button">How do I book a sports facility?</button>
@@ -257,11 +244,11 @@
           <span class="data-badge">Prototype timetable data</span>
         </header>
         <div class="metric-row" aria-label="Today summary">
-          <article><strong id="todayPlannedCount">4</strong><span>Planned activities</span></article><article><strong>1</strong><span>Completed</span></article><article><strong id="todayCampusCommitmentCount">0</strong><span>Registered &amp; booked</span></article><article><strong>17:00</strong><span>Day finishes</span></article>
+          <article><strong id="todayPlannedCount">—</strong><span>Planned activities</span></article><article><strong id="todayCompletedCount">—</strong><span>Completed</span></article><article><strong id="todayCampusCommitmentCount">—</strong><span>Registered &amp; booked</span></article><article><strong id="todayFinishTime">—</strong><span>Day finishes</span></article>
         </div>
         <div class="content-layout two-one">
           <article class="content-panel">
-            <div class="section-heading"><div><span class="eyebrow">THURSDAY</span><h3>8 October</h3></div><button class="secondary-button" id="calendarDownloadButton" type="button"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg> Download calendar</button></div>
+            <div class="section-heading"><div><span class="eyebrow" id="todayWeekday">TODAY</span><h3 id="todayDate">Current date</h3></div><button class="secondary-button" id="calendarDownloadButton" type="button"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg> Download calendar</button></div>
             <ol class="agenda-list">
               <li class="complete"><time>09:00<span>10:00</span></time><span class="agenda-marker"></span><div><strong>Computer Science Lecture</strong><p>Engineering Building · EB.2.14</p><span class="pill success">Attended</span></div></li>
               <li><time>11:00<span>12:00</span></time><span class="agenda-marker orange-dot"></span><div><strong>Group Project Meeting</strong><p>Library · Study Room 3</p><span class="pill info">Next activity</span></div></li>
@@ -357,14 +344,14 @@
       </section>
 
       <section class="page-view page-surface" id="map-page" data-page="map" hidden tabindex="-1" aria-labelledby="mapTitle">
-        <header class="view-hero"><div class="view-title"><span class="view-icon green"><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg></span><div><span class="eyebrow">CONSENT-BASED FRIEND LOCATION</span><h2 id="mapTitle">Find connected friends</h2><p>See a friend's latest shared position only when you have both accepted a connection and both chosen to share.</p></div></div><span class="privacy-badge"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg> Off by default</span></header>
+        <header class="view-hero"><div class="view-title"><span class="view-icon green"><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg></span><div><span class="eyebrow">CONSENT-BASED FRIEND LOCATION</span><h2 id="mapTitle">Friend Location</h2><p>This page is for voluntary sharing between accepted connections who have both chosen to share. It is not a campus navigation map or emergency tracker.</p></div></div><span class="privacy-badge"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg> Off by default</span></header>
         <div class="map-workspace"><article class="content-panel location-panel"><h3>Location sharing</h3><p id="locationStatus" role="status" aria-live="polite">Checking pilot availability…</p><p>Sharing is voluntary, visible only to accepted connections who are also sharing, and expires five minutes after your last update. This is a pilot feature, not a safety or emergency tracker.</p><div class="location-actions"><button class="primary-button" id="locationStart" type="button" disabled>Share my location for 5 minutes</button><button class="secondary-button" id="locationStop" type="button" disabled>Stop sharing now</button></div><p class="panel-note">Your browser will ask for permission. Location is rounded to about 11 metres; device accuracy may be worse. Keep this page open for updates. You can stop at any time.</p></article><aside class="content-panel map-sidebar"><h3>Friends sharing now</h3><div id="friendLocations" aria-live="polite"><p>No one is visible until you choose to share.</p></div><button class="secondary-button" id="locationRefresh" type="button" disabled>Refresh friends</button><p class="panel-note">Opening a friend on OpenStreetMap shares those coordinates with that map provider.</p></aside></div>
       </section>
 
       <section class="page-view page-surface" id="wellbeing-page" data-page="wellbeing" hidden tabindex="-1" aria-labelledby="wellbeingTitle">
         <header class="view-hero"><div class="view-title"><span class="view-icon coral"><svg class="icon" aria-hidden="true"><use href="#heart"/></svg></span><div><span class="eyebrow">SUPPORT</span><h2 id="wellbeingTitle">Wellbeing &amp; Support</h2><p>Find the right university support route and privately track a problem from your account.</p></div></div><button class="primary-compact" id="supportFormFocus" type="button"><svg class="icon" aria-hidden="true"><use href="#mail"/></svg> Report a problem</button></header>
         <article class="safety-banner"><svg class="icon" aria-hidden="true"><use href="#heart"/></svg><div><strong>Need urgent help?</strong><p>UniCircle is not an emergency service. A deployed version must show the university's verified emergency and out-of-hours contacts.</p></div></article>
-        <div class="feature-grid three"><article class="service-tile"><span class="view-icon coral"><svg class="icon" aria-hidden="true"><use href="#mindfulness"/></svg></span><h3>Mental wellbeing</h3><p>Counselling information, wellbeing appointments and self-help resources.</p><button class="secondary-button support-route" type="button" data-support-category="WELLBEING">View options</button></article><article class="service-tile"><span class="view-icon blue"><svg class="icon" aria-hidden="true"><use href="#graduation"/></svg></span><h3>Student advice</h3><p>Guidance for finance, housing, academic concerns and university procedures.</p><button class="secondary-button support-route" type="button" data-support-category="OTHER">Find advice</button></article><article class="service-tile"><span class="view-icon violet"><svg class="icon" aria-hidden="true"><use href="#accessibility"/></svg></span><h3>Disability support</h3><p>Access information and reasonable-adjustment support routes.</p><button class="secondary-button support-route" type="button" data-support-category="ACCESSIBILITY">View support</button></article></div>
+        <div class="feature-grid three"><article class="service-tile"><span class="view-icon coral"><svg class="icon" aria-hidden="true"><use href="#mindfulness"/></svg></span><h3>Mental wellbeing</h3><p>Create a private pilot request for the fictional wellbeing team. This is not emergency support.</p><button class="secondary-button support-route" type="button" data-support-category="WELLBEING">Start wellbeing request</button></article><article class="service-tile"><span class="view-icon blue"><svg class="icon" aria-hidden="true"><use href="#graduation"/></svg></span><h3>Student advice</h3><p>Create a private pilot request for finance, housing or academic guidance.</p><button class="secondary-button support-route" type="button" data-support-category="OTHER">Start advice request</button></article><article class="service-tile"><span class="view-icon violet"><svg class="icon" aria-hidden="true"><use href="#accessibility"/></svg></span><h3>Disability support</h3><p>Create a private pilot request for accessibility or reasonable-adjustment guidance.</p><button class="secondary-button support-route" type="button" data-support-category="ACCESSIBILITY">Start accessibility request</button></article></div>
         <div class="support-workspace">
           <form class="content-panel support-form" id="supportCaseForm"><div class="section-heading"><div><span class="eyebrow">PRIVATE REQUEST</span><h3>Tell the right team what happened</h3></div><svg class="icon" aria-hidden="true"><use href="#lock"/></svg></div><label>Type of problem<select id="supportCategory" required><option value="">Choose a team</option><option value="ACADEMIC">Academic or course</option><option value="IT">IT or account access</option><option value="FINANCE">Fees or finance</option><option value="ACCOMMODATION">Accommodation</option><option value="WELLBEING">Wellbeing</option><option value="ACCESSIBILITY">Disability and inclusion</option><option value="OTHER">Something else</option></select></label><label>Short subject<input id="supportSubject" type="text" maxlength="220" required placeholder="For example: Cannot access my module page"></label><label>What happened?<textarea id="supportDescription" maxlength="5000" required placeholder="Include the useful facts, but do not enter passwords, bank details or emergency information."></textarea></label><button class="primary-button" type="submit">Create private support request</button><p class="form-status" id="supportFormStatus" role="status"></p><p class="panel-note">The pilot stores this request inside UniCircle. Sending it by email requires an approved university mail connection and is not falsely shown as sent.</p></form>
           <section class="content-panel"><div class="section-heading"><div><span class="eyebrow">MY REQUESTS</span><h3>Support tracking</h3></div><button class="secondary-button" id="supportRefresh" type="button">Refresh</button></div><div class="support-case-list" id="supportCaseList" aria-live="polite"><div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#mail"/></svg><h3>No requests yet</h3><p>Your private support history will appear here.</p></div></div></section>
@@ -425,7 +412,7 @@
             <p class="panel-note">UniCircle can make mistakes. Important admissions, fees, visa, policy and deadline information must be checked against the cited official source.</p>
           </aside>
           <article class="assistant-chat">
-            <div class="assistant-chat-heading"><span class="avatar assistant-avatar"><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><div><h3 id="assistantChatTitle">New chat</h3><span id="assistantModeLabel">Smart help · local guidance and public sources</span></div><span class="assistant-live-indicator" id="assistantLiveIndicator"><i></i>Checking</span></div>
+            <div class="assistant-chat-heading"><span class="avatar assistant-avatar"><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><div><h3 id="assistantChatTitle">New chat</h3><span id="assistantModeLabel">Smart help · reviewed local guidance</span></div><span class="assistant-live-indicator" id="assistantLiveIndicator"><i></i>Checking</span></div>
             <div class="assistant-chat-body" id="pageAssistantResponse" role="log" aria-live="polite" aria-label="Ask UniCircle conversation"><div class="assistant-welcome"><span><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><h3>How can I help?</h3><p>Ask a question, research a university, work through a topic, debug code or describe an image to create.</p></div></div>
             <form class="assistant-composer" id="pageAssistantForm"><label class="sr-only" for="pageAssistantInput">Ask UniCircle</label><textarea id="pageAssistantInput" rows="1" maxlength="4000" placeholder="Ask UniCircle anything…"></textarea><button type="submit" aria-label="Send question"><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button></form>
             <label class="assistant-public-control" for="assistantPublicLookup"><input id="assistantPublicLookup" type="checkbox"><span><strong>Use public sources for wider answers</strong><small>Only a shortened, screened topic is sent to English Wikipedia. Do not enter personal or confidential information.</small></span></label>
