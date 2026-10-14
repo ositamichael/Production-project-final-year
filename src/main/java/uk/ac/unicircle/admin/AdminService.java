@@ -386,6 +386,9 @@ class AdminService {
                     "This service already has a slot at that time.", duplicate);
         }
         audit(admin, "CREATE_SLOT", "SERVICE_SLOT", id, "Created Test Campus availability slot");
+        ServiceAdminResponse service = service(admin, serviceId);
+        notifyCampus(admin, "BOOKING", "New booking time available",
+                service.title() + " can now be booked in UniCircle.", "SERVICE", serviceId);
         return new SlotAdminResponse(id, serviceId, request.startsAt(), request.endsAt(), request.capacity(), true);
     }
 
@@ -393,33 +396,106 @@ class AdminService {
     MeetingAdminResponse createMeeting(Authentication authentication, CreateMeetingRequest request) {
         SignedInAccount admin = requireAdmin(authentication);
         requireValidTime(request.startsAt(), request.endsAt());
+        String providerUrl = blankToNull(request.providerJoinUrl());
+        if (providerUrl != null && !providerUrl.matches("^https://[^\\s]+$")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "The live-room link must be a complete HTTPS address.");
+        }
+        String audienceLabel = blankToNull(request.audienceLabel());
+        if (!List.of("CAMPUS", "SELECTED").contains(request.audienceType()) && audienceLabel == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Enter the course, year, module or circle for this session.");
+        }
         UUID id = UUID.randomUUID();
         String hostName = jdbc.queryForObject("SELECT display_name FROM user_accounts WHERE id = ?",
                 String.class, admin.accountId());
+        String accessScope = "CAMPUS".equals(request.audienceType()) ? "CAMPUS" : "ASSIGNED";
         jdbc.update("""
                 INSERT INTO learning_meetings
                   (id, university_id, host_id, organiser_id, host_name, title, module_code,
                    meeting_type, starts_at, ends_at, lobby_opens_at, location_label, agenda,
-                   provider_join_url, published)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                   provider_join_url, access_scope, published)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, id, admin.universityId(), admin.accountId(), admin.accountId(), hostName,
                 request.title().strip(), blankToNull(request.moduleCode()), request.meetingType(),
                 request.startsAt(), request.endsAt(), request.startsAt().minusMinutes(10),
                 request.locationLabel().strip(), blankToNull(request.agenda()),
-                blankToNull(request.providerJoinUrl()), request.published());
-        Set<UUID> assignees = new LinkedHashSet<>(request.assigneeIds() == null ? List.of() : request.assigneeIds());
+                providerUrl, accessScope, request.published());
+        Set<UUID> assignees = resolveMeetingAudience(admin, request);
         for (UUID accountId : assignees) {
             requireActiveCampusUser(admin, accountId);
             jdbc.update("""
                     INSERT INTO meeting_assignments (meeting_id, user_id, assigned_by)
                     VALUES (?, ?, ?)
                     """, id, accountId, admin.accountId());
-            notification(admin.universityId(), accountId, "MEETING", "Test Campus session assigned",
+            if (request.published()) {
+                notification(admin.universityId(), accountId, "MEETING", "Test Campus session assigned",
+                        request.title().strip() + " has been added to your UniCircle schedule.", "MEETING", id);
+            }
+        }
+        if (request.published() && "CAMPUS".equals(request.audienceType())) {
+            notifyCampus(admin, "MEETING", "New Test Campus live session",
                     request.title().strip() + " has been added to your UniCircle schedule.", "MEETING", id);
         }
         audit(admin, "CREATE_MEETING", "MEETING", id,
-                "Created Test Campus session for " + assignees.size() + " assigned user(s)");
+                "Created Test Campus session for " + request.audienceType()
+                        + (audienceLabel == null ? "" : " · " + audienceLabel)
+                        + " (" + assignees.size() + " direct assignment(s))");
         return meeting(admin, id);
+    }
+
+    private Set<UUID> resolveMeetingAudience(SignedInAccount admin, CreateMeetingRequest request) {
+        Set<UUID> recipients = new LinkedHashSet<>();
+        if ("CAMPUS".equals(request.audienceType())) return recipients;
+        if ("SELECTED".equals(request.audienceType())) {
+            recipients.addAll(request.assigneeIds() == null ? List.of() : request.assigneeIds());
+            if (recipients.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Select at least one person for this session.");
+            }
+            return recipients;
+        }
+        String label = request.audienceLabel().strip();
+        String sql = switch (request.audienceType()) {
+            case "COURSE" -> """
+                    SELECT id FROM user_accounts
+                    WHERE university_id = ? AND account_status = 'ACTIVE'
+                      AND LOWER(COALESCE(course_name, '')) = LOWER(?)
+                    """;
+            case "YEAR" -> """
+                    SELECT id FROM user_accounts
+                    WHERE university_id = ? AND account_status = 'ACTIVE'
+                      AND CAST(year_of_study AS VARCHAR) = ?
+                    """;
+            case "MODULE" -> """
+                    SELECT DISTINCT account.id FROM user_accounts account
+                    JOIN enrolments enrolment ON enrolment.user_id = account.id AND enrolment.status = 'ACTIVE'
+                    JOIN programme_modules link ON link.programme_id = enrolment.programme_id
+                    JOIN academic_modules module ON module.id = link.module_id
+                    WHERE account.university_id = ? AND account.account_status = 'ACTIVE'
+                      AND (LOWER(module.code) = LOWER(?) OR LOWER(module.title) = LOWER(?))
+                    """;
+            case "CIRCLE" -> """
+                    SELECT member.account_id FROM circle_members member
+                    JOIN campus_circles circle ON circle.id = member.circle_id
+                    JOIN user_accounts account ON account.id = member.account_id
+                    WHERE circle.university_id = ? AND circle.active = TRUE
+                      AND account.account_status = 'ACTIVE' AND LOWER(circle.name) = LOWER(?)
+                    """;
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Choose a valid session audience.");
+        };
+        List<UUID> matched = "MODULE".equals(request.audienceType())
+                ? jdbc.query(sql, (result, row) -> result.getObject(1, UUID.class),
+                        admin.universityId(), label, label)
+                : jdbc.query(sql, (result, row) -> result.getObject(1, UUID.class),
+                        admin.universityId(), label);
+        recipients.addAll(matched);
+        if (recipients.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "No active Test Campus users match that session audience.");
+        }
+        return recipients;
     }
 
     @Transactional(readOnly = true)

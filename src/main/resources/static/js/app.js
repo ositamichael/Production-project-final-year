@@ -19,6 +19,7 @@ let pilotMode = false;
 let signedIn = false;
 let locationRefreshTimer;
 let campusRefreshTimer;
+let meetingRoomRefreshTimer;
 let lastDialogTrigger = null;
 let lastNavigationTrigger = null;
 
@@ -377,15 +378,11 @@ const circleDialog = document.querySelector('#circleDialog');
 const circleForm = document.querySelector('#circleForm');
 const circleSearch = document.querySelector('#circleSearch');
 const guestScheduleMarkup = scheduleList?.innerHTML || '';
-const signedInBaseScheduleMarkup = `
-  <li><time>09:00<small>10:00</small></time><span class="time-dot blue-dot"></span><div><strong>Computer Science Lecture</strong><small>Fictional pilot timetable · Engineering Building, EB.2.14</small></div><span class="status attended">Demo record</span></li>
-  <li><time>11:00<small>12:00</small></time><span class="time-dot orange-dot"></span><div><strong>Group Project Meeting</strong><small>Fictional pilot timetable · Library, Study Room 3</small></div><span class="status upcoming">Demo record</span></li>
-  <li><time>14:00<small>15:00</small></time><span class="time-dot orange-dot"></span><div><strong>Data Structures Seminar</strong><small>Fictional pilot timetable · Engineering Building, EB.1.05</small></div><span class="status upcoming">Demo record</span></li>`;
 const agendaList = document.querySelector('#today .agenda-list');
-const signedInAgendaMarkup = agendaList?.innerHTML || '';
 
 function renderSignedOutAccountStates() {
   signedIn = false;
+  clearInterval(meetingRoomRefreshTimer);
   if (scheduleList) scheduleList.innerHTML = guestScheduleMarkup;
   if (agendaList) agendaList.innerHTML = '<li class="signed-out-agenda"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><div><strong>Sign in to view your day</strong><p>Guest mode never displays a fictional timetable as your personal activity.</p></div></li>';
   if (todayPlannedCount) todayPlannedCount.textContent = '—';
@@ -406,7 +403,7 @@ function renderSignedOutAccountStates() {
 
 function renderSignedInAccountStates() {
   signedIn = true;
-  if (agendaList) agendaList.innerHTML = signedInAgendaMarkup;
+  if (agendaList) agendaList.innerHTML = '<li class="signed-out-agenda"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg><div><strong>Loading your day…</strong><p>Your assigned and booked activities will appear here.</p></div></li>';
   if (todayCompletedCount) todayCompletedCount.textContent = '0';
   if (todayFinishTime) todayFinishTime.textContent = '—';
   document.querySelector('#calendarDownloadButton')?.removeAttribute('disabled');
@@ -1000,8 +997,63 @@ async function loadCampusBookings() {
   }
 }
 
+function isToday(value) {
+  const date = new Date(value);
+  const today = new Date();
+  return date.getFullYear() === today.getFullYear()
+    && date.getMonth() === today.getMonth()
+    && date.getDate() === today.getDate();
+}
+
+function schedulePresentation(resourceType) {
+  if (resourceType === 'EVENT') return { icon: 'events', colour: 'orange', dot: 'orange-dot', short: 'Registered', long: 'Registered event' };
+  if (resourceType === 'MEETING') return { icon: 'monitor-play', colour: 'blue', dot: 'blue-dot', short: 'Session', long: 'Assigned session' };
+  return { icon: 'calendar', colour: 'green', dot: 'green-dot', short: 'Booked', long: 'Confirmed booking' };
+}
+
+function appendScheduleRow(container, item) {
+  const style = schedulePresentation(item.resourceType);
+  const row = document.createElement('li');
+  const time = document.createElement('time');
+  time.innerHTML = `${campusTime(item.startsAt)}<small>${campusTime(item.endsAt)}</small>`;
+  const dot = document.createElement('span');
+  dot.className = `time-dot ${style.dot}`;
+  const copy = document.createElement('div');
+  const title = document.createElement('strong');
+  title.textContent = item.title;
+  const location = document.createElement('small');
+  location.textContent = item.location;
+  copy.append(title, location);
+  const status = document.createElement('span');
+  status.className = 'status upcoming';
+  status.textContent = style.short;
+  row.append(time, dot, copy, status);
+  container.append(row);
+}
+
+function appendAgendaRow(item) {
+  if (!agendaList) return;
+  const style = schedulePresentation(item.resourceType);
+  const row = document.createElement('li');
+  const time = document.createElement('time');
+  time.innerHTML = `${campusTime(item.startsAt)}<span>${campusTime(item.endsAt)}</span>`;
+  const marker = document.createElement('span');
+  marker.className = `agenda-marker ${style.dot}`;
+  const copy = document.createElement('div');
+  const title = document.createElement('strong');
+  title.textContent = item.title;
+  const location = document.createElement('p');
+  location.textContent = item.location;
+  const status = document.createElement('span');
+  status.className = `pill ${style.colour === 'orange' ? 'warning' : style.colour === 'green' ? 'success' : 'info'}`;
+  status.textContent = style.long;
+  copy.append(title, location, status);
+  row.append(time, marker, copy);
+  agendaList.append(row);
+}
+
 async function loadCampusSchedule() {
-  if (!scheduleList && !todayCommitmentList) return;
+  if (!scheduleList && !todayCommitmentList && !agendaList) return;
   try {
     const response = await fetch('/api/campus-life/schedule', { headers: { Accept: 'application/json' } });
     if (response.status === 401 || response.status === 403) {
@@ -1012,38 +1064,27 @@ async function loadCampusSchedule() {
     if (!response.ok) throw new Error('Schedule unavailable');
     const activity = await response.json();
     loadedScheduleActivity = activity;
-    if (scheduleList) scheduleList.innerHTML = signedInBaseScheduleMarkup;
+    const todayActivity = activity.filter((item) => isToday(item.startsAt));
+    if (scheduleList) scheduleList.replaceChildren();
+    if (agendaList) agendaList.replaceChildren();
     if (todayCommitmentList) todayCommitmentList.replaceChildren();
-    if (todayPlannedCount) todayPlannedCount.textContent = String(3 + activity.length);
-    if (todayCompletedCount) todayCompletedCount.textContent = '0';
+    if (todayPlannedCount) todayPlannedCount.textContent = String(todayActivity.length);
+    if (todayCompletedCount) todayCompletedCount.textContent = String(todayActivity.filter((item) => new Date(item.endsAt) < new Date()).length);
     if (todayCampusCommitmentCount) todayCampusCommitmentCount.textContent = String(activity.length);
-    const endTimes = activity.map((item) => new Date(item.endsAt)).filter((date) => !Number.isNaN(date.getTime()));
-    if (todayFinishTime) todayFinishTime.textContent = endTimes.length ? campusTime(new Date(Math.max(...endTimes))) : '15:00';
+    const endTimes = todayActivity.map((item) => new Date(item.endsAt)).filter((date) => !Number.isNaN(date.getTime()));
+    if (todayFinishTime) todayFinishTime.textContent = endTimes.length ? campusTime(new Date(Math.max(...endTimes))) : '—';
+    todayActivity.forEach((item) => {
+      if (scheduleList) appendScheduleRow(scheduleList, item);
+      appendAgendaRow(item);
+    });
     activity.forEach((item) => {
-      if (scheduleList) {
-        const row = document.createElement('li');
-        const time = document.createElement('time');
-        time.innerHTML = `${campusTime(item.startsAt)}<small>${campusTime(item.endsAt)}</small>`;
-        const dot = document.createElement('span');
-        dot.className = `time-dot ${item.resourceType === 'EVENT' ? 'orange-dot' : 'green-dot'}`;
-        const copy = document.createElement('div');
-        const title = document.createElement('strong');
-        title.textContent = item.title;
-        const location = document.createElement('small');
-        location.textContent = item.location;
-        copy.append(title, location);
-        const status = document.createElement('span');
-        status.className = 'status attended';
-        status.textContent = item.resourceType === 'EVENT' ? 'Registered' : 'Confirmed';
-        row.append(time, dot, copy, status);
-        scheduleList.append(row);
-      }
       if (todayCommitmentList) {
+        const style = schedulePresentation(item.resourceType);
         const card = document.createElement('article');
         card.className = 'booking-record schedule-commitment';
         const icon = document.createElement('span');
-        icon.className = `view-icon ${item.resourceType === 'EVENT' ? 'orange' : 'green'}`;
-        icon.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#${item.resourceType === 'EVENT' ? 'events' : 'calendar'}"/></svg>`;
+        icon.className = `view-icon ${style.colour}`;
+        icon.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#${style.icon}"/></svg>`;
         const copy = document.createElement('div');
         const title = document.createElement('h4');
         title.textContent = item.title;
@@ -1051,17 +1092,33 @@ async function loadCampusSchedule() {
         details.textContent = `${fullCampusDate(item.startsAt)}–${campusTime(item.endsAt)} · ${item.location}`;
         copy.append(title, details);
         const status = document.createElement('span');
-        status.className = `pill ${item.resourceType === 'EVENT' ? 'warning' : 'success'}`;
-        status.textContent = item.resourceType === 'EVENT' ? 'Registered event' : 'Confirmed booking';
+        status.className = `pill ${style.colour === 'orange' ? 'warning' : style.colour === 'green' ? 'success' : 'info'}`;
+        status.textContent = style.long;
         card.append(icon, copy, status);
+        if (item.resourceType === 'MEETING') {
+          card.tabIndex = 0;
+          card.setAttribute('role', 'button');
+          card.setAttribute('aria-label', `Open live session ${item.title}`);
+          card.addEventListener('click', () => { showPage('live-classes'); void loadMeetingRoom(item.resourceId); });
+          card.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); card.click(); }
+          });
+        }
         todayCommitmentList.append(card);
       }
     });
+    if (scheduleList && !todayActivity.length) {
+      scheduleList.innerHTML = '<li class="signed-out-card-state"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg><div><strong>No activities scheduled today</strong><small>Assigned sessions, registered events and confirmed bookings will appear here automatically.</small></div></li>';
+    }
+    if (agendaList && !todayActivity.length) {
+      agendaList.innerHTML = '<li class="signed-out-agenda"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg><div><strong>Your day is clear</strong><p>No account-specific activities are scheduled for today.</p></div></li>';
+    }
     if (todayCommitmentList && !activity.length) {
-      todayCommitmentList.innerHTML = '<div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg><h3>No additional commitments</h3><p>Events you register for and services you book will appear here automatically.</p></div>';
+      todayCommitmentList.innerHTML = '<div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg><h3>No upcoming commitments</h3><p>Assigned sessions, registered events and confirmed bookings will appear here automatically.</p></div>';
     }
   } catch {
     if (scheduleList) scheduleList.innerHTML = '<li class="signed-out-card-state"><svg class="icon" aria-hidden="true"><use href="#alert"/></svg><div><strong>Schedule temporarily unavailable</strong><small>Refresh the page or try again shortly.</small></div></li>';
+    if (agendaList) agendaList.innerHTML = '<li class="signed-out-agenda"><svg class="icon" aria-hidden="true"><use href="#alert"/></svg><div><strong>Schedule temporarily unavailable</strong><p>Refresh the page or try again shortly.</p></div></li>';
     if (todayCommitmentList) todayCommitmentList.innerHTML = '<div class="empty-state compact"><h3>Your UniCircle schedule is temporarily unavailable</h3><p>Please try again shortly.</p></div>';
   }
 }
@@ -2169,6 +2226,13 @@ function populateProfile(profile) {
   connectSocialRealtime();
   clearInterval(campusRefreshTimer);
   campusRefreshTimer = setInterval(refreshActiveCampusData, 20000);
+  clearInterval(meetingRoomRefreshTimer);
+  meetingRoomRefreshTimer = setInterval(() => {
+    if (!document.hidden && document.body.dataset.activePage === 'live-classes'
+        && selectedMeetingId && currentMeetingRoom?.meeting?.joined) {
+      void loadMeetingRoom(selectedMeetingId, { quiet: true });
+    }
+  }, 3000);
   void Promise.all([
     loadNotifications(),
     refreshConversationSummary(),
@@ -2617,7 +2681,24 @@ function notificationVisual(type) {
   if (type === 'SAFETY') return ['shield', 'opportunity-type'];
   if (type === 'EVENT') return ['events', 'opportunity-type'];
   if (type === 'BOOKING') return ['calendar', 'booking-type'];
+  if (type === 'ANNOUNCEMENT') return ['megaphone', 'opportunity-type'];
+  if (type === 'MEETING') return ['monitor-play', 'message-type'];
+  if (type === 'OPPORTUNITY') return ['briefcase', 'opportunity-type'];
+  if (type === 'SUPPORT') return ['heart', 'booking-type'];
   return ['users', 'booking-type'];
+}
+
+function makeNotificationActionable(item, action) {
+  item.classList.add('notification-actionable');
+  item.tabIndex = 0;
+  item.setAttribute('role', 'button');
+  item.addEventListener('click', action);
+  item.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      action();
+    }
+  });
 }
 
 async function loadNotifications() {
@@ -2662,17 +2743,32 @@ async function loadNotifications() {
         item.append(dot);
       }
       if (notification.resourceType === 'CONVERSATION' && notification.resourceId) {
-        item.classList.add('notification-actionable');
-        item.addEventListener('click', async () => {
+        makeNotificationActionable(item, async () => {
           showPage('messages');
           await loadMessagingWorkspace(notification.resourceId);
         });
       } else if (notification.resourceType === 'CONNECTION') {
-        item.classList.add('notification-actionable');
-        item.addEventListener('click', () => {
+        makeNotificationActionable(item, () => {
           openModal(studentDirectoryDialog);
           void loadStudentDirectory();
         });
+      } else if (notification.resourceType === 'ANNOUNCEMENT') {
+        makeNotificationActionable(item, () => showPage('updates'));
+      } else if (notification.resourceType === 'EVENT') {
+        makeNotificationActionable(item, () => showPage('events'));
+      } else if (['BOOKING', 'SERVICE'].includes(notification.resourceType)) {
+        makeNotificationActionable(item, () => showPage('services'));
+      } else if (notification.resourceType === 'MEETING' && notification.resourceId) {
+        makeNotificationActionable(item, () => {
+          showPage('live-classes');
+          void loadMeetingRoom(notification.resourceId);
+        });
+      } else if (notification.resourceType === 'OPPORTUNITY') {
+        makeNotificationActionable(item, () => showPage('opportunities'));
+      } else if (notification.resourceType === 'CIRCLE') {
+        makeNotificationActionable(item, () => showPage('circles'));
+      } else if (notification.resourceType === 'SUPPORT_CASE') {
+        makeNotificationActionable(item, () => showPage('wellbeing'));
       }
       notificationList.append(item);
     });
@@ -3849,13 +3945,13 @@ function renderMeetingRoom(room) {
   renderMeetings();
 }
 
-async function loadMeetingRoom(meetingId) {
+async function loadMeetingRoom(meetingId, { quiet = false } = {}) {
   try {
     const response = await fetch(`/api/campus-information/meetings/${meetingId}`, { headers: { Accept: 'application/json' } });
     if (!response.ok) throw new Error('The classroom could not be opened.');
     renderMeetingRoom(await response.json());
   } catch (error) {
-    showToast(error.message);
+    if (!quiet) showToast(error.message);
   }
 }
 
@@ -4262,6 +4358,9 @@ const adminAuditList = document.querySelector('#adminAuditList');
 const adminCatalogueList = document.querySelector('#adminCatalogueList');
 const adminOverviewCatalogue = document.querySelector('#adminOverviewCatalogue');
 const adminMeetingAssignees = document.querySelector('#adminMeetingAssignees');
+const adminMeetingAssigneesWrap = document.querySelector('#adminMeetingAssigneesWrap');
+const adminMeetingAudience = document.querySelector('#adminMeetingAudience');
+const adminMeetingAudienceLabel = document.querySelector('#adminMeetingAudienceLabel');
 const adminOpportunityPublisher = document.querySelector('#adminOpportunityPublisher');
 const adminModuleProgramme = document.querySelector('#adminModuleProgramme');
 const adminActivityStatus = document.querySelector('#adminActivityStatus');
@@ -4510,6 +4609,7 @@ async function submitAdminForm(form, button, action) {
     adminActivityStatus.textContent = message;
     form.reset();
     if (form.id === 'adminAnnouncementForm') syncAdminAnnouncementAudience();
+    if (form.id === 'adminMeetingForm') syncAdminMeetingAudience();
     await loadAdminWorkspace();
     showToast(message);
   } catch (error) {
@@ -4530,6 +4630,25 @@ function syncAdminAnnouncementAudience() {
   if (!targeted) adminAnnouncementAudienceLabel.value = '';
 }
 adminAnnouncementAudience?.addEventListener('change', syncAdminAnnouncementAudience);
+
+function syncAdminMeetingAudience() {
+  const type = adminMeetingAudience.value;
+  const selectedPeople = type === 'SELECTED';
+  const labelledAudience = !['CAMPUS', 'SELECTED'].includes(type);
+  adminMeetingAssigneesWrap.hidden = !selectedPeople;
+  adminMeetingAssignees.disabled = !selectedPeople;
+  adminMeetingAudienceLabel.disabled = !labelledAudience;
+  adminMeetingAudienceLabel.required = labelledAudience;
+  adminMeetingAudienceLabel.placeholder = type === 'COURSE'
+    ? 'Exact course name' : type === 'YEAR'
+      ? 'Year number, for example 3' : type === 'MODULE'
+        ? 'Module code, for example COMP6001' : type === 'CIRCLE'
+          ? 'Exact circle name' : 'Not needed for all users';
+  if (!labelledAudience) adminMeetingAudienceLabel.value = '';
+  if (!selectedPeople) [...adminMeetingAssignees.options].forEach((option) => { option.selected = false; });
+}
+adminMeetingAudience?.addEventListener('change', syncAdminMeetingAudience);
+syncAdminMeetingAudience();
 
 document.querySelector('#adminAnnouncementForm')?.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -4616,8 +4735,21 @@ document.querySelector('#adminMeetingForm')?.addEventListener('submit', (event) 
   event.preventDefault();
   const form = event.currentTarget;
   submitAdminForm(form, form.querySelector('[type="submit"]'), async () => {
-    await socialPost('/api/admin/meetings', { title: document.querySelector('#adminMeetingTitle').value, moduleCode: document.querySelector('#adminMeetingModule').value, meetingType: document.querySelector('#adminMeetingType').value, startsAt: adminIso('#adminMeetingStarts'), endsAt: adminIso('#adminMeetingEnds'), locationLabel: document.querySelector('#adminMeetingLocation').value, agenda: document.querySelector('#adminMeetingAgenda').value, providerJoinUrl: '', assigneeIds: [...adminMeetingAssignees.selectedOptions].map((option) => option.value), published: document.querySelector('#adminMeetingPublished').checked });
-    return 'The live session was created and assigned schedules were updated.';
+    await socialPost('/api/admin/meetings', {
+      title: document.querySelector('#adminMeetingTitle').value,
+      moduleCode: document.querySelector('#adminMeetingModule').value,
+      meetingType: document.querySelector('#adminMeetingType').value,
+      startsAt: adminIso('#adminMeetingStarts'),
+      endsAt: adminIso('#adminMeetingEnds'),
+      locationLabel: document.querySelector('#adminMeetingLocation').value,
+      agenda: document.querySelector('#adminMeetingAgenda').value,
+      providerJoinUrl: document.querySelector('#adminMeetingProviderUrl').value,
+      audienceType: adminMeetingAudience.value,
+      audienceLabel: adminMeetingAudienceLabel.value,
+      assigneeIds: [...adminMeetingAssignees.selectedOptions].map((option) => option.value),
+      published: document.querySelector('#adminMeetingPublished').checked
+    });
+    return 'The live session was created, the audience was notified and their schedules were updated.';
   });
 });
 

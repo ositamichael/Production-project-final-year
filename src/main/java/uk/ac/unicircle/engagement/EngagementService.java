@@ -213,7 +213,7 @@ class EngagementService {
                 FROM event_registrations registration
                 JOIN campus_events e ON e.id = registration.event_id
                 WHERE registration.user_id = ? AND registration.status = 'REGISTERED'
-                  AND e.university_id = ?
+                  AND e.university_id = ? AND e.ends_at > CURRENT_TIMESTAMP
                 UNION ALL
                 SELECT booking.id, 'BOOKING', service.title, service.location,
                        slot.starts_at, slot.ends_at, booking.status
@@ -221,20 +221,24 @@ class EngagementService {
                 JOIN service_slots slot ON slot.id = booking.slot_id
                 JOIN service_offerings service ON service.id = slot.service_id
                 WHERE booking.user_id = ? AND booking.university_id = ?
-                  AND booking.status = 'CONFIRMED'
+                  AND booking.status = 'CONFIRMED' AND slot.ends_at > CURRENT_TIMESTAMP
                 UNION ALL
                 SELECT meeting.id, 'MEETING', meeting.title, meeting.location_label,
                        meeting.starts_at, meeting.ends_at, 'ASSIGNED'
-                FROM meeting_assignments assignment
-                JOIN learning_meetings meeting ON meeting.id = assignment.meeting_id
-                WHERE assignment.user_id = ? AND meeting.university_id = ? AND meeting.published = TRUE
+                FROM learning_meetings meeting
+                WHERE meeting.university_id = ? AND meeting.published = TRUE
+                  AND meeting.ends_at > CURRENT_TIMESTAMP
+                  AND (meeting.access_scope = 'CAMPUS' OR EXISTS (
+                    SELECT 1 FROM meeting_assignments assignment
+                    WHERE assignment.meeting_id = meeting.id AND assignment.user_id = ?
+                  ))
                 ORDER BY 5
                 """, (result, row) -> new ScheduleItemResponse(
                         result.getObject(1, UUID.class), result.getString(2), result.getString(3),
                         result.getString(4), result.getObject(5, OffsetDateTime.class),
                         result.getObject(6, OffsetDateTime.class), result.getString(7)),
                 current.accountId(), current.universityId(), current.accountId(), current.universityId(),
-                current.accountId(), current.universityId());
+                current.universityId(), current.accountId());
     }
 
     private List<ServiceSlotResponse> serviceSlots(SignedInAccount current, UUID serviceId) {
