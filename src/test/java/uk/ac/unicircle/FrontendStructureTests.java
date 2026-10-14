@@ -155,7 +155,8 @@ class FrontendStructureTests {
             .contains("renderSignedOutAccountStates")
             .contains("Sign in required")
             .contains("Europe/London")
-            .contains("Fictional pilot timetable")
+            .contains("No activities scheduled today")
+            .doesNotContain("Fictional pilot timetable")
             .contains("Local guidance")
             .doesNotContain("advanced ? 'Advanced' : 'Sourced'");
     }

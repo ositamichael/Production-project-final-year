@@ -212,9 +212,19 @@ class InformationService {
                   ON mine.meeting_id = meeting.id AND mine.user_id = ?
                 WHERE meeting.university_id = ? AND meeting.published = TRUE
                   AND meeting.ends_at > ?
+                  AND (
+                    meeting.access_scope = 'CAMPUS'
+                    OR meeting.host_id = ?
+                    OR EXISTS (SELECT 1 FROM meeting_assignments assignment
+                               WHERE assignment.meeting_id = meeting.id AND assignment.user_id = ?)
+                    OR EXISTS (SELECT 1 FROM user_accounts account
+                               WHERE account.id = ? AND account.university_id = meeting.university_id
+                                 AND account.role = 'ADMIN' AND account.account_status = 'ACTIVE')
+                  )
                 ORDER BY meeting.starts_at
                 """, (result, row) -> meetingSummary(result),
-                current.accountId(), current.universityId(), OffsetDateTime.now().minusDays(1));
+                current.accountId(), current.universityId(), OffsetDateTime.now().minusDays(1),
+                current.accountId(), current.accountId(), current.accountId());
     }
 
     @Transactional(readOnly = true)
@@ -427,8 +437,18 @@ class InformationService {
                     LEFT JOIN meeting_attendance mine
                       ON mine.meeting_id = meeting.id AND mine.user_id = ?
                     WHERE meeting.id = ? AND meeting.university_id = ? AND meeting.published = TRUE
+                      AND (
+                        meeting.access_scope = 'CAMPUS'
+                        OR meeting.host_id = ?
+                        OR EXISTS (SELECT 1 FROM meeting_assignments assignment
+                                   WHERE assignment.meeting_id = meeting.id AND assignment.user_id = ?)
+                        OR EXISTS (SELECT 1 FROM user_accounts account
+                                   WHERE account.id = ? AND account.university_id = meeting.university_id
+                                     AND account.role = 'ADMIN' AND account.account_status = 'ACTIVE')
+                      )
                     """, (result, row) -> meetingSummary(result),
-                    current.accountId(), meetingId, current.universityId());
+                    current.accountId(), meetingId, current.universityId(),
+                    current.accountId(), current.accountId(), current.accountId());
         } catch (EmptyResultDataAccessException exception) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "This class meeting is unavailable.");
         }

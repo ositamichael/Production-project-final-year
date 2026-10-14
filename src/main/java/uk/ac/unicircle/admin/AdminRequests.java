@@ -90,6 +90,8 @@ final class AdminRequests {
             @NotBlank @Size(max = 180) String locationLabel,
             @Size(max = 3000) String agenda,
             @Size(max = 1000) String providerJoinUrl,
+            @NotBlank @Pattern(regexp = "CAMPUS|COURSE|YEAR|MODULE|CIRCLE|SELECTED") String audienceType,
+            @Size(max = 180) String audienceLabel,
             List<UUID> assigneeIds,
             boolean published) {
     }

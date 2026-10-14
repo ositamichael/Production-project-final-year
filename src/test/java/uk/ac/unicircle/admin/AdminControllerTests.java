@@ -90,17 +90,29 @@ class AdminControllerTests {
                 {"title":"Test Campus Project Review","moduleCode":"TEST6001",
                  "meetingType":"PROJECT","startsAt":"%s","endsAt":"%s",
                  "locationLabel":"UniCircle live room","agenda":"Review the pilot evidence.",
-                 "providerJoinUrl":"","published":true,"assigneeIds":["%s"]}
+                 "providerJoinUrl":"","audienceType":"SELECTED","audienceLabel":"",
+                 "published":true,"assigneeIds":["%s"]}
                 """.formatted(starts, starts.plusHours(1), MICHAEL_ID);
 
-        mockMvc.perform(post("/api/admin/meetings").with(user(ADMIN)).with(csrf())
+        String response = mockMvc.perform(post("/api/admin/meetings").with(user(ADMIN)).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON).content(request))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.assignedUsers").value(1));
+                .andExpect(jsonPath("$.assignedUsers").value(1))
+                .andReturn().getResponse().getContentAsString();
+        UUID meetingId = UUID.fromString(com.jayway.jsonpath.JsonPath.read(response, "$.id"));
 
         mockMvc.perform(get("/api/campus-life/schedule").with(user("student")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].title", hasItem("Test Campus Project Review")));
+
+        mockMvc.perform(get("/api/campus-information/meetings/{id}", meetingId)
+                        .with(user("aisha.khan@students.unicircle.test")))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/campus-life/schedule")
+                        .with(user("aisha.khan@students.unicircle.test")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].title",
+                        org.hamcrest.Matchers.not(hasItem("Test Campus Project Review"))));
     }
 
     @Test
