@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.Matchers.hasItem;
 
 import java.util.UUID;
 import java.awt.image.BufferedImage;
@@ -76,6 +77,30 @@ class PilotFriendsJourneyTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
                 .andExpect(jsonPath("$.fields.password").value("size must be between 12 and 128"));
+    }
+
+    @Test
+    void newAccountSeesAndIsNotifiedAboutCurrentPublishedCampusRecords() throws Exception {
+        UUID announcementId = UUID.randomUUID();
+        String title = "Published before this tester joined";
+        jdbc.update("""
+                INSERT INTO campus_announcements
+                  (id, university_id, author_name, author_role, category, audience_type,
+                   title, body, pinned, urgent)
+                VALUES (?, ?, 'Test Campus Admin', 'Administrator', 'UNIVERSITY', 'UNIVERSITY',
+                        ?, 'Existing campus information must reach future accounts.', TRUE, FALSE)
+                """, announcementId, UUID.fromString("2c952dd9-5276-4e44-bf20-3fe98b345111"), title);
+
+        register("future.tester@example.net", "Future Tester");
+        MockHttpSession session = signIn("future.tester@example.net");
+
+        mockMvc.perform(get("/api/campus-information/announcements").session(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].title", hasItem(title)));
+        mockMvc.perform(get("/api/social/notifications").session(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].resourceId", hasItem(announcementId.toString())))
+                .andExpect(jsonPath("$[*].body", hasItem(title)));
     }
 
     @Test

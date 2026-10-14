@@ -26,16 +26,19 @@ import uk.ac.unicircle.information.InformationResponses.MeetingRoomResponse;
 import uk.ac.unicircle.information.InformationResponses.MeetingSummaryResponse;
 import uk.ac.unicircle.information.InformationResponses.SupportCaseResponse;
 import uk.ac.unicircle.information.InformationResponses.SupportReplyResponse;
+import uk.ac.unicircle.social.SocialRealtimeGateway;
 
 @Service
 class InformationService {
 
     private final CurrentIdentity currentIdentity;
     private final JdbcTemplate jdbc;
+    private final SocialRealtimeGateway realtime;
 
-    InformationService(CurrentIdentity currentIdentity, JdbcTemplate jdbc) {
+    InformationService(CurrentIdentity currentIdentity, JdbcTemplate jdbc, SocialRealtimeGateway realtime) {
         this.currentIdentity = currentIdentity;
         this.jdbc = jdbc;
+        this.realtime = realtime;
     }
 
     @Transactional(readOnly = true)
@@ -121,6 +124,11 @@ class InformationService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "The expiry time must be in the future.");
         }
+        List<UUID> recipients = announcementRecipients(current, request.audienceType(), audienceLabel);
+        if (!"UNIVERSITY".equals(request.audienceType()) && recipients.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "No active Test Campus users match that announcement audience. Choose an existing course, year or module, or publish to all campus users.");
+        }
         UUID id = UUID.randomUUID();
         boolean urgent = request.urgent() || "URGENT".equals(request.category());
         jdbc.update("""
@@ -133,8 +141,7 @@ class InformationService {
                 publisher.roleLabel(), request.category(), request.audienceType(), audienceLabel,
                 request.title().strip(), request.body().strip(), clean(request.actionLabel()),
                 clean(request.actionUrl()), request.pinned(), urgent, publishedAt, request.expiresAt());
-        notifyAnnouncementAudience(current, id, request.audienceType(), audienceLabel,
-                request.title().strip(), urgent);
+        notifyAnnouncementAudience(current, id, request.title().strip(), urgent, recipients);
         return new AnnouncementResponse(id, publisher.name(), publisher.roleLabel(), request.category(),
                 request.audienceType(), audienceLabel, request.title().strip(), request.body().strip(),
                 clean(request.actionLabel()), clean(request.actionUrl()), request.pinned(), urgent,
@@ -374,8 +381,8 @@ class InformationService {
         return publishers.getFirst();
     }
 
-    private void notifyAnnouncementAudience(SignedInAccount publisher, UUID announcementId,
-            String audienceType, String audienceLabel, String title, boolean urgent) {
+    private List<UUID> announcementRecipients(SignedInAccount publisher,
+            String audienceType, String audienceLabel) {
         List<UUID> recipients = switch (audienceType) {
             case "COURSE" -> jdbc.query("""
                     SELECT id FROM user_accounts
@@ -404,6 +411,11 @@ class InformationService {
                     WHERE university_id = ? AND account_status = 'ACTIVE'
                     """, (result, row) -> result.getObject(1, UUID.class), publisher.universityId());
         };
+        return recipients;
+    }
+
+    private void notifyAnnouncementAudience(SignedInAccount publisher, UUID announcementId,
+            String title, boolean urgent, List<UUID> recipients) {
         String body = (urgent ? "Urgent Test Campus update: " : "Test Campus update: ") + title;
         recipients.forEach(accountId -> createNotification(publisher.universityId(), accountId,
                 "ANNOUNCEMENT", title, body, "ANNOUNCEMENT", announcementId));
@@ -416,6 +428,7 @@ class InformationService {
                   (id, university_id, recipient_id, notification_type, title, body, resource_type, resource_id)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """, UUID.randomUUID(), universityId, recipientId, type, title, body, resourceType, resourceId);
+        realtime.publishAfterCommit(recipientId, "NOTIFICATIONS_CHANGED", resourceId);
     }
 
     private String clean(String value) {

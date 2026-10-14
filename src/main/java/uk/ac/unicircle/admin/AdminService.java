@@ -49,15 +49,18 @@ import uk.ac.unicircle.admin.AdminResponses.SupportAdminResponse;
 import uk.ac.unicircle.admin.AdminResponses.UserResponse;
 import uk.ac.unicircle.identity.CurrentIdentity;
 import uk.ac.unicircle.identity.CurrentIdentity.SignedInAccount;
+import uk.ac.unicircle.social.SocialRealtimeGateway;
 
 @Service
 class AdminService {
     private final CurrentIdentity currentIdentity;
     private final JdbcTemplate jdbc;
+    private final SocialRealtimeGateway realtime;
 
-    AdminService(CurrentIdentity currentIdentity, JdbcTemplate jdbc) {
+    AdminService(CurrentIdentity currentIdentity, JdbcTemplate jdbc, SocialRealtimeGateway realtime) {
         this.currentIdentity = currentIdentity;
         this.jdbc = jdbc;
+        this.realtime = realtime;
     }
 
     @Transactional(readOnly = true)
@@ -138,6 +141,11 @@ class AdminService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "The announcement expiry must be in the future.");
         }
+        List<UUID> recipients = announcementRecipients(admin, request.audienceType(), audienceLabel);
+        if (!"UNIVERSITY".equals(request.audienceType()) && recipients.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "No active Test Campus users match that announcement audience. Choose an existing course, year or module, or publish to all campus users.");
+        }
         UUID id = UUID.randomUUID();
         String authorName = jdbc.queryForObject("SELECT display_name FROM user_accounts WHERE id = ?",
                 String.class, admin.accountId());
@@ -151,11 +159,11 @@ class AdminService {
                 request.audienceType(), audienceLabel, request.title().strip(), request.body().strip(),
                 blankToNull(request.actionLabel()), blankToNull(request.actionUrl()),
                 request.pinned(), request.urgent(), request.expiresAt());
-        notifyAnnouncementAudience(admin, id, request.audienceType(), audienceLabel,
-                request.title().strip());
+        int notifiedUsers = notifyAnnouncementAudience(admin, id, request.title().strip(), recipients);
         audit(admin, "PUBLISH_ANNOUNCEMENT", "ANNOUNCEMENT", id,
-                "Published to " + request.audienceType() + ": " + request.title().strip());
-        return announcement(admin, id);
+                "Published to " + request.audienceType() + " (" + notifiedUsers + " active accounts): "
+                        + request.title().strip());
+        return announcement(admin, id, notifiedUsers);
     }
 
     @Transactional(readOnly = true)
@@ -651,7 +659,7 @@ class AdminService {
                 accountId, admin.universityId()).stream().findFirst().orElseThrow(() -> notFound("user"));
     }
 
-    private AnnouncementAdminResponse announcement(SignedInAccount admin, UUID id) {
+    private AnnouncementAdminResponse announcement(SignedInAccount admin, UUID id, int notifiedUsers) {
         return jdbc.query("""
                 SELECT id, title, category, audience_type, audience_label, pinned, urgent,
                        published_at, expires_at
@@ -659,7 +667,8 @@ class AdminService {
                 """, (result, row) -> new AnnouncementAdminResponse(result.getObject(1, UUID.class),
                         result.getString(2), result.getString(3), result.getString(4),
                         result.getString(5), result.getBoolean(6), result.getBoolean(7),
-                        result.getObject(8, OffsetDateTime.class), result.getObject(9, OffsetDateTime.class)),
+                        result.getObject(8, OffsetDateTime.class), result.getObject(9, OffsetDateTime.class),
+                        notifiedUsers),
                 id, admin.universityId()).stream().findFirst()
                 .orElseThrow(() -> notFound("announcement"));
     }
@@ -734,7 +743,13 @@ class AdminService {
         return jdbc.query("""
                 SELECT meeting.id, meeting.title, meeting.module_code, meeting.meeting_type,
                        meeting.starts_at, meeting.ends_at, meeting.location_label,
-                       (SELECT COUNT(*) FROM meeting_assignments assignment WHERE assignment.meeting_id = meeting.id),
+                       CASE WHEN meeting.access_scope = 'CAMPUS'
+                         THEN (SELECT COUNT(*) FROM user_accounts account
+                               WHERE account.university_id = meeting.university_id
+                                 AND account.account_status = 'ACTIVE')
+                         ELSE (SELECT COUNT(*) FROM meeting_assignments assignment
+                               WHERE assignment.meeting_id = meeting.id)
+                       END,
                        meeting.published
                 FROM learning_meetings meeting WHERE meeting.id = ? AND meeting.university_id = ?
                 """, (result, row) -> new MeetingAdminResponse(result.getObject(1, UUID.class),
@@ -861,6 +876,7 @@ class AdminService {
                   (id, university_id, recipient_id, notification_type, title, body, resource_type, resource_id)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """, UUID.randomUUID(), universityId, recipientId, type, title, body, resourceType, resourceId);
+        realtime.publishAfterCommit(recipientId, "NOTIFICATIONS_CHANGED", resourceId);
     }
 
     private void notifyCampus(SignedInAccount admin, String type, String title, String body,
@@ -873,8 +889,8 @@ class AdminService {
                 type, title, body, resourceType, resourceId));
     }
 
-    private void notifyAnnouncementAudience(SignedInAccount admin, UUID announcementId,
-            String audienceType, String audienceLabel, String title) {
+    private List<UUID> announcementRecipients(SignedInAccount admin,
+            String audienceType, String audienceLabel) {
         List<UUID> recipients;
         if ("COURSE".equals(audienceType)) {
             recipients = jdbc.query("""
@@ -903,16 +919,22 @@ class AdminService {
                     JOIN programme_modules link ON link.programme_id = enrolment.programme_id
                     JOIN academic_modules module ON module.id = link.module_id
                     WHERE account.university_id = ? AND account.account_status = 'ACTIVE'
-                      AND LOWER(module.code) = LOWER(?)
+                      AND (LOWER(module.code) = LOWER(?) OR LOWER(module.title) = LOWER(?))
                     """, (result, row) -> result.getObject(1, UUID.class),
-                    admin.universityId(), audienceLabel);
+                    admin.universityId(), audienceLabel, audienceLabel);
         } else {
             recipients = jdbc.query("""
                     SELECT id FROM user_accounts
                     WHERE university_id = ? AND account_status = 'ACTIVE'
                     """, (result, row) -> result.getObject(1, UUID.class), admin.universityId());
         }
+        return recipients;
+    }
+
+    private int notifyAnnouncementAudience(SignedInAccount admin, UUID announcementId,
+            String title, List<UUID> recipients) {
         recipients.forEach(accountId -> notification(admin.universityId(), accountId,
                 "ANNOUNCEMENT", "New campus update", title, "ANNOUNCEMENT", announcementId));
+        return recipients.size();
     }
 }

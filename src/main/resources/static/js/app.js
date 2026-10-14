@@ -22,6 +22,7 @@ let campusRefreshTimer;
 let meetingRoomRefreshTimer;
 let lastDialogTrigger = null;
 let lastNavigationTrigger = null;
+let activeAnnouncementCategory = '';
 
 function campusNow() {
   return new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/London' }));
@@ -2225,7 +2226,7 @@ function populateProfile(profile) {
   }
   connectSocialRealtime();
   clearInterval(campusRefreshTimer);
-  campusRefreshTimer = setInterval(refreshActiveCampusData, 20000);
+  campusRefreshTimer = setInterval(refreshActiveCampusData, 10000);
   clearInterval(meetingRoomRefreshTimer);
   meetingRoomRefreshTimer = setInterval(() => {
     if (!document.hidden && document.body.dataset.activePage === 'live-classes'
@@ -2242,7 +2243,7 @@ function populateProfile(profile) {
     loadCampusSchedule(),
     loadOpportunities(),
     loadLostFound(),
-    loadAnnouncements(),
+    loadAnnouncements(activeAnnouncementCategory),
     loadMeetings(),
     loadSupportCases(),
     loadCircles(),
@@ -2255,9 +2256,9 @@ function refreshActiveCampusData() {
   if (!signedIn || document.hidden) return;
   void loadNotifications();
   const page = document.body.dataset.activePage;
-  if (page === 'campus') void Promise.all([loadAnnouncements(), loadCampusSchedule(), loadCampusEvents(), loadOpportunities()]);
+  if (page === 'campus') void Promise.all([loadAnnouncements(activeAnnouncementCategory), loadCampusSchedule(), loadCampusEvents(), loadOpportunities()]);
   else if (page === 'today') void loadCampusSchedule();
-  else if (page === 'updates') void loadAnnouncements();
+  else if (page === 'updates') void loadAnnouncements(activeAnnouncementCategory);
   else if (page === 'events') void loadCampusEvents();
   else if (page === 'services') void Promise.all([loadCampusServices(), loadCampusBookings()]);
   else if (page === 'opportunities') void loadOpportunities();
@@ -2383,8 +2384,15 @@ async function socialPost(url, body) {
     },
     ...(body === undefined ? {} : { body: JSON.stringify(body) })
   });
+  const responseBody = await response.text();
+  let responseData = null;
+  if (responseBody) {
+    try { responseData = JSON.parse(responseBody); } catch { /* Non-JSON error pages use the fallback below. */ }
+  }
   if (!response.ok) {
-    if (response.status === 400) throw new Error('Check the information supplied and try again.');
+    const fieldMessage = responseData?.fields && Object.values(responseData.fields)[0];
+    const serverMessage = responseData?.detail || responseData?.message || fieldMessage;
+    if (response.status === 400) throw new Error(serverMessage || 'Check the information supplied and try again.');
     if (response.status === 401) throw new Error('Sign in to continue.');
     if (response.status === 403) throw new Error('This action is not permitted for your account.');
     if (response.status === 409) throw new Error('This request has already been handled or is no longer available.');
@@ -2392,8 +2400,7 @@ async function socialPost(url, body) {
     if (response.status === 502) throw new Error('The connected service is temporarily unavailable. Please try again shortly.');
     throw new Error('The request could not be completed. Please refresh and try again.');
   }
-  const responseBody = await response.text();
-  return responseBody ? JSON.parse(responseBody) : null;
+  return responseData;
 }
 
 async function socialPatch(url, body) {
@@ -3711,6 +3718,7 @@ function renderAnnouncements() {
 
 async function loadAnnouncements(category = '') {
   if (!announcementFeed && !dashboardAnnouncementList) return;
+  activeAnnouncementCategory = category || '';
   try {
     const response = await fetch(`/api/campus-information/announcements?category=${encodeURIComponent(category)}`, { headers: { Accept: 'application/json' } });
     if (response.status === 401 || response.status === 403) {
@@ -3736,7 +3744,8 @@ document.querySelectorAll('[data-announcement-category]').forEach((button) => {
   button.addEventListener('click', () => {
     document.querySelectorAll('[data-announcement-category]').forEach((item) => item.classList.remove('active'));
     button.classList.add('active');
-    void loadAnnouncements(button.dataset.announcementCategory);
+    activeAnnouncementCategory = button.dataset.announcementCategory || '';
+    void loadAnnouncements(activeAnnouncementCategory);
   });
 });
 
@@ -4361,6 +4370,7 @@ const adminMeetingAssignees = document.querySelector('#adminMeetingAssignees');
 const adminMeetingAssigneesWrap = document.querySelector('#adminMeetingAssigneesWrap');
 const adminMeetingAudience = document.querySelector('#adminMeetingAudience');
 const adminMeetingAudienceLabel = document.querySelector('#adminMeetingAudienceLabel');
+const adminCourseOptions = document.querySelector('#adminCourseOptions');
 const adminOpportunityPublisher = document.querySelector('#adminOpportunityPublisher');
 const adminModuleProgramme = document.querySelector('#adminModuleProgramme');
 const adminActivityStatus = document.querySelector('#adminActivityStatus');
@@ -4436,6 +4446,9 @@ function renderAdminCatalogue(records) {
 
 function renderAdminUsers(users) {
   adminUsers = users;
+  const courses = [...new Set(users.map((user) => user.courseName?.trim()).filter(Boolean))]
+    .sort((left, right) => left.localeCompare(right));
+  adminCourseOptions?.replaceChildren(...courses.map((course) => new Option(course)));
   adminUserList.replaceChildren();
   if (!users.length) {
     adminUserList.append(adminEmpty('No matching testers', 'Try a different name, email address or course.'));
@@ -4601,6 +4614,21 @@ function adminIso(id) {
   return value ? new Date(value).toISOString() : null;
 }
 
+function adminTimeRange(startsId, endsId, label) {
+  const starts = new Date(document.querySelector(startsId).value);
+  const ends = new Date(document.querySelector(endsId).value);
+  if (Number.isNaN(starts.getTime()) || Number.isNaN(ends.getTime())) {
+    throw new Error(`Choose a valid start and end time for the ${label}.`);
+  }
+  if (starts.getTime() <= Date.now()) {
+    throw new Error(`The ${label} start time must be in the future.`);
+  }
+  if (ends.getTime() <= starts.getTime()) {
+    throw new Error(`The ${label} end time must be after its start time.`);
+  }
+  return { startsAt: starts.toISOString(), endsAt: ends.toISOString() };
+}
+
 async function submitAdminForm(form, button, action) {
   button.disabled = true;
   adminActivityStatus.textContent = 'Saving the Test Campus record…';
@@ -4627,6 +4655,8 @@ function syncAdminAnnouncementAudience() {
     ? 'Exact course name' : adminAnnouncementAudience.value === 'YEAR'
       ? 'Year number, for example 3' : adminAnnouncementAudience.value === 'MODULE'
         ? 'Module code, for example COMP6001' : 'Not needed for all users';
+  if (adminAnnouncementAudience.value === 'COURSE') adminAnnouncementAudienceLabel.setAttribute('list', 'adminCourseOptions');
+  else adminAnnouncementAudienceLabel.removeAttribute('list');
   if (!targeted) adminAnnouncementAudienceLabel.value = '';
 }
 adminAnnouncementAudience?.addEventListener('change', syncAdminAnnouncementAudience);
@@ -4644,6 +4674,8 @@ function syncAdminMeetingAudience() {
       ? 'Year number, for example 3' : type === 'MODULE'
         ? 'Module code, for example COMP6001' : type === 'CIRCLE'
           ? 'Exact circle name' : 'Not needed for all users';
+  if (type === 'COURSE') adminMeetingAudienceLabel.setAttribute('list', 'adminCourseOptions');
+  else adminMeetingAudienceLabel.removeAttribute('list');
   if (!labelledAudience) adminMeetingAudienceLabel.value = '';
   if (!selectedPeople) [...adminMeetingAssignees.options].forEach((option) => { option.selected = false; });
 }
@@ -4655,7 +4687,7 @@ document.querySelector('#adminAnnouncementForm')?.addEventListener('submit', (ev
   const form = event.currentTarget;
   submitAdminForm(form, form.querySelector('[type="submit"]'), async () => {
     const actionUrl = document.querySelector('#adminAnnouncementAction').value;
-    await socialPost('/api/admin/announcements', {
+    const published = await socialPost('/api/admin/announcements', {
       category: document.querySelector('#adminAnnouncementCategory').value,
       audienceType: adminAnnouncementAudience.value,
       audienceLabel: adminAnnouncementAudienceLabel.value,
@@ -4667,7 +4699,13 @@ document.querySelector('#adminAnnouncementForm')?.addEventListener('submit', (ev
       urgent: document.querySelector('#adminAnnouncementUrgent').checked,
       expiresAt: adminIso('#adminAnnouncementExpiry')
     });
-    return 'The announcement was published and the selected audience was notified.';
+    activeAnnouncementCategory = '';
+    document.querySelectorAll('[data-announcement-category]').forEach((item) => {
+      item.classList.toggle('active', (item.dataset.announcementCategory || '') === '');
+    });
+    await loadAnnouncements(activeAnnouncementCategory);
+    const recipients = Number(published.notifiedUsers || 0);
+    return `Published successfully. ${recipients} active account${recipients === 1 ? '' : 's'} received a notification, and future matching accounts will see this update automatically.`;
   });
 });
 
@@ -4716,7 +4754,8 @@ document.querySelector('#adminEventForm')?.addEventListener('submit', (event) =>
   event.preventDefault();
   const form = event.currentTarget;
   submitAdminForm(form, form.querySelector('[type="submit"]'), async () => {
-    await socialPost('/api/admin/events', { title: document.querySelector('#adminEventTitle').value, summary: document.querySelector('#adminEventSummary').value, category: document.querySelector('#adminEventCategory').value, venue: document.querySelector('#adminEventVenue').value, startsAt: adminIso('#adminEventStarts'), endsAt: adminIso('#adminEventEnds'), capacity: Number(document.querySelector('#adminEventCapacity').value), published: document.querySelector('#adminEventPublished').checked });
+    const time = adminTimeRange('#adminEventStarts', '#adminEventEnds', 'event');
+    await socialPost('/api/admin/events', { title: document.querySelector('#adminEventTitle').value, summary: document.querySelector('#adminEventSummary').value, category: document.querySelector('#adminEventCategory').value, venue: document.querySelector('#adminEventVenue').value, ...time, capacity: Number(document.querySelector('#adminEventCapacity').value), published: document.querySelector('#adminEventPublished').checked });
     return 'The Test Campus event was created.';
   });
 });
@@ -4725,8 +4764,9 @@ document.querySelector('#adminServiceForm')?.addEventListener('submit', (event) 
   event.preventDefault();
   const form = event.currentTarget;
   submitAdminForm(form, form.querySelector('[type="submit"]'), async () => {
+    const time = adminTimeRange('#adminSlotStarts', '#adminSlotEnds', 'bookable slot');
     const service = await socialPost('/api/admin/services', { serviceType: document.querySelector('#adminServiceType').value, title: document.querySelector('#adminServiceTitle').value, providerName: document.querySelector('#adminServiceProvider').value, description: document.querySelector('#adminServiceDescription').value, location: document.querySelector('#adminServiceLocation').value });
-    await socialPost(`/api/admin/services/${service.id}/slots`, { startsAt: adminIso('#adminSlotStarts'), endsAt: adminIso('#adminSlotEnds'), capacity: Number(document.querySelector('#adminSlotCapacity').value) });
+    await socialPost(`/api/admin/services/${service.id}/slots`, { ...time, capacity: Number(document.querySelector('#adminSlotCapacity').value) });
     return 'The service and first bookable slot were created.';
   });
 });
@@ -4735,21 +4775,29 @@ document.querySelector('#adminMeetingForm')?.addEventListener('submit', (event) 
   event.preventDefault();
   const form = event.currentTarget;
   submitAdminForm(form, form.querySelector('[type="submit"]'), async () => {
-    await socialPost('/api/admin/meetings', {
+    const time = adminTimeRange('#adminMeetingStarts', '#adminMeetingEnds', 'live session');
+    const providerJoinUrl = document.querySelector('#adminMeetingProviderUrl').value.trim();
+    if (providerJoinUrl) {
+      const provider = new URL(providerJoinUrl);
+      if (provider.origin === window.location.origin) {
+        throw new Error('That is a UniCircle page, not a video-room link. Leave this field blank for the built-in classroom, or enter an approved Teams, Zoom or Google Meet HTTPS link.');
+      }
+    }
+    const meeting = await socialPost('/api/admin/meetings', {
       title: document.querySelector('#adminMeetingTitle').value,
       moduleCode: document.querySelector('#adminMeetingModule').value,
       meetingType: document.querySelector('#adminMeetingType').value,
-      startsAt: adminIso('#adminMeetingStarts'),
-      endsAt: adminIso('#adminMeetingEnds'),
+      ...time,
       locationLabel: document.querySelector('#adminMeetingLocation').value,
       agenda: document.querySelector('#adminMeetingAgenda').value,
-      providerJoinUrl: document.querySelector('#adminMeetingProviderUrl').value,
+      providerJoinUrl,
       audienceType: adminMeetingAudience.value,
       audienceLabel: adminMeetingAudienceLabel.value,
       assigneeIds: [...adminMeetingAssignees.selectedOptions].map((option) => option.value),
       published: document.querySelector('#adminMeetingPublished').checked
     });
-    return 'The live session was created, the audience was notified and their schedules were updated.';
+    const recipients = Number(meeting.assignedUsers || 0);
+    return `The live session was published to ${recipients} active account${recipients === 1 ? '' : 's'} and added to their schedules.`;
   });
 });
 
