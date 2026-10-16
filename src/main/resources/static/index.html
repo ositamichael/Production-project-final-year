@@ -10,8 +10,8 @@
   <title>UniCircle — My Campus</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="stylesheet" href="/css/app.css?v=39">
-  <script src="/js/app.js?v=40" defer></script>
+  <link rel="stylesheet" href="/css/app.css?v=40">
+  <script src="/js/app.js?v=43" defer></script>
 </head>
 <body>
   <svg class="svg-sprite" aria-hidden="true">
@@ -636,7 +636,8 @@
     <div class="call-surface">
       <div class="call-security"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><span>Private call with an accepted connection</span></div>
       <div class="call-stage" id="callStage">
-        <video id="remoteCallVideo" autoplay playsinline hidden></video>
+        <audio id="remoteCallAudio" autoplay></audio>
+        <video id="remoteCallVideo" autoplay muted playsinline hidden></video>
         <div class="call-avatar avatar navy-avatar" id="callPeerAvatar" aria-hidden="true">UC</div>
         <video class="local-call-video" id="localCallVideo" autoplay muted playsinline hidden></video>
       </div>
@@ -650,6 +651,8 @@
         <button class="call-control" id="callCamera" type="button" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#video"/></svg><span>Camera</span></button>
         <button class="call-control end" id="callEnd" type="button"><svg class="icon" aria-hidden="true"><use href="#phone-off"/></svg><span>End</span></button>
       </div>
+      <button class="secondary-button" id="callEnableSound" type="button" hidden>Enable call sound</button>
+      <p class="call-privacy" id="callAudioNotice" role="status" hidden></p>
       <p class="call-privacy" id="callNetworkNotice">Your browser will ask before sharing your microphone or camera. UniCircle does not record calls.</p>
     </div>
   </section>

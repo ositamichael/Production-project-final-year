@@ -42,7 +42,7 @@ public class SocialRealtimeGateway extends TextWebSocketHandler {
     private static final int MAX_CALL_SIGNALS_PER_MINUTE = 300;
     private static final int MAX_CALL_PAYLOAD_BYTES = 65_536;
     private static final Set<String> CALL_SIGNAL_TYPES = Set.of(
-            "CALL_OFFER", "CALL_ANSWER", "CALL_ICE_CANDIDATE", "CALL_REJECTED",
+            "CALL_OFFER", "CALL_ACCEPTING", "CALL_ANSWER", "CALL_ICE_CANDIDATE", "CALL_REJECTED",
             "CALL_CANCELLED", "CALL_ENDED", "CALL_BUSY");
 
     private final CurrentIdentity currentIdentity;
@@ -138,7 +138,7 @@ public class SocialRealtimeGateway extends TextWebSocketHandler {
             sendCallError(senderId, session, callId, "CALL_UNAVAILABLE",
                     "This person is not currently online in UniCircle.");
         }
-        if (Set.of("CALL_ANSWER", "CALL_REJECTED", "CALL_BUSY").contains(type)) {
+        if (Set.of("CALL_ACCEPTING", "CALL_ANSWER", "CALL_REJECTED", "CALL_BUSY").contains(type)) {
             ObjectNode resolved = json.createObjectNode();
             resolved.put("type", "CALL_RESOLVED_ELSEWHERE");
             resolved.put("callId", callId.toString());

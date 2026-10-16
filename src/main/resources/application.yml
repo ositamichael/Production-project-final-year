@@ -50,6 +50,13 @@ unicircle:
     turn-urls: ${UNICIRCLE_TURN_URLS:}
     turn-username: ${UNICIRCLE_TURN_USERNAME:}
     turn-credential: ${UNICIRCLE_TURN_CREDENTIAL:}
+    turn-shared-secret: ${UNICIRCLE_TURN_SHARED_SECRET:}
+    credential-ttl-seconds: ${UNICIRCLE_TURN_CREDENTIAL_TTL_SECONDS:21600}
+    ice-transport-policy: ${UNICIRCLE_CALL_ICE_TRANSPORT_POLICY:all}
+    xirsys:
+      ident: ${UNICIRCLE_XIRSYS_IDENT:}
+      secret: ${UNICIRCLE_XIRSYS_SECRET:}
+      channel: ${UNICIRCLE_XIRSYS_CHANNEL:}
   pilot:
     bootstrap-admin-email: ${UNICIRCLE_BOOTSTRAP_ADMIN_EMAIL:}
   demo:
