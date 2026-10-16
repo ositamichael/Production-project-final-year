@@ -103,11 +103,64 @@ class CallSignallingTests {
     }
 
     @Test
+    void answeringAcknowledgementReachesCallerAndResolvesOtherReceiverTabs() throws Exception {
+        var michael = session("student");
+        var aisha = session("aisha.khan@students.unicircle.test");
+        var otherTab = session("aisha.khan@students.unicircle.test");
+        gateway.afterConnectionEstablished(michael);
+        gateway.afterConnectionEstablished(aisha);
+        gateway.afterConnectionEstablished(otherTab);
+        UUID id = UUID.randomUUID();
+        gateway.handleTextMessage(aisha, new TextMessage("""
+                {"type":"CALL_ACCEPTING","callId":"%s","targetAccountId":"%s"}
+                """.formatted(id, MICHAEL_ID)));
+        assertThat(json.readTree(michael.messages.getFirst()).path("type").asText()).isEqualTo("CALL_ACCEPTING");
+        assertThat(json.readTree(michael.messages.getFirst()).path("fromAccountId").asText()).isEqualTo(AISHA_ID.toString());
+        assertThat(json.readTree(otherTab.messages.getFirst()).path("type").asText()).isEqualTo("CALL_RESOLVED_ELSEWHERE");
+        assertThat(aisha.messages).isEmpty();
+    }
+
+    @Test
+    void answerAndNetworkCandidatesAreForwardedToTheAcceptedCaller() throws Exception {
+        var michael = session("student");
+        var aisha = session("aisha.khan@students.unicircle.test");
+        gateway.afterConnectionEstablished(michael);
+        gateway.afterConnectionEstablished(aisha);
+        UUID id = UUID.randomUUID();
+        gateway.handleTextMessage(aisha, new TextMessage("""
+                {"type":"CALL_ANSWER","callId":"%s","targetAccountId":"%s","sdp":"test-answer"}
+                """.formatted(id, MICHAEL_ID)));
+        gateway.handleTextMessage(aisha, new TextMessage("""
+                {"type":"CALL_ICE_CANDIDATE","callId":"%s","targetAccountId":"%s",
+                 "candidate":"test-candidate","sdpMid":"0","sdpMLineIndex":0}
+                """.formatted(id, MICHAEL_ID)));
+        assertThat(michael.messages).hasSize(2);
+        assertThat(json.readTree(michael.messages.getFirst()).path("sdp").asText()).isEqualTo("test-answer");
+        assertThat(json.readTree(michael.messages.getLast()).path("candidate").asText()).isEqualTo("test-candidate");
+        assertThat(json.readTree(michael.messages.getLast()).path("sdpMLineIndex").asInt()).isZero();
+    }
+
+    @Test
+    void unacceptedStudentCannotSendAnAnsweringAcknowledgement() throws Exception {
+        var michael = session("student");
+        var james = session("james.wilson@students.unicircle.test");
+        gateway.afterConnectionEstablished(michael);
+        gateway.afterConnectionEstablished(james);
+        gateway.handleTextMessage(james, new TextMessage("""
+                {"type":"CALL_ACCEPTING","callId":"%s","targetAccountId":"%s"}
+                """.formatted(UUID.randomUUID(), MICHAEL_ID)));
+        assertThat(michael.messages).isEmpty();
+        assertThat(json.readTree(james.messages.getFirst()).path("type").asText()).isEqualTo("CALL_FORBIDDEN");
+    }
+
+    @Test
     void authenticatedBrowserReceivesIceServerConfiguration() throws Exception {
         mockMvc.perform(get("/api/social/calls/configuration").with(user("student")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.iceServers[0].urls[0]").value("stun:stun.l.google.com:19302"))
                 .andExpect(jsonPath("$.relayConfigured").value(false))
+                .andExpect(jsonPath("$.iceTransportPolicy").value("all"))
+                .andExpect(jsonPath("$.expiresAtEpochSeconds").value(0))
                 .andExpect(jsonPath("$.privacyNotice").value("Calls use browser WebRTC and are never recorded by UniCircle."));
 
         mockMvc.perform(get("/api/social/calls/configuration"))

@@ -365,6 +365,8 @@ class FrontendStructureTests {
             .contains("id=\"callDecline\"")
             .contains("id=\"callMute\"")
             .contains("id=\"callCamera\"")
+            .contains("id=\"remoteCallAudio\"")
+            .contains("id=\"callEnableSound\"")
             .contains("UniCircle does not record calls");
         assertThat(script)
             .contains("new RTCPeerConnection")

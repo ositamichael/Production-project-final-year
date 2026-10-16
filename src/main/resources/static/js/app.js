@@ -2639,6 +2639,9 @@ const callDirection = document.querySelector('#callDirection');
 const callStatus = document.querySelector('#callStatus');
 const callNetworkNotice = document.querySelector('#callNetworkNotice');
 const remoteCallVideo = document.querySelector('#remoteCallVideo');
+const remoteCallAudio = document.querySelector('#remoteCallAudio');
+const callEnableSound = document.querySelector('#callEnableSound');
+const callAudioNotice = document.querySelector('#callAudioNotice');
 const localCallVideo = document.querySelector('#localCallVideo');
 const incomingCallActions = document.querySelector('#incomingCallActions');
 const activeCallActions = document.querySelector('#activeCallActions');
@@ -2788,7 +2791,7 @@ async function loadNotifications() {
 }
 
 const CALL_SIGNAL_TYPES = new Set([
-  'CALL_OFFER', 'CALL_ANSWER', 'CALL_ICE_CANDIDATE', 'CALL_REJECTED',
+  'CALL_OFFER', 'CALL_ACCEPTING', 'CALL_ANSWER', 'CALL_ICE_CANDIDATE', 'CALL_REJECTED',
   'CALL_CANCELLED', 'CALL_ENDED', 'CALL_BUSY', 'CALL_UNAVAILABLE',
   'CALL_FORBIDDEN', 'CALL_INVALID', 'CALL_RESOLVED_ELSEWHERE'
 ]);
@@ -2810,10 +2813,30 @@ function setCallButtonsAvailable(available) {
 }
 
 async function loadCallConfiguration() {
-  if (callConfiguration) return callConfiguration;
-  const response = await fetch('/api/social/calls/configuration', { headers: { Accept: 'application/json' } });
-  if (!response.ok) throw new Error('Call configuration is temporarily unavailable.');
-  const result = await response.json();
+  // Obtain fresh temporary credentials for each call, including after a long signed-in session.
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), 10000);
+  let result;
+  try {
+    const response = await fetch('/api/social/calls/configuration', {
+      headers: { Accept: 'application/json' }, cache: 'no-store', signal: controller.signal
+    });
+    if (response.status === 401 || response.status === 403) {
+      throw new Error('Your sign-in expired. Sign in again before calling.');
+    }
+    if (response.status === 503) {
+      throw new Error('The call relay is unavailable. Its free allowance or settings may need attention.');
+    }
+    if (!response.ok) throw new Error('Call configuration is temporarily unavailable.');
+    result = await response.json();
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      throw new Error('Call setup could not reach the server. Check your internet connection and try again.');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
   callConfiguration = {
     iceServers: (result.iceServers || []).map((server) => ({
       urls: server.urls,
@@ -2821,6 +2844,7 @@ async function loadCallConfiguration() {
       ...(server.credential ? { credential: server.credential } : {})
     })),
     relayConfigured: Boolean(result.relayConfigured),
+    iceTransportPolicy: result.iceTransportPolicy === 'relay' ? 'relay' : 'all',
     privacyNotice: result.privacyNotice
   };
   return callConfiguration;
@@ -2846,12 +2870,34 @@ function waitForRealtime() {
 async function sendCallSignal(type, details = {}, call = activeCall) {
   if (!call) return;
   await waitForRealtime();
+  if (['CALL_OFFER', 'CALL_ACCEPTING', 'CALL_ANSWER', 'CALL_ICE_CANDIDATE'].includes(type)
+      && activeCall !== call) return;
   socialSocket.send(JSON.stringify({
     type,
     callId: call.id,
     targetAccountId: call.peerAccountId,
     ...details
   }));
+}
+
+async function queueLocalCallCandidate(call, candidate) {
+  if (activeCall !== call) return;
+  if (!call.descriptionSignalled) {
+    call.pendingLocalCandidates.push(candidate);
+    return;
+  }
+  call.localCandidateChain = call.localCandidateChain.then(async () => {
+    if (activeCall === call) await sendCallSignal('CALL_ICE_CANDIDATE', candidate, call);
+  });
+  await call.localCandidateChain;
+}
+
+async function signalCallDescription(type, details, call) {
+  await sendCallSignal(type, details, call);
+  if (activeCall !== call) return;
+  call.descriptionSignalled = true;
+  const pending = call.pendingLocalCandidates.splice(0);
+  for (const candidate of pending) await queueLocalCallCandidate(call, candidate);
 }
 
 function updateCallControl(button, pressed, activeIcon, inactiveIcon, activeLabel, inactiveLabel) {
@@ -2873,10 +2919,19 @@ function showCallInterface(call, mode) {
   callMute.disabled = false;
   callCamera.disabled = false;
   callEnd.disabled = false;
+  callAccept.disabled = false;
+  callDecline.disabled = false;
   updateCallControl(callMute, false, 'mic-off', 'mic', 'Unmute', 'Mute');
   updateCallControl(callCamera, false, 'video-off', 'video', 'Camera on', 'Camera');
   remoteCallVideo.hidden = true;
+  remoteCallVideo.controls = false;
   remoteCallVideo.srcObject = null;
+  remoteCallAudio.srcObject = null;
+  remoteCallAudio.muted = false;
+  remoteCallAudio.volume = 1;
+  callEnableSound.hidden = true;
+  callAudioNotice.hidden = true;
+  callAudioNotice.textContent = '';
   localCallVideo.hidden = true;
   localCallVideo.srcObject = null;
   callPeerAvatar.hidden = false;
@@ -2899,6 +2954,12 @@ function stopCallMedia(call) {
     call.peerConnection.onconnectionstatechange = null;
     call.peerConnection.close();
   }
+  // A late permission result from a cancelled call must not clear a newer call's players.
+  if (activeCall && activeCall !== call) return;
+  remoteCallAudio.pause();
+  remoteCallAudio.srcObject = null;
+  callEnableSound.hidden = true;
+  callAudioNotice.hidden = true;
   remoteCallVideo.srcObject = null;
   localCallVideo.srcObject = null;
 }
@@ -2925,40 +2986,100 @@ async function requestCallMedia(media) {
     throw new Error('Calls require a secure HTTPS address.');
   }
   try {
-    return await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: true, noiseSuppression: true },
+    // Start capture from the user's click, before waiting on signalling or configuration.
+    const capture = navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
       video: media === 'VIDEO' ? { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } : false
     });
+    return await new Promise((resolve, reject) => {
+      let settled = false;
+      const timer = window.setTimeout(() => {
+        settled = true;
+        const error = new Error('Microphone or camera permission is still waiting. Check this site\'s browser permissions, then try the call again.');
+        error.name = 'CallMediaTimeoutError';
+        reject(error);
+      }, 25000);
+      capture.then((stream) => {
+        if (settled) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+        settled = true;
+        clearTimeout(timer);
+        resolve(stream);
+      }, (error) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        reject(error);
+      });
+    });
   } catch (error) {
-    if (error?.name === 'NotAllowedError') throw new Error('Microphone or camera permission was not granted.');
+    if (error?.name === 'CallMediaTimeoutError') throw error;
+    if (error?.name === 'NotAllowedError') throw new Error('Microphone or camera permission was not granted. Allow it in this site\'s browser settings, then try again.');
     if (error?.name === 'NotFoundError') throw new Error('A required microphone or camera was not found.');
     throw new Error('Your microphone or camera could not be started.');
   }
 }
 
+async function playRemoteCallAudio(call) {
+  if (activeCall !== call || !remoteCallAudio.srcObject) return;
+  try {
+    await remoteCallAudio.play();
+    if (activeCall !== call) return;
+    callEnableSound.hidden = true;
+    callAudioNotice.hidden = true;
+  } catch {
+    if (activeCall !== call) return;
+    callEnableSound.hidden = false;
+    callAudioNotice.hidden = false;
+    callAudioNotice.textContent = 'Call sound has not started. Tap Enable call sound, then check your device volume and speaker or headset output.';
+  }
+}
+
 async function createCallPeer(call) {
   const configuration = await loadCallConfiguration();
+  if (activeCall !== call) throw new Error('The call was cancelled.');
   call.relayConfigured = configuration.relayConfigured;
   callNetworkNotice.textContent = configuration.relayConfigured
-    ? `${configuration.privacyNotice} A secure relay is available if a direct connection is blocked.`
+    ? `${configuration.privacyNotice} A relay is configured for calls across different networks; connectivity still depends on the relay and both internet connections.`
     : `${configuration.privacyNotice} This pilot currently uses direct connections only, so some mobile or restricted Wi-Fi networks may block the call.`;
-  const peer = new RTCPeerConnection({ iceServers: configuration.iceServers });
+  const peer = new RTCPeerConnection({
+    iceServers: configuration.iceServers,
+    iceTransportPolicy: configuration.iceTransportPolicy
+  });
   call.peerConnection = peer;
+  call.pendingLocalCandidates = [];
+  call.localCandidateChain = Promise.resolve();
+  call.descriptionSignalled = false;
+  call.remoteStream = new MediaStream();
   call.localStream.getTracks().forEach((track) => peer.addTrack(track, call.localStream));
   peer.addEventListener('icecandidate', (event) => {
     if (!event.candidate || activeCall !== call) return;
-    void sendCallSignal('CALL_ICE_CANDIDATE', {
+    void queueLocalCallCandidate(call, {
       candidate: event.candidate.candidate,
       sdpMid: event.candidate.sdpMid,
       sdpMLineIndex: event.candidate.sdpMLineIndex
-    }).catch(() => finishCall('The live call connection was lost.'));
+    }).catch(() => {
+      if (activeCall === call) finishCall('The live call connection was lost.');
+    });
   });
   peer.addEventListener('track', (event) => {
     if (activeCall !== call) return;
-    const stream = event.streams[0] || new MediaStream([event.track]);
-    remoteCallVideo.srcObject = stream;
-    void remoteCallVideo.play().catch(() => {});
-    if (call.media === 'VIDEO') {
+    // Some browsers deliver audio and video in separate streamless track events.
+    // Accumulate tracks instead of replacing the previous track (and losing sound).
+    if (!call.remoteStream.getTracks().some((track) => track.id === event.track.id)) {
+      call.remoteStream.addTrack(event.track);
+    }
+    if (event.track.kind === 'audio') {
+      remoteCallAudio.srcObject = new MediaStream(call.remoteStream.getAudioTracks());
+      void playRemoteCallAudio(call);
+    }
+    if (call.media === 'VIDEO' && event.track.kind === 'video') {
+      remoteCallVideo.srcObject = call.remoteStream;
+      void remoteCallVideo.play().catch(() => {
+        if (activeCall === call) remoteCallVideo.controls = true;
+      });
       remoteCallVideo.hidden = false;
       callPeerAvatar.hidden = true;
     }
@@ -2995,10 +3116,12 @@ function startCallConnectionDeadline(call) {
   call.connectTimer = window.setTimeout(() => {
     if (activeCall !== call || call.phase === 'connected') return;
     void sendCallSignal('CALL_ENDED').catch(() => {});
-    finishCall(call.relayConfigured === false
-      ? 'The devices could not establish a direct media connection. Try the same Wi-Fi network, or configure a TURN relay for reliable calling.'
+    finishCall(call.phase === 'answering'
+      ? 'Answering timed out. Check the microphone and camera permissions on the receiving device.'
+      : call.relayConfigured === false
+      ? 'The devices could not connect directly. The service owner needs to configure a working TURN relay for calls across restricted networks.'
       : 'The secure media connection timed out. Please try again.');
-  }, 20000);
+  }, 45000);
 }
 
 async function flushCallCandidates(call) {
@@ -3033,27 +3156,40 @@ async function beginCall(media) {
     const offer = await peer.createOffer();
     await peer.setLocalDescription(offer);
     call.phase = 'ringing';
-    await sendCallSignal('CALL_OFFER', { media, sdp: offer.sdp });
-    callStatus.textContent = `Ringing ${call.peerName}…`;
-    call.ringTimer = window.setTimeout(() => {
-      if (activeCall === call && call.phase === 'ringing') {
-        void sendCallSignal('CALL_CANCELLED').catch(() => {});
-        finishCall('No answer.');
-      }
-    }, 30000);
+    await signalCallDescription('CALL_OFFER', { media, sdp: offer.sdp }, call);
+    if (activeCall !== call) return stopCallMedia(call);
+    if (call.phase === 'ringing') {
+      callStatus.textContent = `Ringing ${call.peerName}…`;
+      call.ringTimer = window.setTimeout(() => {
+        if (activeCall === call && call.phase === 'ringing') {
+          void sendCallSignal('CALL_CANCELLED').catch(() => {});
+          finishCall('No answer.');
+        }
+      }, 30000);
+    }
   } catch (error) {
-    finishCall(error.message || 'The call could not be started.', 2200);
+    if (activeCall === call) finishCall(error.message || 'The call could not be started.', 8000);
+    else stopCallMedia(call);
   }
 }
 
 async function acceptIncomingCall() {
   const call = activeCall;
-  if (!call || call.direction !== 'incoming') return;
+  if (!call || call.direction !== 'incoming' || call.phase !== 'ringing') return;
+  call.phase = 'answering';
   callAccept.disabled = true;
   callDecline.disabled = true;
-  callStatus.textContent = 'Starting your microphone and camera…';
+  incomingCallActions.hidden = true;
+  activeCallActions.hidden = false;
+  callMute.disabled = true;
+  callCamera.disabled = true;
+  callStatus.textContent = call.media === 'VIDEO'
+    ? 'Allow your microphone and camera to answer…' : 'Allow your microphone to answer…';
   try {
-    call.localStream = await requestCallMedia(call.media);
+    const capture = requestCallMedia(call.media);
+    // This acknowledgement changes the caller's state without waiting for a permission prompt.
+    void sendCallSignal('CALL_ACCEPTING', {}, call).catch(() => {});
+    call.localStream = await capture;
     if (activeCall !== call) return stopCallMedia(call);
     localCallVideo.srcObject = call.localStream;
     localCallVideo.hidden = call.media !== 'VIDEO';
@@ -3068,14 +3204,20 @@ async function acceptIncomingCall() {
     activeCallActions.hidden = false;
     callCamera.hidden = call.media !== 'VIDEO';
     callStatus.textContent = 'Connecting securely…';
-    await sendCallSignal('CALL_ANSWER', { sdp: answer.sdp });
+    callMute.disabled = false;
+    callCamera.disabled = false;
+    await signalCallDescription('CALL_ANSWER', { sdp: answer.sdp }, call);
     startCallConnectionDeadline(call);
   } catch (error) {
-    await sendCallSignal('CALL_REJECTED').catch(() => {});
-    finishCall(error.message || 'The call could not be answered.', 2200);
+    if (activeCall === call) {
+      await sendCallSignal('CALL_REJECTED', {}, call).catch(() => {});
+      if (activeCall === call) finishCall(error.message || 'The call could not be answered.', 8000);
+    } else stopCallMedia(call);
   } finally {
-    callAccept.disabled = false;
-    callDecline.disabled = false;
+    if (activeCall === call) {
+      callAccept.disabled = false;
+      callDecline.disabled = false;
+    }
   }
 }
 
@@ -3106,7 +3248,13 @@ async function handleCallSignal(signal) {
     return;
   }
   if (!activeCall || (signal.callId && signal.callId !== activeCall.id)) return;
-  if (signal.type === 'CALL_ANSWER') {
+  if (signal.type === 'CALL_ACCEPTING') {
+    if (activeCall.direction !== 'outgoing' || activeCall.phase !== 'ringing') return;
+    clearTimeout(activeCall.ringTimer);
+    activeCall.phase = 'answering';
+    callStatus.textContent = 'Answered. Waiting for the other device\'s microphone or camera…';
+    startCallConnectionDeadline(activeCall);
+  } else if (signal.type === 'CALL_ANSWER') {
     if (activeCall.direction !== 'outgoing' || !activeCall.peerConnection) return;
     clearTimeout(activeCall.ringTimer);
     activeCall.phase = 'connecting';
@@ -3158,6 +3306,9 @@ videoCallButton?.addEventListener('click', () => void beginCall('VIDEO'));
 callAccept?.addEventListener('click', () => void acceptIncomingCall());
 callDecline?.addEventListener('click', () => void declineOrEndCall());
 callEnd?.addEventListener('click', () => void declineOrEndCall());
+callEnableSound?.addEventListener('click', () => {
+  if (activeCall) void playRemoteCallAudio(activeCall);
+});
 callMute?.addEventListener('click', () => {
   if (!activeCall?.localStream) return;
   const muted = callMute.getAttribute('aria-pressed') !== 'true';
