@@ -108,6 +108,11 @@ class PilotFriendsJourneyTests {
         register("recovery@example.net", "Recovery Tester");
         UUID accountId = jdbc.queryForObject("SELECT id FROM user_accounts WHERE email = ?",
                 UUID.class, "recovery@example.net");
+        String storedPassword = jdbc.queryForObject(
+                "SELECT password_hash FROM pilot_credentials WHERE account_id = ?",
+                String.class, accountId);
+        org.assertj.core.api.Assertions.assertThat(storedPassword)
+                .startsWith("{bcrypt}$2a$12$");
         String recoveryCode = "SingleUseRecoveryCode-2026";
         jdbc.update("""
                 INSERT INTO pilot_password_reset_tokens (id, account_id, token_hash, expires_at)

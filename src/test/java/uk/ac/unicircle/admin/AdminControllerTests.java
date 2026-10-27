@@ -35,6 +35,12 @@ class AdminControllerTests {
     @Autowired JdbcTemplate jdbc;
 
     @Test
+    void administratorWorkspaceRejectsUnauthenticatedRequests() throws Exception {
+        mockMvc.perform(get("/api/admin/overview"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void administratorWorkspaceIsRoleAndCampusScoped() throws Exception {
         mockMvc.perform(get("/api/admin/overview").with(user("student")))
                 .andExpect(status().isForbidden());
@@ -133,6 +139,34 @@ class AdminControllerTests {
     }
 
     @Test
+    void overlappingSessionsForTheSameModuleAreRejected() throws Exception {
+        OffsetDateTime starts = OffsetDateTime.now(ZoneOffset.UTC).plusDays(12).withSecond(0).withNano(0);
+        String first = """
+                {"title":"First Module Session","moduleCode":"TEST-OVERLAP",
+                 "meetingType":"LECTURE","startsAt":"%s","endsAt":"%s",
+                 "locationLabel":"Test Campus Room C","agenda":"First session",
+                 "providerJoinUrl":"","audienceType":"CAMPUS","audienceLabel":"",
+                 "published":false,"assigneeIds":[]}
+                """.formatted(starts, starts.plusHours(1));
+        String overlapping = """
+                {"title":"Overlapping Module Session","moduleCode":"test-overlap",
+                 "meetingType":"SEMINAR","startsAt":"%s","endsAt":"%s",
+                 "locationLabel":"Test Campus Room D","agenda":"Overlapping session",
+                 "providerJoinUrl":"","audienceType":"CAMPUS","audienceLabel":"",
+                 "published":false,"assigneeIds":[]}
+                """.formatted(starts.plusMinutes(30), starts.plusMinutes(90));
+
+        mockMvc.perform(post("/api/admin/meetings").with(user(ADMIN)).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(first))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/admin/meetings").with(user(ADMIN)).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(overlapping))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail").value(
+                        "That module already has a session during this time."));
+    }
+
+    @Test
     void targetedAnnouncementCannotClaimSuccessWhenNoAccountMatches() throws Exception {
         mockMvc.perform(post("/api/admin/announcements").with(user(ADMIN)).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -178,6 +212,15 @@ class AdminControllerTests {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         UUID slotId = UUID.fromString(com.jayway.jsonpath.JsonPath.read(slotResponse, "$.id"));
+
+        mockMvc.perform(post("/api/admin/services/{id}/slots", serviceId)
+                        .with(user(ADMIN)).with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"startsAt":"%s","endsAt":"%s","capacity":1}
+                                """.formatted(starts.plusMinutes(15), starts.plusMinutes(45))))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail").value(
+                        "This service already has availability that overlaps that time."));
 
         mockMvc.perform(get("/api/campus-life/services").with(user("student")))
                 .andExpect(status().isOk())

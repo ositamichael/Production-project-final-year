@@ -382,7 +382,8 @@ class AdminService {
     SlotAdminResponse createSlot(Authentication authentication, UUID serviceId, CreateSlotRequest request) {
         SignedInAccount admin = requireAdmin(authentication);
         requireValidTime(request.startsAt(), request.endsAt());
-        service(admin, serviceId);
+        lockServiceForScheduling(admin, serviceId);
+        requireNoServiceSlotOverlap(serviceId, request.startsAt(), request.endsAt());
         UUID id = UUID.randomUUID();
         try {
             jdbc.update("""
@@ -404,6 +405,8 @@ class AdminService {
     MeetingAdminResponse createMeeting(Authentication authentication, CreateMeetingRequest request) {
         SignedInAccount admin = requireAdmin(authentication);
         requireValidTime(request.startsAt(), request.endsAt());
+        String moduleCode = blankToNull(request.moduleCode());
+        requireNoMeetingOverlap(admin, moduleCode, request.startsAt(), request.endsAt());
         String providerUrl = blankToNull(request.providerJoinUrl());
         if (providerUrl != null && !providerUrl.matches("^https://[^\\s]+$")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -425,7 +428,7 @@ class AdminService {
                    provider_join_url, access_scope, published)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, id, admin.universityId(), admin.accountId(), admin.accountId(), hostName,
-                request.title().strip(), blankToNull(request.moduleCode()), request.meetingType(),
+                request.title().strip(), moduleCode, request.meetingType(),
                 request.startsAt(), request.endsAt(), request.startsAt().minusMinutes(10),
                 request.locationLabel().strip(), blankToNull(request.agenda()),
                 providerUrl, accessScope, request.published());
@@ -837,6 +840,45 @@ class AdminService {
         if (endsAt == null || !endsAt.isAfter(startsAt)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "The end time must be after the start time.");
+        }
+    }
+
+    private void lockServiceForScheduling(SignedInAccount admin, UUID serviceId) {
+        List<UUID> services = jdbc.query("""
+                SELECT id FROM service_offerings
+                WHERE id = ? AND university_id = ?
+                FOR UPDATE
+                """, (result, row) -> result.getObject(1, UUID.class),
+                serviceId, admin.universityId());
+        if (services.isEmpty()) throw notFound("service");
+    }
+
+    private void requireNoServiceSlotOverlap(UUID serviceId,
+            OffsetDateTime startsAt, OffsetDateTime endsAt) {
+        Integer overlaps = jdbc.queryForObject("""
+                SELECT COUNT(*) FROM service_slots
+                WHERE service_id = ? AND active = TRUE
+                  AND starts_at < ? AND ends_at > ?
+                """, Integer.class, serviceId, endsAt, startsAt);
+        if (overlaps != null && overlaps > 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "This service already has availability that overlaps that time.");
+        }
+    }
+
+    private void requireNoMeetingOverlap(SignedInAccount admin, String moduleCode,
+            OffsetDateTime startsAt, OffsetDateTime endsAt) {
+        if (moduleCode == null) return;
+        jdbc.queryForObject("SELECT id FROM universities WHERE id = ? FOR UPDATE",
+                UUID.class, admin.universityId());
+        Integer overlaps = jdbc.queryForObject("""
+                SELECT COUNT(*) FROM learning_meetings
+                WHERE university_id = ? AND LOWER(module_code) = LOWER(?)
+                  AND starts_at < ? AND ends_at > ?
+                """, Integer.class, admin.universityId(), moduleCode, endsAt, startsAt);
+        if (overlaps != null && overlaps > 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "That module already has a session during this time.");
         }
     }
 

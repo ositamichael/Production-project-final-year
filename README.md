@@ -141,6 +141,10 @@ The staging sign-in page includes a password-recovery form. Recovery requires a 
 UniCircle begins as a modular monolith. This keeps deployment manageable for a final-year project while enforcing boundaries that can later support independent services. See:
 
 - [`docs/architecture.md`](docs/architecture.md)
+- [`docs/assessment/requirements-traceability.md`](docs/assessment/requirements-traceability.md)
+- [`docs/assessment/research-and-requirements.md`](docs/assessment/research-and-requirements.md)
+- [`docs/assessment/architecture-evidence.md`](docs/assessment/architecture-evidence.md)
+- [`docs/assessment/production-manifest-reconciliation.md`](docs/assessment/production-manifest-reconciliation.md)
 - [`docs/adr/0001-platform-and-language.md`](docs/adr/0001-platform-and-language.md)
 - [`docs/adr/0002-modular-monolith.md`](docs/adr/0002-modular-monolith.md)
 - [`docs/adr/0003-identity-and-tenancy.md`](docs/adr/0003-identity-and-tenancy.md)
