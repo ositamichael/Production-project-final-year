@@ -1,6 +1,6 @@
 # UniCircle research and requirements baseline
 
-Updated: 27 October 2026
+Updated: 5 November 2026
 
 ## Purpose and academic position
 
@@ -51,7 +51,7 @@ These sources support an investigation; they do not prove that UniCircle itself 
 
 ### 2.1 Secondary research already recorded
 
-The project specification contains the search-term template, search locations, repeatable search strings, source-selection rules and bibliography. The evidence base covers:
+The detailed, critically appraised evidence base is maintained in `../research/literature-review.md`, with the reproducible search and appraisal record in `../research/source-evaluation-log.md`. The Component 1 project specification contains the original search-term template and bibliography. Together they cover:
 
 - student digital experience and the intelligent campus;
 - student engagement and sense of belonging;
@@ -201,6 +201,8 @@ Problem statement -> research questions -> prioritised requirements
 
 The detailed repository evidence is indexed in `requirements-traceability.md`; design views are in `architecture-evidence.md`; decisions are in `docs/adr`; implementation increments and their acceptance notes are in `docs/sprints`; repeatable evaluation is provided by the automated test suite and `docs/qa`.
 
+The authoritative final-scope and measurable-requirements baseline is `requirements-and-scope.md`. If wording in this older combined baseline conflicts with it, `requirements-and-scope.md` takes precedence after supervisor review.
+
 ## 8. Risks that directly affect the requirements
 
 The specification's risk register remains authoritative. The highest-impact requirements risks are scope growth, unauthorised disclosure, unreliable real-time communication, booking races, unavailable institutional integrations, inaccessible interaction, weak research evidence and late testing. Each is linked to a mitigation: frozen Must scope, server-side authorisation, persisted messaging, database transactions, adapters/test data, iterative accessibility review, source-quality rules and continuous tests.
@@ -218,9 +220,9 @@ The Research & Requirements pillar can be presented as complete only when:
 7. Design, Implementation and Evaluation sections reference the requirement IDs;
 8. limitations and conflicting evidence are discussed critically.
 
-## References already established by the project specification
+## Research evidence and references
 
-The full Harvard-formatted bibliography is maintained in `docs/specification/UniCircle_Component_1_Project_Specification_With_AI_Log.docx`. Key sources include Jisc digital-experience and intelligent-campus publications; Kahu and Nelson on student engagement; Strayhorn and Thomas on belonging; DeLone and McLean on information-system success; Brooke and Bangor et al. on SUS; W3C WCAG 2.2; ICO location-data guidance; OWASP Top 10; OpenID Connect; and official Spring Modulith and WebSocket Security documentation.
+The critical synthesis and current Harvard-formatted bibliography are in `../research/literature-review.md`; the search and source-appraisal evidence is in `../research/source-evaluation-log.md`. The original bibliography remains in the submitted Component 1 specification under `docs/specification/`. Where a source version has changed, the literature review records the current version; in particular, ASVS 5.0.0 now provides verifiable security requirements rather than reliance on an OWASP Top 10 awareness list alone.
 
 The Leeds Beckett Software Engineering course page and 2026/27 course handbook identify Production Project as a Level 6, 40-credit core module and describe the research-design-implementation-evaluation cycle. They should be cited as module context, not as evidence that UniCircle solves the identified problem:
 
