@@ -1,6 +1,6 @@
 # UniCircle assessment requirements traceability
 
-Updated: 27 October 2026
+Updated: 5 November 2026
 
 ## Purpose
 
@@ -28,12 +28,61 @@ Verified on 27 October 2026:
 
 These figures must be regenerated before submission; screenshots are supporting evidence, while the repeatable command and source-controlled tests are the primary evidence.
 
+## Requirements baseline v1.0 reconciliation
+
+This section reconciles the IDs in `requirements-and-scope.md` with the repository inspected on 5 November 2026. The status is based on source and existing test inspection. The full suite was **not** re-run for this documentation update, so the 27 October verification figures above remain historical rather than a claim about the current working tree.
+
+Status meanings:
+
+- **Implemented and evidenced** - relevant implementation and repeatable automated tests were identified.
+- **Implemented but weakly evidenced** - implementation exists, but a required negative, race, audit or end-to-end case is missing or unclear.
+- **Partially implemented** - only part of the measurable requirement is evidenced.
+- **Not yet evidenced** - no valid completion evidence exists; a plan or target is not a result.
+
+### Functional requirements
+
+| ID | Status | Principal repository evidence | Gap/action |
+| --- | --- | --- | --- |
+| FR-01 | Implemented and evidenced | `DemoSignInJourneyTests`; `PilotFriendsJourneyTests`; protected controller tests | Re-run the complete suite and retain final authentication results. |
+| FR-02 | Implemented and evidenced | `CampusContextControllerTests`; `AdminControllerTests`; `SocialControllerTests`; `LostFoundStaffReviewControllerTests` | Add one consolidated cross-role/cross-university security evidence table for the report. |
+| FR-03 | Implemented and evidenced | `ProfileControllerTests`; `LocalProfilePhotoStorageTests` | Confirm production media-storage and retention boundaries remain explicit. |
+| FR-04 | Implemented and evidenced | `SocialControllerTests`; `PilotFriendsJourneyTests` | Retain state-transition evidence in the final appendix. |
+| FR-05 | Implemented and evidenced | `SocialControllerTests`; authenticated real-time gateway; call/signalling tests provide additional permission evidence | Add measured concurrent WebSocket behaviour only if claimed as a performance result. |
+| FR-06 | Implemented and evidenced | `CommunityControllerTests`; community module and migrations | Add an explicit cross-university negative test if not already covered indirectly by fixtures. |
+| FR-07 | Implemented and evidenced | `AdminControllerTests`; `InformationControllerTests`; engagement publication paths | Clarify which publisher role owns each retained final feature. |
+| FR-08 | Implemented but weakly evidenced | `EngagementControllerTests` covers registration, booking, duplicates, availability, cancellation and schedule | Add a genuine simultaneous final-place booking race test; sequential availability is not sufficient concurrency evidence. |
+| FR-09 | Implemented and evidenced | `EngagementControllerTests`; `AdminControllerTests`; account-specific information tests | Record one complete schedule-composition demonstration. |
+| FR-10 | Implemented but weakly evidenced | `SocialControllerTests` covers blocking and report creation; staff review/audit patterns exist in lost-and-found | Add or identify the exact authorised safety-report review tests and audit transition. |
+| FR-11 | Implemented but weakly evidenced | `AdminControllerTests` demonstrates role/campus scope; audited moderation exists in `LostFoundStaffReviewControllerTests` | Demonstrate that every retained privileged mutation, not only selected moderation actions, has the required audit record. |
+| FR-12 | Implemented and evidenced | `SearchControllerTests`; feature catalogue visibility tests | Add explicit moderation-pending/private-record search denial where not already covered. |
+| FR-13 | Implemented and evidenced | `PilotFriendsJourneyTests`; `LocationSharingServiceTests` | Add retained proof of configured expiry/precision and document the retention rationale. |
+| FR-14 | Implemented and evidenced | `EngagementControllerTests.personalScheduleCanBeDownloadedAsAStandardsBasedCalendar` | Validate the exported file manually in at least one named calendar client if interoperability is claimed. |
+| FR-15 | Implemented and evidenced | `InformationControllerTests.supportRequestsAreTrackedPrivatelyPerAccount`; public safety/boundary content | Participant understanding of boundaries remains ethics dependent. |
+| FR-16 | Conditional | Extensive optional-feature controller, structure and integration tests | Select the final extensions first; exclude unstable or irrelevant extensions from the assessed release rather than claiming all of them. |
+
+### Non-functional requirements
+
+| ID | Status | Principal repository evidence | Gap/action |
+| --- | --- | --- | --- |
+| NFR-01 | Partially implemented | Spring Security configuration, CSRF tests, negative access tests, security headers and validation tests | Select/map ASVS 5.0.0 controls; run dependency and application-security review; triage findings. |
+| NFR-02 | Partially implemented | Fictional-data labels, privacy page, ownership tests, short-lived location design | Produce a data inventory covering purpose, fields, access, retention and deletion; decide the account data-export/deletion gap. |
+| NFR-03 | Partially implemented | Semantic/structure checks, responsive styles, accessibility information | Run named automated scans and the complete manual WCAG 2.2 AA core-journey checklist, fix defects and retest. |
+| NFR-04 | Not yet evidenced | Target and proposed method exist only | Wait for Favourable Opinion; then retain approved task data, SUS calculations and limitations. |
+| NFR-05 | Not yet evidenced | No controlled current load report identified | Create repeatable HTTP/WebSocket load scripts and record environment, dataset, percentiles and failures. |
+| NFR-06 | Implemented; current run pending | Maven/Flyway build and historical 27 October result; booking transaction tests | Re-run from a clean state and add the simultaneous booking race test. |
+| NFR-07 | Implemented and evidenced | `ArchitectureTests.modularBoundariesAreValid`; ADRs; Flyway migrations | Generate final diagrams from the implemented structure and evaluate coupling/trade-offs. |
+| NFR-08 | Implemented but reconciliation incomplete | JUnit/MockMvc tests and JaCoCo 75% line gate | Link every Must acceptance criterion to a named test and add missing negative/race cases. |
+| NFR-09 | Implemented but weakly evidenced | `FrontendStructureTests`, responsive CSS and retained screenshots | Perform named browser/viewport manual checks; structure assertions do not prove visual operability. |
+| NFR-10 | Partially implemented | Audited moderation/admin records and safe exception tests | Define the final privileged-event audit set and verify secrets/sensitive payloads are not logged. |
+| NFR-11 | Implemented and evidenced for rehearsal | Dockerfile, external configuration, production profile and health endpoint | Rehearsal evidence is not institutionally approved production evidence; record the final environment. |
+| NFR-12 | Partially implemented | Dated QA documents, sprints, build command and traceability records | Replace stale metrics with final dated outputs and archive tool versions/environment details. |
+
 ## Assessment mapping
 
 | Assessment quality | UniCircle evidence | Status | Remaining evidence before submission |
 | --- | --- | --- | --- |
 | Clear real-world problem | `research-and-requirements.md`, project specification, sprint records | Evidence-based problem statement written | Complete approved primary research and analyse the results without fabricating evidence |
-| Requirements analysis | `research-and-requirements.md`, sprint acceptance criteria, `docs/friends-pilot.md`, this traceability matrix | Numbered functional and non-functional baseline established | Map every official module outcome and mark descriptor when the formal assessment brief is supplied |
+| Requirements analysis | `requirements-and-scope.md`, `../research/literature-review.md`, `../research/source-evaluation-log.md`, sprint acceptance criteria, `docs/friends-pilot.md`, this traceability matrix | Research-derived functional and non-functional baseline established | Obtain supervisor confirmation of the final core scope and material post-Component-1 changes |
 | Functional requirements | Identity, profiles, connections, messages, calls, circles, events, bookings, opportunities, updates, support, lost and found, assistant and administration | Implemented and tested | Keep the submission scope explicit; do not claim unavailable institutional integrations |
 | Non-functional requirements | Security headers, CSRF, access control, validation, rate limits, short-lived location data, responsive frontend, health endpoint | Implemented | Add measured load-test results and formal accessibility audit evidence |
 | Architecture and justification | `docs/architecture.md`, ADRs, modularity test, architecture diagrams | Implemented | Include selected diagrams and trade-off discussion in the dissertation |
@@ -83,7 +132,7 @@ The pilot must continue to state that its campus data is fictional and that it i
 
 ## Highest-priority remaining work
 
-1. Obtain the official module brief and map each learning outcome and mark descriptor to this table.
+1. Review the final Must/Should/Could boundaries and post-Component-1 scope changes with the supervisor, then record the decision.
 2. Produce controlled load-test results for HTTP and WebSocket journeys.
 3. Complete an accessibility audit and record fixes.
 4. Perform a dependency and application-security review, then record findings and remediations.
