@@ -91,7 +91,7 @@ Important limitation: most services use JDBC against one shared schema. Spring M
 Three authentication modes share the same server-side authorisation model:
 
 1. **Development:** seeded fictional in-memory users.
-2. **Invitation-only pilot:** database-backed fictional/pilot accounts with encoded passwords.
+2. **Staging pilot:** database-backed fictional/pilot accounts with encoded passwords.
 3. **Production profile:** OIDC redirect to an approved provider.
 
 The browser must never provide the authoritative university context. `CurrentIdentity` resolves the signed-in account and university on the server. Services then apply role, ownership, membership, connection and tenant rules before accessing or mutating data.
