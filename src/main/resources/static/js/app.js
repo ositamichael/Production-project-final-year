@@ -5003,7 +5003,7 @@ fetch('/api/platform/status')
       void refreshConversationSummary();
       if (!document.querySelector('#map-page').hidden) void loadLocationPanel();
     } else {
-      locationText('Real location sharing is available in the invitation-only pilot, not the fictional sandbox.');
+      locationText('Real location sharing is available in the staging-pilot profile, not the fictional sandbox.');
     }
   })
   .catch(() => document.documentElement.dataset.platformStage = 'offline');
