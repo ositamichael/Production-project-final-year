@@ -1,0 +1,7 @@
+target
+.git
+.idea
+unicircle-pilot.mv.db
+unicircle-pilot.trace.db
+*.zip
+docs

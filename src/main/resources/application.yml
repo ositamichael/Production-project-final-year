@@ -1,0 +1,67 @@
+spring:
+  application:
+    name: UniCircle
+  datasource:
+    url: jdbc:h2:mem:unicircle;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+server:
+  error:
+    include-message: never
+    include-stacktrace: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: UniCircle
+    stage: Sprint 16 no-cost basic assistant
+    data-status: Prototype fixtures only
+
+unicircle:
+  assistant:
+    model: ${UNICIRCLE_ASSISTANT_MODEL:gpt-6.1-sol}
+    image-model: ${UNICIRCLE_ASSISTANT_IMAGE_MODEL:gpt-image-2.5-flare}
+  meetings:
+    provider-base-url: ${UNICIRCLE_MEETING_PROVIDER_BASE_URL:}
+  calls:
+    stun-urls: ${UNICIRCLE_STUN_URLS:stun:stun.l.google.com:19302}
+    turn-urls: ${UNICIRCLE_TURN_URLS:}
+    turn-username: ${UNICIRCLE_TURN_USERNAME:}
+    turn-credential: ${UNICIRCLE_TURN_CREDENTIAL:}
+    turn-shared-secret: ${UNICIRCLE_TURN_SHARED_SECRET:}
+    credential-ttl-seconds: ${UNICIRCLE_TURN_CREDENTIAL_TTL_SECONDS:21600}
+    ice-transport-policy: ${UNICIRCLE_CALL_ICE_TRANSPORT_POLICY:all}
+    xirsys:
+      ident: ${UNICIRCLE_XIRSYS_IDENT:}
+      secret: ${UNICIRCLE_XIRSYS_SECRET:}
+      channel: ${UNICIRCLE_XIRSYS_CHANNEL:}
+  pilot:
+    bootstrap-admin-email: ${UNICIRCLE_BOOTSTRAP_ADMIN_EMAIL:}
+  demo:
+    username: ${UNICIRCLE_DEMO_USERNAME:student@demo.unicircle.test}
+    password: ${UNICIRCLE_DEMO_PASSWORD:CampusDemo!2026}
+  storage:
+    profile-photos-dir: ${UNICIRCLE_PROFILE_PHOTOS_DIR:${java.io.tmpdir}/unicircle-profile-photos}
+    lost-found-photos-dir: ${UNICIRCLE_LOST_FOUND_PHOTOS_DIR:${java.io.tmpdir}/unicircle-lost-found-photos}

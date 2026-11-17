@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="UniCircle brings trusted campus connections, services, opportunities and support into one accessible platform.">
+  <meta name="theme-color" content="#082b59">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>UniCircle — My Campus</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/css/app.css?v=40">
+  <script src="/js/app.js?v=43" defer></script>
+</head>
+<body>
+  <svg class="svg-sprite" aria-hidden="true">
+    <symbol id="home" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></symbol>
+    <symbol id="calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></symbol>
+    <symbol id="users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="message" viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/><path d="M8 9h8M8 13h5"/></symbol>
+    <symbol id="events" viewBox="0 0 24 24"><path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z"/><path d="m15 9-2 6-6 2 2-6Z"/></symbol>
+    <symbol id="building" viewBox="0 0 24 24"><path d="m3 10 9-6 9 6"/><path d="M5 10h14v9H5zM3 21h18M8 13v4M12 13v4M16 13v4"/></symbol>
+    <symbol id="briefcase" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2"/></symbol>
+    <symbol id="map-pin" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></symbol>
+    <symbol id="search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+    <symbol id="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.41M17.66 6.34l1.41-1.41"/></symbol>
+    <symbol id="sparkles" viewBox="0 0 24 24"><path d="m12 3-1.2 3.1L8 7.5l2.8 1.4L12 12l1.2-3.1L16 7.5l-2.8-1.4Z"/><path d="m18 13-.8 2.2L15 16l2.2.8L18 19l.8-2.2L21 16l-2.2-.8ZM5 13l-.7 1.8L2.5 15.5l1.8.7L5 18l.7-1.8 1.8-.7-1.8-.7Z"/></symbol>
+    <symbol id="lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></symbol>
+    <symbol id="star" viewBox="0 0 24 24"><path d="m12 2 3 6 6.5 1-4.7 4.6 1.1 6.4-5.9-3.1L6.1 20l1.1-6.4L2.5 9 9 8Z"/></symbol>
+    <symbol id="menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+    <symbol id="more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></symbol>
+    <symbol id="check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+    <symbol id="close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="code" viewBox="0 0 24 24"><path d="m8 9-4 3 4 3M16 9l4 3-4 3M14 5l-4 14"/></symbol>
+    <symbol id="dice" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8" cy="8" r="1"/><circle cx="16" cy="8" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="8" cy="16" r="1"/><circle cx="16" cy="16" r="1"/></symbol>
+    <symbol id="leaf" viewBox="0 0 24 24"><path d="M20 4C11 4 5 8 5 15c0 3 2 5 5 5 7 0 10-7 10-16Z"/><path d="M4 21c3-6 7-9 13-12"/></symbol>
+    <symbol id="globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></symbol>
+    <symbol id="palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18h1.4a2 2 0 0 0 1.6-3.2 2 2 0 0 1 1.6-3.2H18a3 3 0 0 0 3-3A9 9 0 0 0 12 3Z"/><circle cx="7.5" cy="10" r="1"/><circle cx="10" cy="6.8" r="1"/><circle cx="14.5" cy="7" r="1"/></symbol>
+    <symbol id="puzzle" viewBox="0 0 24 24"><path d="M19 13h-2a2 2 0 1 1 0-4h2V5h-5a2 2 0 1 0-4 0H5v5a2 2 0 1 0 0 4v5h5a2 2 0 1 0 4 0h5Z"/></symbol>
+    <symbol id="graduation" viewBox="0 0 24 24"><path d="m3 9 9-5 9 5-9 5Z"/><path d="M7 12v4c3 2 7 2 10 0v-4M21 9v6"/></symbol>
+    <symbol id="mindfulness" viewBox="0 0 24 24"><path d="M12 3c-2 3-2 5 0 7 2-2 2-4 0-7Z"/><path d="M6 10c1 4 3 6 6 7 3-1 5-3 6-7-3 0-5 1-6 4-1-3-3-4-6-4Z"/><path d="M4 21h16"/></symbol>
+    <symbol id="food" viewBox="0 0 24 24"><path d="M4 3v7a3 3 0 0 0 3 3v8M10 3v7a3 3 0 0 1-3 3M7 3v7M17 3v18M17 3c3 2 4 5 4 9h-4"/></symbol>
+    <symbol id="presentation" viewBox="0 0 24 24"><path d="M4 4h16v12H4zM8 21l4-5 4 5M8 9l3 3 5-5"/></symbol>
+    <symbol id="laptop" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="12" rx="2"/><path d="M2 19h20"/></symbol>
+    <symbol id="key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M16 7l2 2M14 9l2 2"/></symbol>
+    <symbol id="bottle" viewBox="0 0 24 24"><path d="M9 3h6M10 3v4l-2 3v9a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-9l-2-3V3M8 13h8"/></symbol>
+    <symbol id="id-badge" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 5V3h8v2"/><circle cx="9" cy="12" r="2"/><path d="M6 17c.8-2 2-3 3-3s2.2 1 3 3M15 10h3M15 14h3"/></symbol>
+    <symbol id="library" viewBox="0 0 24 24"><path d="m3 9 9-5 9 5M5 10h14M6 10v8M10 10v8M14 10v8M18 10v8M3 20h18"/></symbol>
+    <symbol id="volunteer" viewBox="0 0 24 24"><path d="M12 21s-8-4.8-8-11a4 4 0 0 1 7-2.6L12 9l1-1.6A4 4 0 0 1 20 10c0 6.2-8 11-8 11Z"/><path d="M8 13h8"/></symbol>
+    <symbol id="accessibility" viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><path d="M5 8h14M12 6v6M8 21l4-9 4 9M5 13l7-1 7 1"/></symbol>
+    <symbol id="room" viewBox="0 0 24 24"><path d="M4 21V4h12v17M16 9h4v12M2 21h20"/><path d="M8 9h4M8 13h4"/></symbol>
+    <symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="camera" viewBox="0 0 24 24"><path d="M14.5 5 13 3h-2L9.5 5H6a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3V8a3 3 0 0 0-3-3Z"/><circle cx="12" cy="13" r="4"/></symbol>
+    <symbol id="phone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.4 19.4 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></symbol>
+    <symbol id="video" viewBox="0 0 24 24"><rect x="2" y="5" width="15" height="14" rx="3"/><path d="m17 10 5-3v10l-5-3Z"/></symbol>
+    <symbol id="phone-off" viewBox="0 0 24 24"><path d="m3 3 18 18M8.6 8.6 8.1 9.9a16 16 0 0 0 6 6l1.3-.5M5.5 5.5 4.1 2h-3A2 2 0 0 0 2.1 4.2a19.8 19.8 0 0 0 3.1 8.6 19.4 19.4 0 0 0 6 6 19.8 19.8 0 0 0 8.6 3.1 2 2 0 0 0 2.2-2v-3a2 2 0 0 0-1.7-2c-.7-.1-1.4-.2-2.1-.5"/></symbol>
+    <symbol id="mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5M8 22h8"/></symbol>
+    <symbol id="mic-off" viewBox="0 0 24 24"><path d="m3 3 18 18M9 9v2a3 3 0 0 0 4.6 2.5M15 9.3V5a3 3 0 0 0-5.1-2.1M17 16.9A7 7 0 0 0 19 12v-2M5 10v2a7 7 0 0 0 10.5 6.1M12 19v3M8 22h8"/></symbol>
+    <symbol id="video-off" viewBox="0 0 24 24"><path d="m3 3 18 18M10.6 5H5a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h12v-2.6M17 10l5-3v10l-2.5-1.5M14.7 5.3A3 3 0 0 1 17 8v5"/></symbol>
+    <symbol id="shield" viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 2.8 8.1 7 10 4.2-1.9 7-5.4 7-10V6Z"/><path d="m9 12 2 2 4-5"/></symbol>
+    <symbol id="megaphone" viewBox="0 0 24 24"><path d="M3 11v2a2 2 0 0 0 2 2h2l3 5h3l-2-5 9 3V6L7 10H5a2 2 0 0 0-2 1Z"/><path d="M20 9a3 3 0 0 1 0 6"/></symbol>
+    <symbol id="monitor-play" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="m10 8 5 3-5 3ZM8 21h8M12 17v4"/></symbol>
+    <symbol id="hand" viewBox="0 0 24 24"><path d="M7 11V6a2 2 0 0 1 4 0v4-6a2 2 0 0 1 4 0v6-4a2 2 0 0 1 4 0v8c0 5-3 8-8 8h-1c-3 0-5-2-7-5l-2-3a2 2 0 0 1 3-2l3 2"/></symbol>
+    <symbol id="mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol>
+    <symbol id="alert" viewBox="0 0 24 24"><path d="M12 3 2 21h20Z"/><path d="M12 9v5M12 18h.01"/></symbol>
+    <symbol id="book-open" viewBox="0 0 24 24"><path d="M3 5a7 7 0 0 1 9 2v14a7 7 0 0 0-9-2ZM21 5a7 7 0 0 0-9 2v14a7 7 0 0 1 9-2Z"/></symbol>
+    <symbol id="clipboard-check" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M8 10h8M8 14h3M13 16l2 2 4-5"/></symbol>
+    <symbol id="refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M6.1 8a7 7 0 0 1 11.8-2L20 8M4 16l2.1 2a7 7 0 0 0 11.8-2"/></symbol>
+  </svg>
+  <a class="skip-link" href="#main-content">Skip to dashboard</a>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+      <button class="sidebar-close" id="sidebarClose" type="button" aria-label="Close navigation"><svg class="icon" aria-hidden="true"><use href="#close"/></svg></button>
+      <a class="brand" href="/" aria-label="UniCircle home">
+        <span class="brand-mark" aria-hidden="true"><span></span></span>
+        <span>UniCircle</span>
+      </a>
+      <nav class="main-nav">
+        <a class="nav-item active" href="#campus" data-page-link="campus" aria-current="page"><svg class="icon" aria-hidden="true"><use href="#home"/></svg> My Campus</a>
+        <a class="nav-item" href="#today" data-page-link="today"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg> Today</a>
+        <a class="nav-item" href="#updates-page" data-page-link="updates"><svg class="icon" aria-hidden="true"><use href="#megaphone"/></svg> Campus Updates</a>
+        <a class="nav-item" href="#live-classes-page" data-page-link="live-classes"><svg class="icon" aria-hidden="true"><use href="#monitor-play"/></svg> Live Classes</a>
+        <a class="nav-item" href="#circles-page" data-page-link="circles"><svg class="icon" aria-hidden="true"><use href="#users"/></svg> Campus Circles</a>
+        <a class="nav-item" href="#messages-page" data-page-link="messages"><svg class="icon" aria-hidden="true"><use href="#message"/></svg> Messages <span class="nav-count" id="messageUnreadBadge" hidden>0</span></a>
+        <a class="nav-item" href="#events-page" data-page-link="events"><svg class="icon" aria-hidden="true"><use href="#events"/></svg> Events</a>
+        <a class="nav-item" href="#services-page" data-page-link="services"><svg class="icon" aria-hidden="true"><use href="#building"/></svg> Book a Service</a>
+        <a class="nav-item" href="#opportunities-page" data-page-link="opportunities"><svg class="icon" aria-hidden="true"><use href="#briefcase"/></svg> Opportunities</a>
+        <a class="nav-item" href="#map-page" data-page-link="map"><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg> Friend Location</a>
+        <a class="nav-item" href="#wellbeing-page" data-page-link="wellbeing"><svg class="icon" aria-hidden="true"><use href="#heart"/></svg> Wellbeing &amp; Support</a>
+        <a class="nav-item" href="#lost-found-page" data-page-link="lost-found"><svg class="icon" aria-hidden="true"><use href="#search"/></svg> Lost and Found</a>
+        <a class="nav-item" href="#lost-found-review-page" data-page-link="lost-found-review" id="staffReviewNav" hidden><svg class="icon" aria-hidden="true"><use href="#shield"/></svg> Review queue</a>
+        <a class="nav-item" href="#admin-page" data-page-link="admin" id="adminNav" hidden><svg class="icon" aria-hidden="true"><use href="#building"/></svg> Test Campus Admin</a>
+        <a class="nav-item" href="#pilot-tests-page" data-page-link="pilot-tests" id="pilotTestNav" hidden><svg class="icon" aria-hidden="true"><use href="#clipboard-check"/></svg> Pilot Test Centre</a>
+        <a class="nav-item" href="#assistant-page" data-page-link="assistant"><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg> Ask UniCircle</a>
+      </nav>
+      <button class="account-card" id="sidebarProfileButton" type="button" data-open-profile aria-label="Open your profile">
+        <div class="avatar avatar-michael" aria-hidden="true">UC</div>
+        <div><strong data-current-user-name>Campus guest</strong><span data-current-user-course>Sign in to continue</span></div>
+      </button>
+      <button class="verified-card" id="universityAccountButton" type="button" data-open-profile aria-label="Open university account and profile">
+        <svg class="icon lock" aria-hidden="true"><use href="#lock"/></svg>
+        <span><strong data-current-university>University account</strong><small data-current-account-detail>Sign-in required</small></span>
+        <span class="verified-dot" aria-hidden="true"><svg class="icon"><use href="#check"/></svg></span>
+      </button>
+    </aside>
+    <button class="sidebar-scrim" id="sidebarScrim" type="button" aria-label="Close navigation" hidden></button>
+
+    <main id="main-content" tabindex="-1">
+      <header class="topbar">
+        <button class="menu-button" id="menuButton" type="button" aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation"><svg class="icon" aria-hidden="true"><use href="#menu"/></svg></button>
+        <a class="mobile-brand" href="#campus" data-open-page="campus" aria-label="UniCircle home"><span class="brand-mark" aria-hidden="true"><span></span></span><span>UniCircle</span></a>
+        <div class="welcome">
+          <svg class="icon sun" aria-hidden="true"><use href="#sun"/></svg>
+          <div><h1><span data-time-greeting>Welcome</span>, <span data-current-user-first-name>guest</span></h1><p data-dashboard-intro>Explore UniCircle or sign in to see your account activity.</p></div>
+        </div>
+        <label class="search-box">
+          <svg class="icon" aria-hidden="true"><use href="#search"/></svg>
+          <span class="sr-only">Search dashboard</span>
+          <input id="globalSearch" type="search" placeholder="Filter this dashboard…" autocomplete="off">
+        </label>
+        <div class="global-search-results" id="globalSearchResults" hidden role="listbox" aria-label="Campus search results"></div>
+        <button class="icon-button" id="notificationButton" type="button" aria-expanded="false" aria-controls="notificationPanel" aria-label="Notifications, none unread">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"/><path d="M10 21h4"/></svg>
+          <span id="notificationBadge" hidden>0</span>
+        </button>
+        <button class="profile-button" id="profileButton" type="button" data-open-profile aria-label="Open your profile"><span class="avatar avatar-michael">UC</span></button>
+      </header>
+
+      <section class="notification-panel" id="notificationPanel" hidden aria-labelledby="notificationTitle">
+        <div class="notification-heading">
+          <div><span class="eyebrow">MY CAMPUS</span><h2 id="notificationTitle">Notifications</h2></div>
+          <button class="panel-close" id="notificationClose" type="button" aria-label="Close notifications"><svg class="icon" aria-hidden="true"><use href="#close"/></svg></button>
+        </div>
+        <div class="notification-toolbar">
+          <span id="notificationSummary">Sign in to view updates</span>
+          <button id="markAllRead" type="button">Mark all as read</button>
+        </div>
+        <ol class="notification-list" id="notificationList"><li class="notification-empty">Sign in to load your notifications.</li></ol>
+        <button class="notification-footer" id="notificationMessagesLink" type="button">Open messages <svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button>
+        <p class="notification-disclaimer" id="notificationStorageNote">Account-specific updates stored in the local demonstration database.</p>
+      </section>
+
+      <section class="dashboard-grid page-surface" id="campus" data-page="campus" aria-label="UniCircle dashboard">
+        <article class="card pilot-welcome" id="pilotWelcome" hidden>
+          <span class="eyebrow">YOUR UNICIRCLE PILOT</span>
+          <h2>Your campus life, connected.</h2>
+          <p>Find students, message privately, discover events, book campus services, explore opportunities and test consent-based location sharing from one account.</p>
+          <div class="pilot-welcome-actions"><button class="primary-button" id="pilotFindFriends" type="button">Find students</button><a class="secondary-button" href="#events-page" data-open-page="events">Explore events</a><a class="secondary-button" href="#services-page" data-open-page="services">Book a service</a><a class="secondary-button" href="#messages-page" data-open-page="messages">Open messages</a><a class="secondary-button" href="#pilot-tests-page" data-open-page="pilot-tests">Open Test Centre</a></div>
+          <small>Course and year are self-declared pilot details. Events, services and opportunities are test records—not data supplied by a university.</small>
+        </article>
+        <article class="card schedule-card searchable" id="schedule" data-search="schedule lecture project seminar gym">
+          <div class="card-heading"><h2><span class="heading-icon blue"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg></span> Today's Schedule</h2><a href="#today" data-open-page="today">View all</a></div>
+          <ol class="timeline" id="schedule-list"><li class="signed-out-card-state"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><div><strong>Sign in to view your schedule</strong><small>No attendance or timetable information is shown to guests.</small></div></li></ol>
+        </article>
+
+        <article class="card searchable" id="circles" data-search="campus circles computer science society board games sustainable campus">
+          <div class="card-heading"><h2><span class="heading-icon navy"><svg class="icon" aria-hidden="true"><use href="#users"/></svg></span> Campus Circles</h2><a href="#circles-page" data-open-page="circles">View all</a></div>
+          <ul class="people-list" id="dashboardCircleList" aria-live="polite">
+            <li class="loading-note">Sign in to discover campus circles.</li>
+          </ul>
+        </article>
+
+        <article class="card searchable" id="messages" data-search="messages emily group project tutor">
+          <div class="card-heading"><h2><span class="heading-icon navy"><svg class="icon" aria-hidden="true"><use href="#message"/></svg></span> Messages</h2><a href="#messages-page" data-open-page="messages">View all</a></div>
+          <ul class="message-list" id="dashboardMessagesList"><li class="signed-out-card-state"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><div><strong>Private messages are protected</strong><small>Sign in to load your own accepted conversations.</small></div></li></ul>
+        </article>
+
+        <article class="card campus-updates-card searchable" data-search="announcements module placement internship university updates">
+          <div class="card-heading"><h2><span class="heading-icon orange"><svg class="icon" aria-hidden="true"><use href="#megaphone"/></svg></span> Campus Updates</h2><a href="#updates-page" data-open-page="updates">View all</a></div>
+          <div class="dashboard-update-list" id="dashboardAnnouncementList"><p class="loading-note">Sign in to load account-specific pilot updates.</p></div>
+        </article>
+
+        <article class="card live-class-card searchable" data-search="online class team meeting lecture seminar live">
+          <div class="card-heading"><h2><span class="heading-icon blue"><svg class="icon" aria-hidden="true"><use href="#monitor-play"/></svg></span> Live Classes</h2><a href="#live-classes-page" data-open-page="live-classes">View all</a></div>
+          <div class="dashboard-meeting-list" id="dashboardMeetingList"><p class="loading-note">Sign in to load your scheduled pilot sessions.</p></div>
+        </article>
+
+        <section class="quick-actions" aria-label="Campus services">
+          <a class="quick-card coral searchable" href="#events-page" data-open-page="events" data-search="events campus"><span><svg class="icon" aria-hidden="true"><use href="#events"/></svg></span><strong>Events</strong><small>What's on campus</small></a>
+          <a class="quick-card orange searchable" href="#updates-page" data-open-page="updates" data-search="announcements placements internships module notices"><span><svg class="icon" aria-hidden="true"><use href="#megaphone"/></svg></span><strong>Campus Updates</strong><small>Official news and course notices</small></a>
+          <a class="quick-card blue searchable" href="#live-classes-page" data-open-page="live-classes" data-search="online classes lectures project meetings"><span><svg class="icon" aria-hidden="true"><use href="#monitor-play"/></svg></span><strong>Live Classes</strong><small>Join, chat, ask and participate</small></a>
+          <a class="quick-card blue searchable" href="#services-page" data-open-page="services" data-search="book service rooms appointments"><span><svg class="icon" aria-hidden="true"><use href="#building"/></svg></span><strong>Book a Service</strong><small>Rooms, facilities, appointments</small></a>
+          <a class="quick-card orange searchable" href="#opportunities-page" data-open-page="opportunities" data-search="opportunities jobs internships volunteering"><span><svg class="icon" aria-hidden="true"><use href="#briefcase"/></svg></span><strong>Opportunities</strong><small>Jobs, internships, volunteering</small></a>
+          <a class="quick-card mint searchable" href="#map-page" data-open-page="map" data-search="friend location accepted connections sharing"><span><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg></span><strong>Friend Location</strong><small>Voluntary sharing controls</small></a>
+          <a class="quick-card rose searchable" href="#wellbeing-page" data-open-page="wellbeing" data-search="wellbeing support help advice"><span><svg class="icon" aria-hidden="true"><use href="#heart"/></svg></span><strong>Wellbeing &amp; Support</strong><small>Get help and advice</small></a>
+          <a class="quick-card peach searchable" href="#lost-found-page" data-open-page="lost-found" data-search="lost found report items"><span><svg class="icon" aria-hidden="true"><use href="#search"/></svg></span><strong>Lost and Found</strong><small>Report or browse items</small></a>
+          <a class="quick-card violet searchable" href="#assistant-page" data-open-page="assistant" data-search="ask unicircle help assistant"><span><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><strong>Ask UniCircle</strong><small>Find campus information</small></a>
+        </section>
+
+        <article class="card events-card searchable" id="dashboard-events-card" data-search="events careers fair mindfulness international food festival">
+          <div class="card-heading"><h2><span class="heading-icon coral"><svg class="icon" aria-hidden="true"><use href="#events"/></svg></span> Upcoming Events</h2><a href="#events-page" data-open-page="events">View all</a></div>
+          <ul class="event-list" id="dashboardEventList"><li class="signed-out-card-state"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><div><strong>Sign in to view pilot events</strong><small>Dates are loaded from the signed-in university-scoped catalogue.</small></div></li></ul>
+        </article>
+
+        <article class="card booking-card searchable" id="booking" data-search="book service lecturer appointment room facility">
+          <div class="card-heading"><h2><span class="heading-icon green"><svg class="icon" aria-hidden="true"><use href="#building"/></svg></span> Book a Service</h2><a href="#services-page" data-open-page="services">View all</a></div>
+          <div class="tabs" role="tablist" aria-label="Booking type">
+            <button class="tab active" id="lecturerTab" type="button" role="tab" aria-selected="true" aria-controls="bookingPanel" tabindex="0" data-mode="appointment">Lecturer Appointment</button>
+            <button class="tab" id="roomTab" type="button" role="tab" aria-selected="false" aria-controls="bookingPanel" tabindex="-1" data-mode="facility">Room / Facility</button>
+          </div>
+          <div id="bookingPanel" role="tabpanel" aria-labelledby="lecturerTab">
+            <div class="lecturer-row"><span class="avatar green-avatar" id="bookingAvatar">DT</span><div><strong id="bookingName">Dr Taylor</strong><small id="bookingDetail">Computer Science</small></div><svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></div>
+            <p class="field-label">Select a time</p>
+            <div class="date-strip" id="bookingDateStrip"><span class="loading-copy">Sign in to load available dates.</span></div>
+            <div class="time-strip" id="bookingTimeStrip"></div>
+            <button class="primary-button" id="bookButton" type="button">Book appointment</button>
+          </div>
+          <p class="inline-status" id="bookingStatus" role="status" aria-live="polite"></p>
+        </article>
+
+        <article class="card map-card searchable" id="map" data-search="campus map nearby accepted connections">
+          <div class="card-heading"><h2><span class="heading-icon green"><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg></span> Friend Location</h2><a href="#map-page" data-open-page="map">View controls</a></div>
+          <p class="panel-note" id="mapDashboardNote">Location sharing is off by default. Open the map to decide whether to share with accepted connections.</p>
+          <a class="message-button" href="#map-page" data-open-page="map">Open location controls</a>
+        </article>
+
+        <article class="card assistant-card searchable" id="assistant" data-search="ask unicircle assistant quiet study sports career">
+          <div class="card-heading"><h2><span class="heading-icon violet"><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span> Ask UniCircle</h2></div>
+          <div class="assistant-intro"><span class="avatar assistant-avatar">U</span><p id="dashboardAssistantIntro">Ask for basic study, computing and campus guidance. Account-specific university data is not available to guests.</p></div>
+          <div class="prompt-list">
+            <button type="button">Find a quiet study space</button>
+            <button type="button">How do I book a sports facility?</button>
+            <button type="button">Tell me about career opportunities</button>
+          </div>
+          <div class="assistant-response" id="assistantResponse" role="status" aria-live="polite">Choose a question or type your own.</div>
+          <form class="assistant-form" id="assistantForm">
+            <label class="sr-only" for="assistantInput">Ask UniCircle a question</label>
+            <input id="assistantInput" type="text" maxlength="250" placeholder="Type your question…">
+            <button type="submit" aria-label="Send question"><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button>
+          </form>
+          <small class="privacy-note">Prototype guidance only. A deployed service must use approved university information sources.</small>
+        </article>
+
+        <article class="card opportunity-card searchable" id="opportunities" data-search="opportunities student ambassador internship library assistant">
+          <div class="card-heading"><h2><span class="heading-icon green"><svg class="icon" aria-hidden="true"><use href="#briefcase"/></svg></span> Opportunities</h2><a href="#opportunities-page" data-open-page="opportunities">View all</a></div>
+          <div class="opportunity-grid" id="dashboardOpportunityList"><span class="loading-copy">Sign in to load verified opportunities.</span></div>
+        </article>
+      </section>
+
+      <section class="page-view page-surface" id="today" data-page="today" hidden tabindex="-1" aria-labelledby="todayTitle">
+        <header class="view-hero">
+          <div class="view-title"><span class="view-icon blue"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg></span><div><span class="eyebrow">MY DAY</span><h2 id="todayTitle">Today</h2><p>Your assigned classes, registered events and confirmed bookings in one clear view.</p></div></div>
+          <span class="data-badge">Account-specific schedule</span>
+        </header>
+        <div class="metric-row" aria-label="Today summary">
+          <article><strong id="todayPlannedCount">—</strong><span>Planned activities</span></article><article><strong id="todayCompletedCount">—</strong><span>Completed</span></article><article><strong id="todayCampusCommitmentCount">—</strong><span>Registered &amp; booked</span></article><article><strong id="todayFinishTime">—</strong><span>Day finishes</span></article>
+        </div>
+        <div class="content-layout two-one">
+          <article class="content-panel">
+            <div class="section-heading"><div><span class="eyebrow" id="todayWeekday">TODAY</span><h3 id="todayDate">Current date</h3></div><button class="secondary-button" id="calendarDownloadButton" type="button"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg> Download calendar</button></div>
+            <ol class="agenda-list" id="todayAgendaList"><li class="signed-out-agenda"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><div><strong>Sign in to view your day</strong><p>Your personal schedule is never shown to guests.</p></div></li></ol>
+          </article>
+          <aside class="content-stack">
+            <article class="content-panel"><div class="section-heading"><h3>Deadlines</h3><span class="pill neutral">Not connected</span></div><div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg><h3>No deadline source connected</h3><p>UniCircle will only show coursework deadlines after an approved learning-system integration is available.</p></div></article>
+            <article class="content-panel soft-panel"><h3>Attendance snapshot</h3><div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#shield"/></svg><h3>No official attendance feed</h3><p>Live-session joins are recorded inside this Test Campus. Official module attendance requires a university-approved integration.</p></div></article>
+          </aside>
+        </div>
+        <article class="content-panel schedule-commitments-panel">
+          <div class="section-heading"><div><span class="eyebrow">YOUR UNICIRCLE SCHEDULE</span><h3>Upcoming campus commitments</h3></div><span class="data-badge">Account-specific</span></div>
+          <div class="schedule-commitments" id="todayCommitmentList" aria-live="polite"><div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg><h3>No additional commitments</h3><p>Events you register for and services you book will appear here automatically.</p></div></div>
+        </article>
+      </section>
+
+      <section class="page-view page-surface" id="updates-page" data-page="updates" hidden tabindex="-1" aria-labelledby="updatesTitle">
+        <header class="view-hero"><div class="view-title"><span class="view-icon orange"><svg class="icon" aria-hidden="true"><use href="#megaphone"/></svg></span><div><span class="eyebrow">TRUSTED CAMPUS INFORMATION</span><h2 id="updatesTitle">Campus Updates</h2><p>Official university, lecturer, placement, internship and course announcements in one feed.</p></div></div><span class="data-badge" id="announcementCountBadge">Loading updates…</span></header>
+        <div class="section-toolbar"><div class="filter-row" id="announcementFilters"><button class="filter-chip active" type="button" data-announcement-category="">All updates</button><button class="filter-chip" type="button" data-announcement-category="MODULE">My course</button><button class="filter-chip" type="button" data-announcement-category="PLACEMENT">Placements</button><button class="filter-chip" type="button" data-announcement-category="INTERNSHIP">Internships</button><button class="filter-chip" type="button" data-announcement-category="URGENT">Urgent</button></div><span class="privacy-badge"><svg class="icon" aria-hidden="true"><use href="#shield"/></svg> Verified publishers</span></div>
+        <details class="publisher-panel" id="announcementPublisherPanel" hidden><summary><span><svg class="icon" aria-hidden="true"><use href="#megaphone"/></svg><strong>Publish an official announcement</strong></span><small>Verified staff only</small></summary><form id="announcementPublisherForm"><div class="publisher-form-grid"><label>Category<select id="publisherCategory" required><option value="UNIVERSITY">University</option><option value="MODULE">Module</option><option value="PLACEMENT">Placement</option><option value="INTERNSHIP">Internship</option><option value="CAREERS">Careers</option><option value="EVENT">Event</option><option value="SOCIETY">Society</option><option value="URGENT">Urgent</option></select></label><label>Audience<select id="publisherAudience" required><option value="UNIVERSITY">All students</option><option value="COURSE">A course</option><option value="YEAR">A year group</option><option value="MODULE">A module</option></select></label><label id="publisherAudienceLabelWrap">Audience name<input id="publisherAudienceLabel" maxlength="180" placeholder="Course, year number or module code" disabled></label><label>Open page<select id="publisherActionUrl"><option value="">No action</option><option value="#opportunities-page">Opportunities</option><option value="#events-page">Events</option><option value="#live-classes-page">Live Classes</option><option value="#wellbeing-page">Student Support</option><option value="#services-page">Book a Service</option></select></label><label class="publisher-wide">Title<input id="publisherTitle" maxlength="220" required placeholder="Clear announcement title"></label><label class="publisher-wide">Announcement<textarea id="publisherBody" maxlength="5000" required placeholder="Give students the verified facts, date, location and next step."></textarea></label><label>Expires <span>(optional)</span><input id="publisherExpiry" type="datetime-local"></label><div class="publisher-options"><label><input id="publisherPinned" type="checkbox"> Pin this update</label><label><input id="publisherUrgent" type="checkbox"> Mark urgent</label></div></div><div class="publisher-actions"><button class="primary-button" type="submit">Publish to selected audience</button><p class="form-status" id="publisherStatus" role="status"></p></div></form></details>
+        <div class="announcement-feed" id="announcementFeed" aria-live="polite"><div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#megaphone"/></svg><h3>Loading trusted updates</h3><p>Announcements for your university account will appear here.</p></div></div>
+        <p class="panel-note">Pilot announcements are clearly marked test records. A university deployment must connect approved staff publishing accounts and official course data.</p>
+      </section>
+
+      <section class="page-view page-surface" id="live-classes-page" data-page="live-classes" hidden tabindex="-1" aria-labelledby="liveClassesTitle">
+        <header class="view-hero"><div class="view-title"><span class="view-icon blue"><svg class="icon" aria-hidden="true"><use href="#monitor-play"/></svg></span><div><span class="eyebrow">LIVE LEARNING</span><h2 id="liveClassesTitle">Classes &amp; Team Meetings</h2><p>Join scheduled sessions, record attendance, follow participants, chat, ask questions and raise your hand.</p></div></div><span class="data-badge" id="meetingCountBadge">Loading sessions…</span></header>
+        <div class="learning-workspace">
+          <aside class="meeting-list-panel"><div class="section-heading"><div><span class="eyebrow">UPCOMING</span><h3>Your sessions</h3></div></div><div class="meeting-list" id="meetingList" aria-live="polite"><p class="loading-note">Loading classes…</p></div></aside>
+          <article class="classroom-panel" id="classroomPanel">
+            <div class="classroom-empty" id="classroomEmpty"><svg class="icon" aria-hidden="true"><use href="#monitor-play"/></svg><h3>Select a class or meeting</h3><p>Open a scheduled session to see its agenda, participants, live chat and participation controls.</p></div>
+            <div class="classroom" id="classroom" hidden>
+              <header class="classroom-heading"><div><span class="eyebrow" id="classroomModule">ONLINE SESSION</span><h3 id="classroomTitle">Classroom</h3><p id="classroomHost"></p></div><span class="pill neutral" id="classroomStatus">Not joined</span></header>
+              <div class="classroom-stage"><div class="classroom-stage-brand"><span class="view-icon blue"><svg class="icon" aria-hidden="true"><use href="#monitor-play"/></svg></span><h3 id="classroomStageTitle">Ready to join</h3><p id="classroomProviderStatus">Secure video status will appear here.</p></div><div class="classroom-controls"><button class="class-control primary" id="meetingJoin" type="button"><svg class="icon" aria-hidden="true"><use href="#video"/></svg><span>Join class</span></button><button class="class-control" id="meetingHand" type="button" disabled><svg class="icon" aria-hidden="true"><use href="#hand"/></svg><span>Raise hand</span></button><button class="class-control danger" id="meetingLeave" type="button" disabled><svg class="icon" aria-hidden="true"><use href="#phone-off"/></svg><span>Leave</span></button></div></div>
+              <div class="classroom-details"><section><div class="section-heading"><h4>Agenda</h4></div><p id="classroomAgenda"></p><div class="provider-link" id="classroomProviderLink"></div></section><section><div class="section-heading"><h4>Participants</h4><span id="participantCount">0</span></div><ul class="participant-list" id="participantList"></ul></section></div>
+              <section class="class-chat"><div class="class-chat-tabs"><button class="active" type="button" data-class-message-type="CHAT">Class chat</button><button type="button" data-class-message-type="QUESTION">Q&amp;A</button></div><div class="class-message-list" id="classMessageList" aria-live="polite"><p>No messages yet.</p></div><form class="composer" id="classMessageForm"><label class="sr-only" for="classMessageInput">Write in the class</label><input id="classMessageInput" type="text" maxlength="2000" placeholder="Join the class to participate" disabled><button type="submit" aria-label="Send to class" disabled><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button></form></section>
+            </div>
+          </article>
+        </div>
+        <p class="panel-note">UniCircle manages identity, class access, attendance and participation. Multi-person video must use an approved meeting provider; the interface never pretends video is active when no provider is connected.</p>
+      </section>
+
+      <section class="page-view page-surface" id="circles-page" data-page="circles" hidden tabindex="-1" aria-labelledby="circlesTitle">
+        <header class="view-hero"><div class="view-title"><span class="view-icon navy"><svg class="icon" aria-hidden="true"><use href="#users"/></svg></span><div><span class="eyebrow">COMMUNITY</span><h2 id="circlesTitle">Campus Circles</h2><p>Find trusted university communities, course groups and shared interests.</p></div></div><button class="primary-compact" id="circleCreateButton" type="button"><svg class="icon" aria-hidden="true"><use href="#users"/></svg> Create a circle</button></header>
+        <div class="section-toolbar"><label class="mini-search"><svg class="icon" aria-hidden="true"><use href="#search"/></svg><span class="sr-only">Search circles</span><input id="circleSearch" type="search" maxlength="80" placeholder="Search circles"></label><div class="filter-row" id="circleFilters" aria-label="Circle filters"><button class="filter-chip active" type="button" data-circle-category="">For you</button><button class="filter-chip" type="button" data-circle-view="joined">Joined</button><button class="filter-chip" type="button" data-circle-category="ACADEMIC">Academic</button><button class="filter-chip" type="button" data-circle-category="SOCIAL">Social</button><button class="filter-chip" type="button" data-circle-category="COMMUNITY">Community</button><button class="filter-chip" type="button" data-circle-category="CAREERS">Careers</button><button class="filter-chip" type="button" data-circle-category="PROJECTS">Projects</button></div></div>
+        <div class="feature-grid three" id="circleCatalogue" aria-live="polite">
+          <div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#users"/></svg><h3>Loading campus circles</h3><p>Your university communities will appear here.</p></div>
+        </div>
+      </section>
+
+      <section class="page-view page-surface" id="messages-page" data-page="messages" hidden tabindex="-1" aria-labelledby="messagesTitle">
+        <header class="view-hero"><div class="view-title"><span class="view-icon navy"><svg class="icon" aria-hidden="true"><use href="#message"/></svg></span><div><span class="eyebrow">CONVERSATIONS</span><h2 id="messagesTitle">Messages</h2><p>Private conversations with accepted UniCircle connections.</p></div></div><div class="view-hero-actions"><span class="current-account-badge" id="messagesAccountBadge" hidden><span class="avatar avatar-michael" aria-hidden="true">UC</span><span><small>Signed in as</small><strong data-current-user-name>Campus guest</strong></span></span><button class="primary-compact" id="studentDirectoryButton" type="button"><svg class="icon" aria-hidden="true"><use href="#users"/></svg> Find students</button></div></header>
+        <div class="message-workspace">
+          <aside class="thread-panel"><label class="mini-search"><svg class="icon" aria-hidden="true"><use href="#search"/></svg><span class="sr-only">Search messages</span><input id="conversationSearch" type="search" placeholder="Search conversations"></label><div class="messages-state" id="conversationListStatus" role="status">Sign in to load your private conversations.</div><ul class="thread-list" id="conversationList"></ul></aside>
+          <article class="conversation-panel">
+            <header>
+              <button class="message-back-button" id="messageBackButton" type="button" aria-label="Back to conversations"><svg class="icon" aria-hidden="true"><use href="#chevron-right"/></svg></button>
+              <span class="avatar navy-avatar" id="conversationAvatar">UC</span>
+              <div class="conversation-person"><h3 id="conversationName">Choose a conversation</h3><span id="conversationTrust"><i class="online-dot"></i> Accepted connections only</span></div>
+              <div class="conversation-header-actions">
+                <div class="conversation-call-actions" id="conversationCallActions" hidden>
+                  <button class="call-header-button" id="audioCallButton" type="button" aria-label="Start voice call" title="Voice call"><svg class="icon" aria-hidden="true"><use href="#phone"/></svg></button>
+                  <button class="call-header-button" id="videoCallButton" type="button" aria-label="Start video call" title="Video call"><svg class="icon" aria-hidden="true"><use href="#video"/></svg></button>
+                </div>
+                <button class="conversation-safety" id="conversationSafetyButton" type="button" hidden><svg class="icon" aria-hidden="true"><use href="#shield"/></svg> Safety</button>
+              </div>
+            </header>
+            <div class="conversation-body" id="conversationMessages" aria-live="polite"><div class="conversation-empty"><svg class="icon" aria-hidden="true"><use href="#message"/></svg><strong>Your private messages appear here</strong><span>Select a conversation or find a student and connect.</span></div></div>
+            <form class="composer" id="messageComposer"><label class="sr-only" for="messageInput">Write a message</label><input id="messageInput" type="text" maxlength="4000" autocomplete="off" placeholder="Select a conversation to write a message" disabled><button id="messageSend" type="submit" disabled aria-label="Send message"><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button></form>
+            <p class="panel-note" id="messagePrivacyNote">Messages are stored in the local development database and update across signed-in browser sessions. Voice and video calls are live, are not recorded by UniCircle, and require both people to have the app open. All displayed people and conversations are fictional test records.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="page-view page-surface" id="events-page" data-page="events" hidden tabindex="-1" aria-labelledby="eventsTitle">
+        <header class="view-hero"><div class="view-title"><span class="view-icon coral"><svg class="icon" aria-hidden="true"><use href="#events"/></svg></span><div><span class="eyebrow">CAMPUS LIFE</span><h2 id="eventsTitle">Events</h2><p>Discover academic, careers, wellbeing and social activities.</p></div></div><span class="data-badge" id="eventCountBadge">Loading events…</span></header>
+        <div class="section-toolbar"><div class="filter-row" id="eventFilters"><button class="filter-chip active" type="button" data-event-category="">All events</button><button class="filter-chip" type="button" data-event-category="CAREERS">Careers</button><button class="filter-chip" type="button" data-event-category="ACADEMIC">Academic</button><button class="filter-chip" type="button" data-event-category="WELLBEING">Wellbeing</button><button class="filter-chip" type="button" data-event-category="SOCIAL">Social</button></div><span class="data-badge">Account-specific registrations</span></div>
+        <div class="feature-grid three" id="eventCatalogue" aria-live="polite"><div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#events"/></svg><h3>Loading campus events</h3><p>Your university event catalogue will appear here.</p></div></div>
+      </section>
+
+      <section class="page-view page-surface" id="services-page" data-page="services" hidden tabindex="-1" aria-labelledby="servicesTitle">
+        <header class="view-hero"><div class="view-title"><span class="view-icon green"><svg class="icon" aria-hidden="true"><use href="#building"/></svg></span><div><span class="eyebrow">UNIVERSITY SERVICES</span><h2 id="servicesTitle">Book a Service</h2><p>Choose an available appointment, room or campus-support time.</p></div></div><span class="data-badge">Transactional sandbox booking</span></header>
+        <div class="service-catalogue" id="serviceCatalogue" aria-live="polite"><div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#building"/></svg><h3>Loading available services</h3><p>Approved fictional service slots will appear here.</p></div></div>
+        <article class="content-panel"><div class="section-heading"><div><span class="eyebrow">YOUR REQUESTS</span><h3>Booking activity</h3></div><span class="pill success" id="bookingCountBadge">0 confirmed</span></div><div class="booking-activity" id="bookingActivity"><div class="empty-state"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg><h3>No bookings yet</h3><p>Confirmed service bookings will appear here.</p></div></div></article>
+      </section>
+
+      <section class="page-view page-surface" id="opportunities-page" data-page="opportunities" hidden tabindex="-1" aria-labelledby="opportunitiesTitle">
+        <header class="view-hero"><div class="view-title"><span class="view-icon orange"><svg class="icon" aria-hidden="true"><use href="#briefcase"/></svg></span><div><span class="eyebrow">GROWTH</span><h2 id="opportunitiesTitle">Opportunities</h2><p>Explore verified work, placements and volunteering, then organise your next steps.</p></div></div><span class="data-badge" id="opportunityCountBadge">Loading verified listings…</span></header>
+        <div class="section-toolbar"><label class="mini-search"><svg class="icon" aria-hidden="true"><use href="#search"/></svg><span class="sr-only">Search opportunities</span><input id="opportunitySearch" type="search" maxlength="100" placeholder="Search title, publisher or skill"></label><div class="filter-row" id="opportunityFilters"><button class="filter-chip active" type="button" data-opportunity-type="">Recommended</button><button class="filter-chip" type="button" data-opportunity-type="JOB">Jobs</button><button class="filter-chip" type="button" data-opportunity-type="PLACEMENT">Placements</button><button class="filter-chip" type="button" data-opportunity-type="VOLUNTEERING">Volunteering</button><button class="filter-chip" type="button" data-opportunity-view="tracker">My tracker</button></div></div>
+        <div class="opportunity-list-large" id="opportunityCatalogue" aria-live="polite"><div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#briefcase"/></svg><h3>Loading opportunities</h3><p>Moderated listings from verified fictional publishers will appear here.</p></div></div>
+        <p class="panel-note">All listings and publishers are fictional development fixtures. UniCircle records planning progress only; it does not submit an application to an employer.</p>
+      </section>
+
+      <section class="page-view page-surface" id="map-page" data-page="map" hidden tabindex="-1" aria-labelledby="mapTitle">
+        <header class="view-hero"><div class="view-title"><span class="view-icon green"><svg class="icon" aria-hidden="true"><use href="#map-pin"/></svg></span><div><span class="eyebrow">CONSENT-BASED FRIEND LOCATION</span><h2 id="mapTitle">Friend Location</h2><p>This page is for voluntary sharing between accepted connections who have both chosen to share. It is not a campus navigation map or emergency tracker.</p></div></div><span class="privacy-badge"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg> Off by default</span></header>
+        <div class="map-workspace"><article class="content-panel location-panel"><h3>Location sharing</h3><p id="locationStatus" role="status" aria-live="polite">Checking pilot availability…</p><p>Sharing is voluntary, visible only to accepted connections who are also sharing, and expires five minutes after your last update. This is a pilot feature, not a safety or emergency tracker.</p><div class="location-actions"><button class="primary-button" id="locationStart" type="button" disabled>Share my location for 5 minutes</button><button class="secondary-button" id="locationStop" type="button" disabled>Stop sharing now</button></div><p class="panel-note">Your browser will ask for permission. Location is rounded to about 11 metres; device accuracy may be worse. Keep this page open for updates. You can stop at any time.</p></article><aside class="content-panel map-sidebar"><h3>Friends sharing now</h3><div id="friendLocations" aria-live="polite"><p>No one is visible until you choose to share.</p></div><button class="secondary-button" id="locationRefresh" type="button" disabled>Refresh friends</button><p class="panel-note">Opening a friend on OpenStreetMap shares those coordinates with that map provider.</p></aside></div>
+      </section>
+
+      <section class="page-view page-surface" id="wellbeing-page" data-page="wellbeing" hidden tabindex="-1" aria-labelledby="wellbeingTitle">
+        <header class="view-hero"><div class="view-title"><span class="view-icon coral"><svg class="icon" aria-hidden="true"><use href="#heart"/></svg></span><div><span class="eyebrow">SUPPORT</span><h2 id="wellbeingTitle">Wellbeing &amp; Support</h2><p>Find the right university support route and privately track a problem from your account.</p></div></div><button class="primary-compact" id="supportFormFocus" type="button"><svg class="icon" aria-hidden="true"><use href="#mail"/></svg> Report a problem</button></header>
+        <article class="safety-banner"><svg class="icon" aria-hidden="true"><use href="#heart"/></svg><div><strong>Need urgent help?</strong><p>UniCircle is not an emergency service. A deployed version must show the university's verified emergency and out-of-hours contacts.</p></div></article>
+        <div class="feature-grid three"><article class="service-tile"><span class="view-icon coral"><svg class="icon" aria-hidden="true"><use href="#mindfulness"/></svg></span><h3>Mental wellbeing</h3><p>Create a private pilot request for the fictional wellbeing team. This is not emergency support.</p><button class="secondary-button support-route" type="button" data-support-category="WELLBEING">Start wellbeing request</button></article><article class="service-tile"><span class="view-icon blue"><svg class="icon" aria-hidden="true"><use href="#graduation"/></svg></span><h3>Student advice</h3><p>Create a private pilot request for finance, housing or academic guidance.</p><button class="secondary-button support-route" type="button" data-support-category="OTHER">Start advice request</button></article><article class="service-tile"><span class="view-icon violet"><svg class="icon" aria-hidden="true"><use href="#accessibility"/></svg></span><h3>Disability support</h3><p>Create a private pilot request for accessibility or reasonable-adjustment guidance.</p><button class="secondary-button support-route" type="button" data-support-category="ACCESSIBILITY">Start accessibility request</button></article></div>
+        <div class="support-workspace">
+          <form class="content-panel support-form" id="supportCaseForm"><div class="section-heading"><div><span class="eyebrow">PRIVATE REQUEST</span><h3>Tell the right team what happened</h3></div><svg class="icon" aria-hidden="true"><use href="#lock"/></svg></div><label>Type of problem<select id="supportCategory" required><option value="">Choose a team</option><option value="ACADEMIC">Academic or course</option><option value="IT">IT or account access</option><option value="FINANCE">Fees or finance</option><option value="ACCOMMODATION">Accommodation</option><option value="WELLBEING">Wellbeing</option><option value="ACCESSIBILITY">Disability and inclusion</option><option value="OTHER">Something else</option></select></label><label>Short subject<input id="supportSubject" type="text" maxlength="220" required placeholder="For example: Cannot access my module page"></label><label>What happened?<textarea id="supportDescription" maxlength="5000" required placeholder="Include the useful facts, but do not enter passwords, bank details or emergency information."></textarea></label><button class="primary-button" type="submit">Create private support request</button><p class="form-status" id="supportFormStatus" role="status"></p><p class="panel-note">The pilot stores this request inside UniCircle. Sending it by email requires an approved university mail connection and is not falsely shown as sent.</p></form>
+          <section class="content-panel"><div class="section-heading"><div><span class="eyebrow">MY REQUESTS</span><h3>Support tracking</h3></div><button class="secondary-button" id="supportRefresh" type="button">Refresh</button></div><div class="support-case-list" id="supportCaseList" aria-live="polite"><div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#mail"/></svg><h3>No requests yet</h3><p>Your private support history will appear here.</p></div></div></section>
+        </div>
+      </section>
+
+      <section class="page-view page-surface" id="lost-found-page" data-page="lost-found" hidden tabindex="-1" aria-labelledby="lostFoundTitle">
+        <header class="view-hero"><div class="view-title"><span class="view-icon orange"><svg class="icon" aria-hidden="true"><use href="#search"/></svg></span><div><span class="eyebrow">CAMPUS HELP</span><h2 id="lostFoundTitle">Lost and Found</h2><p>Report an item, search moderated campus notices and prove ownership privately.</p></div></div><button class="primary-compact" id="lostFoundReportButton" type="button"><svg class="icon" aria-hidden="true"><use href="#camera"/></svg> Report an item</button></header>
+        <div class="section-toolbar lost-found-toolbar"><label class="mini-search wide"><svg class="icon" aria-hidden="true"><use href="#search"/></svg><span class="sr-only">Search lost and found items</span><input id="lostFoundSearch" type="search" maxlength="100" placeholder="Search by item, colour or campus location"></label><label class="compact-select"><span class="sr-only">Filter item category</span><select id="lostFoundCategoryFilter"><option value="">All categories</option><option value="ELECTRONICS">Electronics</option><option value="KEYS">Keys</option><option value="BAGS">Bags</option><option value="CLOTHING">Clothing</option><option value="DOCUMENTS">Documents</option><option value="ACCESSORIES">Accessories</option><option value="OTHER">Other</option></select></label><div class="filter-row" id="lostFoundFilters"><button class="filter-chip active" type="button" data-lost-found-type="">All reports</button><button class="filter-chip" type="button" data-lost-found-type="FOUND">Found</button><button class="filter-chip" type="button" data-lost-found-type="LOST">Lost</button><button class="filter-chip" type="button" data-lost-found-view="mine">My reports</button><button class="filter-chip" type="button" data-lost-found-view="claims">My claims</button></div></div>
+        <div class="lost-found-summary"><span class="data-badge" id="lostFoundCountBadge">Loading moderated reports…</span><span><svg class="icon" aria-hidden="true"><use href="#shield"/></svg> Ownership evidence is never published</span></div>
+        <div class="lost-found-grid" id="lostFoundCatalogue" aria-live="polite"><div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#search"/></svg><h3>Loading lost-and-found reports</h3><p>Approved reports from your university will appear here.</p></div></div>
+        <p class="panel-note">All displayed reports and claims are fictional development records. New reports require moderation; secure collection must be completed through authorised university staff.</p>
+      </section>
+
+      <section class="page-view page-surface" id="lost-found-review-page" data-page="lost-found-review" hidden tabindex="-1" aria-labelledby="staffReviewTitle">
+        <header class="view-hero"><div class="view-title"><span class="view-icon green"><svg class="icon" aria-hidden="true"><use href="#shield"/></svg></span><div><span class="eyebrow">AUTHORISED REVIEW</span><h2 id="staffReviewTitle">Lost and Found review</h2><p>Check a report's public wording and photograph before it appears in the university catalogue.</p></div></div><div class="staff-review-tools"><span class="data-badge" id="staffReviewCount">Staff access required</span><button class="secondary-button" type="button" id="staffReviewRefresh">Refresh queue</button></div></header>
+        <article class="safety-banner staff-review-notice"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><div><strong>Private review workspace</strong><p>Identifying details are visible only to authorised reviewers. Do not publish them, contact a claimant directly, or treat an online claim as proof of ownership.</p></div></article>
+        <div class="staff-review-list" id="staffReviewList" aria-live="polite"><div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#shield"/></svg><h3>Sign in as a fictional reviewer</h3><p>Pending reports are visible only to authorised staff in this demonstration.</p></div></div>
+        <p class="panel-note">Approval publishes only the report's public fields. Rejections remain private to the reporter. Every decision is recorded in an audit trail.</p>
+      </section>
+
+      <section class="page-view page-surface" id="pilot-tests-page" data-page="pilot-tests" hidden tabindex="-1" aria-labelledby="pilotTestsTitle">
+        <header class="view-hero"><div class="view-title"><span class="view-icon green"><svg class="icon" aria-hidden="true"><use href="#clipboard-check"/></svg></span><div><span class="eyebrow">STAGING ACCEPTANCE EVIDENCE</span><h2 id="pilotTestsTitle">Pilot Test Centre</h2><p>Test the complete UniCircle journey with other people and record evidence against each expected result.</p></div></div><span class="data-badge">Real testers · fictional campus data</span></header>
+        <div class="pilot-test-notice"><svg class="icon" aria-hidden="true"><use href="#shield"/></svg><div><strong>This is one UniCircle application.</strong><p>The tests below use real accounts and real interactions inside the staging campus. They do not claim access to official university records.</p></div></div>
+        <div class="metric-row pilot-test-metrics" aria-label="Pilot test summary">
+          <article><strong id="pilotTestTotal">0</strong><span>Total scenarios</span></article><article><strong id="pilotTestPassed">0</strong><span>Passed</span></article><article><strong id="pilotTestFailed">0</strong><span>Failed</span></article><article><strong id="pilotTestRemaining">0</strong><span>Remaining or blocked</span></article>
+        </div>
+        <div class="pilot-test-list" id="pilotTestList" aria-live="polite"><div class="empty-state compact"><svg class="icon" aria-hidden="true"><use href="#clipboard-check"/></svg><h3>Loading your test plan</h3><p>Sign in with a staging account to record results.</p></div></div>
+        <p class="panel-note">Use fictional or non-sensitive content during testing. Never enter a university password, Authenticator code, genuine support disclosure or confidential student record.</p>
+      </section>
+
+      <section class="page-view page-surface" id="admin-page" data-page="admin" hidden tabindex="-1" aria-labelledby="adminTitle">
+        <header class="view-hero admin-hero"><div class="view-title"><span class="view-icon navy"><svg class="icon" aria-hidden="true"><use href="#building"/></svg></span><div><span class="eyebrow">UNIVERSITY CONTROL CENTRE</span><h2 id="adminTitle">Manage your Test Campus</h2><p>Create, publish and monitor the complete student experience from one organised workspace.</p></div></div><button class="secondary-button" id="adminRefresh" type="button"><svg class="icon" aria-hidden="true"><use href="#refresh"/></svg> Refresh dashboard</button></header>
+        <article class="safety-banner admin-boundary"><svg class="icon" aria-hidden="true"><use href="#shield"/></svg><div><strong>This does not control an external university.</strong><p>Everything you publish here becomes a persistent UniCircle Test Campus record and reaches the correct test accounts. It does not reserve external rooms, email university departments or change official student systems.</p></div></article>
+        <div class="metric-row admin-metrics" id="adminMetrics" aria-live="polite"><article><strong>—</strong><span>Loading campus records</span></article></div>
+        <nav class="admin-tabs" role="tablist" aria-label="University administration workspaces">
+          <button class="filter-chip active" type="button" data-admin-tab="overview">Overview</button>
+          <button class="filter-chip" type="button" data-admin-tab="publish">Publish information</button>
+          <button class="filter-chip" type="button" data-admin-tab="learning">Courses &amp; community</button>
+          <button class="filter-chip" type="button" data-admin-tab="services">Events &amp; services</button>
+          <button class="filter-chip" type="button" data-admin-tab="people">People &amp; access</button>
+          <button class="filter-chip" type="button" data-admin-tab="support">Support &amp; safety</button>
+          <button class="filter-chip" type="button" data-admin-tab="records">Records &amp; audit</button>
+        </nav>
+        <p class="form-status admin-global-status" id="adminActivityStatus" role="status" aria-live="polite"></p>
+
+        <div class="admin-panel" data-admin-panel="overview">
+          <div class="admin-section-heading"><div><span class="eyebrow">START HERE</span><h3>What would you like to manage?</h3><p>Each action saves to the shared Test Campus database. Published changes create notifications for affected users and remain after refresh, sign-out and server restart.</p></div><span class="admin-live-badge"><i></i> Persistent campus data</span></div>
+          <div class="admin-action-grid">
+            <button type="button" data-admin-open="publish"><span class="view-icon orange"><svg class="icon" aria-hidden="true"><use href="#megaphone"/></svg></span><span><strong>Publish student information</strong><small>Announcements, placements, events and opportunities</small></span><svg class="icon arrow" aria-hidden="true"><use href="#chevron-right"/></svg></button>
+            <button type="button" data-admin-open="learning"><span class="view-icon blue"><svg class="icon" aria-hidden="true"><use href="#monitor-play"/></svg></span><span><strong>Organise learning</strong><small>Courses, modules, live sessions and circles</small></span><svg class="icon arrow" aria-hidden="true"><use href="#chevron-right"/></svg></button>
+            <button type="button" data-admin-open="services"><span class="view-icon green"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg></span><span><strong>Run campus activities</strong><small>Events, appointments, rooms and availability</small></span><svg class="icon arrow" aria-hidden="true"><use href="#chevron-right"/></svg></button>
+            <button type="button" data-admin-open="people"><span class="view-icon navy"><svg class="icon" aria-hidden="true"><use href="#users"/></svg></span><span><strong>Manage people and roles</strong><small>Students, staff, service providers and administrators</small></span><svg class="icon arrow" aria-hidden="true"><use href="#chevron-right"/></svg></button>
+            <button type="button" data-admin-open="support"><span class="view-icon coral"><svg class="icon" aria-hidden="true"><use href="#heart"/></svg></span><span><strong>Respond to students</strong><small>Support requests, safety reports and moderation</small></span><svg class="icon arrow" aria-hidden="true"><use href="#chevron-right"/></svg></button>
+            <button type="button" data-admin-open="records"><span class="view-icon violet"><svg class="icon" aria-hidden="true"><use href="#clipboard-check"/></svg></span><span><strong>Check published records</strong><small>Review what students can see and the audit evidence</small></span><svg class="icon arrow" aria-hidden="true"><use href="#chevron-right"/></svg></button>
+          </div>
+          <section class="admin-overview-records"><div class="section-heading"><div><span class="eyebrow">LATEST CAMPUS CONTENT</span><h3>Recently managed records</h3></div><button class="secondary-button" type="button" data-admin-open="records">View all records</button></div><div class="admin-record-list" id="adminOverviewCatalogue"></div></section>
+        </div>
+
+        <div class="admin-panel" data-admin-panel="publish" hidden>
+          <div class="admin-section-heading"><div><span class="eyebrow">PUBLISH &amp; NOTIFY</span><h3>Student information and opportunities</h3><p>Choose the audience carefully. A published record appears on the relevant student page and creates an in-app notification.</p></div></div>
+          <datalist id="adminCourseOptions"></datalist>
+          <div class="admin-form-grid">
+            <form class="content-panel admin-form admin-form-featured" id="adminAnnouncementForm"><div class="admin-form-title"><span class="view-icon orange"><svg class="icon" aria-hidden="true"><use href="#megaphone"/></svg></span><div><h3>Publish an announcement</h3><p>University news, module notices, placements, internships or urgent updates.</p></div></div><div class="admin-fields"><label>Category<select id="adminAnnouncementCategory"><option value="UNIVERSITY">University news</option><option value="MODULE">Module notice</option><option value="PLACEMENT">Placement</option><option value="INTERNSHIP">Internship</option><option value="CAREERS">Careers</option><option value="EVENT">Event notice</option><option value="SOCIETY">Society</option><option value="URGENT">Urgent</option></select></label><label>Who should receive it?<select id="adminAnnouncementAudience"><option value="UNIVERSITY">All campus users</option><option value="COURSE">One course</option><option value="YEAR">One year group</option><option value="MODULE">One module</option></select></label><label id="adminAnnouncementAudienceLabelWrap">Audience detail<input id="adminAnnouncementAudienceLabel" maxlength="180" placeholder="Not needed for all users" disabled></label><label>Open this page<select id="adminAnnouncementAction"><option value="">No action button</option><option value="#updates-page">Campus Updates</option><option value="#opportunities-page">Opportunities</option><option value="#events-page">Events</option><option value="#live-classes-page">Live Classes</option><option value="#wellbeing-page">Student Support</option><option value="#services-page">Book a Service</option></select></label></div><label>Clear title<input id="adminAnnouncementTitle" required maxlength="220" placeholder="What students need to know"></label><label>Full information<textarea id="adminAnnouncementBody" required maxlength="5000" rows="5" placeholder="Include the verified facts, dates, location and what students should do next."></textarea></label><div class="admin-fields"><label>Remove after <span>(optional)</span><input id="adminAnnouncementExpiry" type="datetime-local"></label><div class="admin-option-stack"><label class="check-label"><input id="adminAnnouncementPinned" type="checkbox"> Keep at the top of Campus Updates</label><label class="check-label"><input id="adminAnnouncementUrgent" type="checkbox"> Mark as urgent</label></div></div><button class="primary-button" type="submit">Publish announcement and notify</button></form>
+            <form class="content-panel admin-form" id="adminOpportunityForm"><div class="admin-form-title"><span class="view-icon orange"><svg class="icon" aria-hidden="true"><use href="#briefcase"/></svg></span><div><h3>Publish a job or placement</h3><p>Create a verified Test Campus listing students can save and track.</p></div></div><div class="admin-fields"><label>Verified publisher<select id="adminOpportunityPublisher" required></select></label><label>Title<input id="adminOpportunityTitle" required maxlength="180"></label><label>Type<select id="adminOpportunityType"><option value="JOB">Job</option><option value="PLACEMENT">Placement</option><option value="VOLUNTEERING">Volunteering</option></select></label><label>Work mode<select id="adminOpportunityMode"><option value="ON_CAMPUS">On campus</option><option value="HYBRID">Hybrid</option><option value="REMOTE">Remote</option><option value="FLEXIBLE">Flexible</option></select></label><label>Location<input id="adminOpportunityLocation" required maxlength="180"></label><label>Closing date<input id="adminOpportunityCloses" type="date" required></label><label>Hours<input id="adminOpportunityHours" required maxlength="120"></label><label>Compensation<input id="adminOpportunityCompensation" required maxlength="120"></label></div><label>Short summary<textarea id="adminOpportunitySummary" required maxlength="560" rows="2"></textarea></label><label>Full description<textarea id="adminOpportunityDescription" required maxlength="1960" rows="4"></textarea></label><label>Skills<input id="adminOpportunitySkills" required maxlength="600" placeholder="For example: Java, teamwork, communication"></label><label>Who can apply?<textarea id="adminOpportunityEligibility" required maxlength="800" rows="2"></textarea></label><label class="check-label"><input id="adminOpportunityPublished" type="checkbox" checked> Publish now and notify campus users</label><button class="primary-button" type="submit">Publish opportunity</button></form>
+          </div>
+        </div>
+
+        <div class="admin-panel" data-admin-panel="learning" hidden>
+          <div class="admin-section-heading"><div><span class="eyebrow">ACADEMIC &amp; COMMUNITY SETUP</span><h3>Courses, modules, live learning and student groups</h3><p>Build the structure students use to receive targeted information and participate in campus life.</p></div></div>
+          <div class="admin-form-grid">
+            <form class="content-panel admin-form" id="adminProgrammeForm"><div class="admin-form-title"><span class="view-icon navy"><svg class="icon" aria-hidden="true"><use href="#building"/></svg></span><div><h3>Add a course or programme</h3><p>This becomes an available academic programme in the Test Campus.</p></div></div><div class="admin-fields"><label>Course code<input id="adminProgrammeCode" required maxlength="60" placeholder="BSC-CS"></label><label>Qualification<input id="adminProgrammeQualification" required maxlength="80" placeholder="BSc (Hons)"></label></div><label>Course title<input id="adminProgrammeTitle" required maxlength="180" placeholder="Computer Science"></label><button class="primary-button" type="submit">Create programme</button></form>
+            <form class="content-panel admin-form" id="adminModuleForm"><div class="admin-form-title"><span class="view-icon blue"><svg class="icon" aria-hidden="true"><use href="#calendar"/></svg></span><div><h3>Add a module to a programme</h3><p>Module codes can be used for targeted announcements and live sessions.</p></div></div><div class="admin-fields"><label>Programme<select id="adminModuleProgramme" required></select></label><label>Module code<input id="adminModuleCode" required maxlength="60" placeholder="COMP6001"></label><label>Study level<input id="adminModuleLevel" type="number" min="1" max="8" value="6" required></label><label>Year of study<input id="adminModuleYear" type="number" min="1" max="12" value="3" required></label></div><label>Module title<input id="adminModuleTitle" required maxlength="180"></label><button class="primary-button" type="submit">Create and link module</button></form>
+            <form class="content-panel admin-form" id="adminMeetingForm"><div class="admin-form-title"><span class="view-icon blue"><svg class="icon" aria-hidden="true"><use href="#monitor-play"/></svg></span><div><h3>Schedule a live class or meeting</h3><p>The selected audience receives a notification and the session is added to each person’s schedule.</p></div></div><div class="admin-fields"><label>Session title<input id="adminMeetingTitle" required maxlength="220"></label><label>Module code<input id="adminMeetingModule" maxlength="40"></label><label>Type<select id="adminMeetingType"><option value="LECTURE">Lecture</option><option value="SEMINAR">Seminar</option><option value="TUTORIAL">Tutorial</option><option value="PROJECT">Project meeting</option><option value="DROP_IN">Drop-in</option></select></label><label>Location or online room<input id="adminMeetingLocation" required maxlength="180"></label><label>Starts<input id="adminMeetingStarts" type="datetime-local" required></label><label>Ends<input id="adminMeetingEnds" type="datetime-local" required></label><label>Who should receive it?<select id="adminMeetingAudience"><option value="CAMPUS">All active campus users</option><option value="COURSE">One course</option><option value="YEAR">One year group</option><option value="MODULE">One module</option><option value="CIRCLE">Members of one circle</option><option value="SELECTED">Selected people</option></select></label><label id="adminMeetingAudienceLabelWrap">Audience detail<input id="adminMeetingAudienceLabel" maxlength="180" placeholder="Not needed for all users" disabled></label></div><label>Agenda<textarea id="adminMeetingAgenda" maxlength="3000" rows="3" placeholder="Topics, preparation and expected outcomes"></textarea></label><label>External video-room link <span>(optional)</span><input id="adminMeetingProviderUrl" type="url" maxlength="1000" placeholder="https://teams.microsoft.com/…"><small>Leave blank to use UniCircle attendance, class chat, questions and hand raising. Add only a genuine approved Teams, Zoom or Google Meet HTTPS link for live group video; a UniCircle page address is not a video room.</small></label><label id="adminMeetingAssigneesWrap" hidden>Assign people<select id="adminMeetingAssignees" multiple size="5" aria-describedby="adminAssigneeHelp"></select><small id="adminAssigneeHelp">On a Mac, hold Command while selecting more than one person.</small></label><label class="check-label"><input id="adminMeetingPublished" type="checkbox" checked> Publish now, notify the audience and update schedules</label><button class="primary-button" type="submit">Create session and update schedules</button></form>
+            <form class="content-panel admin-form" id="adminCircleForm"><div class="admin-form-title"><span class="view-icon green"><svg class="icon" aria-hidden="true"><use href="#users"/></svg></span><div><h3>Create a campus circle</h3><p>Start an official course, careers, community or project group.</p></div></div><div class="admin-fields"><label>Circle name<input id="adminCircleName" required minlength="3" maxlength="120"></label><label>Category<select id="adminCircleCategory"><option value="ACADEMIC">Academic</option><option value="SOCIAL">Social</option><option value="COMMUNITY">Community</option><option value="CAREERS">Careers</option><option value="PROJECTS">Projects</option></select></label></div><label>What is this circle for?<textarea id="adminCircleDescription" required minlength="10" maxlength="600" rows="4"></textarea></label><button class="primary-button" type="submit">Create circle and notify users</button></form>
+          </div>
+        </div>
+
+        <div class="admin-panel" data-admin-panel="services" hidden>
+          <div class="admin-section-heading"><div><span class="eyebrow">CAMPUS OPERATIONS</span><h3>Events, appointments, rooms and availability</h3><p>These are genuine bookable Test Campus records. Registrations and confirmed bookings automatically appear in each student’s schedule.</p></div></div>
+          <div class="admin-form-grid">
+            <form class="content-panel admin-form" id="adminEventForm"><div class="admin-form-title"><span class="view-icon coral"><svg class="icon" aria-hidden="true"><use href="#events"/></svg></span><div><h3>Create a campus event</h3><p>Students can register until capacity is reached.</p></div></div><label>Event title<input id="adminEventTitle" required maxlength="180"></label><label>Student-facing summary<textarea id="adminEventSummary" required maxlength="560" rows="3"></textarea></label><div class="admin-fields"><label>Category<select id="adminEventCategory"><option value="ACADEMIC">Academic</option><option value="CAREERS">Careers</option><option value="WELLBEING">Wellbeing</option><option value="SOCIAL">Social</option></select></label><label>Venue<input id="adminEventVenue" required maxlength="180"></label><label>Starts<input id="adminEventStarts" type="datetime-local" required></label><label>Ends<input id="adminEventEnds" type="datetime-local" required></label><label>Maximum attendees<input id="adminEventCapacity" type="number" min="1" max="10000" value="20" required></label></div><label class="check-label"><input id="adminEventPublished" type="checkbox" checked> Publish now and notify campus users</label><button class="primary-button" type="submit">Create event</button></form>
+            <form class="content-panel admin-form" id="adminServiceForm"><div class="admin-form-title"><span class="view-icon green"><svg class="icon" aria-hidden="true"><use href="#building"/></svg></span><div><h3>Create a bookable service</h3><p>Add an appointment, room or campus service with its first available time.</p></div></div><div class="admin-fields"><label>Type<select id="adminServiceType"><option value="APPOINTMENT">Appointment</option><option value="FACILITY">Room or facility</option><option value="CAMPUS">Campus service</option></select></label><label>Service title<input id="adminServiceTitle" required maxlength="180"></label><label>Provider or team<input id="adminServiceProvider" required maxlength="180"></label><label>Location<input id="adminServiceLocation" required maxlength="180"></label></div><label>What students are booking<textarea id="adminServiceDescription" required maxlength="560" rows="3"></textarea></label><div class="admin-fields"><label>First slot starts<input id="adminSlotStarts" type="datetime-local" required></label><label>First slot ends<input id="adminSlotEnds" type="datetime-local" required></label><label>Places available<input id="adminSlotCapacity" type="number" min="1" max="1000" value="1" required></label></div><button class="primary-button" type="submit">Create service and availability</button></form>
+          </div>
+          <div class="admin-related-links"><a href="#events-page"><svg class="icon" aria-hidden="true"><use href="#events"/></svg><span><strong>Open student Events page</strong><small>Check exactly what published events look like.</small></span></a><a href="#services-page"><svg class="icon" aria-hidden="true"><use href="#building"/></svg><span><strong>Open student booking page</strong><small>Verify availability and complete a booking journey.</small></span></a><a href="#review-page"><svg class="icon" aria-hidden="true"><use href="#shield"/></svg><span><strong>Open Lost &amp; Found review queue</strong><small>Approve or reject student-submitted reports.</small></span></a></div>
+        </div>
+
+        <div class="admin-panel" data-admin-panel="people" hidden>
+          <div class="section-toolbar"><div><span class="eyebrow">IDENTITY &amp; PERMISSIONS</span><h3>People, roles and account access</h3><p>Search Test Campus accounts, then assign the minimum role needed or suspend access. Your own final administrator access is protected.</p></div><label class="mini-search wide"><svg class="icon" aria-hidden="true"><use href="#search"/></svg><span class="sr-only">Search tester accounts</span><input id="adminUserSearch" type="search" maxlength="100" placeholder="Search by name, email or course"></label></div>
+          <div class="admin-role-guide"><span><strong>Student</strong> uses campus features</span><span><strong>Staff</strong> publishes trusted updates</span><span><strong>Service provider</strong> supports campus services</span><span><strong>Admin</strong> controls this workspace</span></div>
+          <div class="admin-record-list" id="adminUserList" aria-live="polite"></div>
+        </div>
+
+        <div class="admin-panel" data-admin-panel="support" hidden>
+          <div class="admin-section-heading"><div><span class="eyebrow">STUDENT CARE &amp; MODERATION</span><h3>Support and safety queues</h3><p>Review genuine tester submissions, update their status and preserve an audit record. Never use this pilot for confidential real-world disclosures.</p></div><a class="secondary-button" href="#review-page">Open Lost &amp; Found moderation</a></div>
+          <div class="admin-queue-grid"><section><h3>Support requests</h3><p class="admin-section-note">Academic, IT, finance, accommodation, wellbeing and accessibility requests.</p><div class="admin-record-list" id="adminSupportList"></div></section><section><h3>Safety reports</h3><p class="admin-section-note">Reports created through connection and messaging safety controls.</p><div class="admin-record-list" id="adminSafetyList"></div></section></div>
+        </div>
+
+        <div class="admin-panel" data-admin-panel="records" hidden>
+          <div class="admin-section-heading"><div><span class="eyebrow">PUBLISHED CONTENT &amp; EVIDENCE</span><h3>Campus record register</h3><p>Use this list to confirm what has been created, its current status and when it becomes effective.</p></div></div>
+          <div class="admin-record-list admin-catalogue-list" id="adminCatalogueList"></div>
+          <div class="admin-audit-divider"><div><span class="eyebrow">ACCOUNTABILITY</span><h3>Administrator audit trail</h3><p>Every sensitive administrator action is stored with its actor, time and affected record.</p></div></div>
+          <div class="admin-record-list" id="adminAuditList"></div>
+        </div>
+      </section>
+
+      <section class="page-view page-surface" id="assistant-page" data-page="assistant" hidden tabindex="-1" aria-labelledby="assistantTitle">
+        <header class="view-hero"><div class="view-title"><span class="view-icon violet"><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><div><span class="eyebrow">AI STUDY &amp; CAMPUS ASSISTANT</span><h2 id="assistantTitle">Ask UniCircle</h2><p>Get basic study, computing and campus help now, with optional advanced research and image tools.</p></div></div><span class="data-badge" id="assistantStatusBadge">Checking assistant…</span></header>
+        <div class="assistant-workspace">
+          <aside class="content-panel assistant-history-panel" aria-label="Ask UniCircle chat history">
+            <div class="assistant-history-heading"><div><span class="eyebrow">YOUR CHATS</span><h3>Conversation history</h3></div><button class="assistant-new-chat" id="assistantNewChat" type="button"><svg class="icon" aria-hidden="true"><use href="#message"/></svg> New chat</button></div>
+            <p class="panel-intro">Open an earlier conversation or start a separate topic.</p>
+            <div class="assistant-conversation-status" id="assistantConversationStatus" role="status">Loading your chats…</div>
+            <ul class="assistant-conversation-list" id="assistantConversationList"></ul>
+          </aside>
+          <aside class="content-panel assistant-tools-panel">
+            <h3>Choose a workspace</h3>
+            <p class="panel-intro">Select how you want UniCircle to help. You can change mode at any time.</p>
+            <div class="assistant-mode-list" role="group" aria-label="Assistant workspace">
+              <button class="assistant-mode active" type="button" data-assistant-mode="GENERAL" aria-pressed="true"><span><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><strong>Smart help</strong><small>Questions, ideas and practical tasks</small></button>
+              <button class="assistant-mode" type="button" data-assistant-mode="UNIVERSITY_RESEARCH" aria-pressed="false"><span><svg class="icon" aria-hidden="true"><use href="#globe"/></svg></span><strong>University research</strong><small>Research planning and source guidance</small></button>
+              <button class="assistant-mode" type="button" data-assistant-mode="STUDY_COACH" aria-pressed="false"><span><svg class="icon" aria-hidden="true"><use href="#book-open"/></svg></span><strong>Study coach</strong><small>Explanations, practice and feedback</small></button>
+              <button class="assistant-mode" type="button" data-assistant-mode="CODE_LAB" aria-pressed="false"><span><svg class="icon" aria-hidden="true"><use href="#code"/></svg></span><strong>Code lab</strong><small>Design, debug and test programs</small></button>
+              <button class="assistant-mode" type="button" data-assistant-mode="IMAGE_STUDIO" aria-pressed="false"><span><svg class="icon" aria-hidden="true"><use href="#palette"/></svg></span><strong>Image studio</strong><small>Create downloadable illustrations</small></button>
+            </div>
+            <div class="assistant-starter-prompts">
+              <h4>Try asking</h4>
+              <button type="button" data-page-question="Compare entry requirements and tuition information for computer science at three UK universities. Use official sources." data-question-mode="UNIVERSITY_RESEARCH">Compare universities</button>
+              <button type="button" data-page-question="Explain dependency injection in Spring Boot with a simple example and then quiz me." data-question-mode="STUDY_COACH">Learn a difficult topic</button>
+              <button type="button" data-page-question="Help me design and test a Java method that finds duplicate student IDs." data-question-mode="CODE_LAB">Solve a coding problem</button>
+              <button type="button" data-page-question="Create a clean illustration of students collaborating in a modern university library." data-question-mode="IMAGE_STUDIO">Create an illustration</button>
+            </div>
+            <p class="panel-note">UniCircle can make mistakes. Important admissions, fees, visa, policy and deadline information must be checked against the cited official source.</p>
+          </aside>
+          <article class="assistant-chat">
+            <div class="assistant-chat-heading"><span class="avatar assistant-avatar"><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><div><h3 id="assistantChatTitle">New chat</h3><span id="assistantModeLabel">Smart help · reviewed local guidance</span></div><span class="assistant-live-indicator" id="assistantLiveIndicator"><i></i>Checking</span></div>
+            <div class="assistant-chat-body" id="pageAssistantResponse" role="log" aria-live="polite" aria-label="Ask UniCircle conversation"><div class="assistant-welcome"><span><svg class="icon" aria-hidden="true"><use href="#sparkles"/></svg></span><h3>How can I help?</h3><p>Ask a question, research a university, work through a topic, debug code or describe an image to create.</p></div></div>
+            <form class="assistant-composer" id="pageAssistantForm"><label class="sr-only" for="pageAssistantInput">Ask UniCircle</label><textarea id="pageAssistantInput" rows="1" maxlength="4000" placeholder="Ask UniCircle anything…"></textarea><button type="submit" aria-label="Send question"><svg class="icon" aria-hidden="true"><use href="#send"/></svg></button></form>
+            <label class="assistant-public-control" for="assistantPublicLookup"><input id="assistantPublicLookup" type="checkbox"><span><strong>Use public sources for wider answers</strong><small>Only a shortened, screened topic is sent to English Wikipedia. Do not enter personal or confidential information.</small></span></label>
+            <p class="assistant-integrity-note"><svg class="icon" aria-hidden="true"><use href="#shield"/></svg> Use AI to understand, practise and improve your own work. Follow your university's assessment rules, and do not enter passwords, personal data or confidential information.</p>
+          </article>
+        </div>
+      </section>
+
+      <footer><span>Staging uses fictional campus data; no official university systems are connected.</span><nav aria-label="Legal and service information"><a href="/privacy.html">Privacy</a><a href="/acceptable-use.html">Acceptable use</a><a href="/accessibility.html">Accessibility</a><a href="/actuator/health">System health</a></nav></footer>
+    </main>
+  </div>
+
+  <nav class="mobile-tabbar" aria-label="Mobile primary navigation">
+    <a class="mobile-tab active" href="#campus" data-page-link="campus" aria-current="page"><svg class="icon" aria-hidden="true"><use href="#home"/></svg><span>My Campus</span></a>
+    <a class="mobile-tab" href="#circles-page" data-page-link="circles"><svg class="icon" aria-hidden="true"><use href="#users"/></svg><span>Circles</span></a>
+    <a class="mobile-tab" href="#messages-page" data-page-link="messages"><span class="mobile-tab-icon"><svg class="icon" aria-hidden="true"><use href="#message"/></svg><span class="mobile-tab-badge" id="mobileMessageUnreadBadge" hidden>0</span></span><span>Messages</span></a>
+    <a class="mobile-tab" href="#events-page" data-page-link="events"><svg class="icon" aria-hidden="true"><use href="#events"/></svg><span>Events</span></a>
+    <button class="mobile-tab" id="mobileMoreButton" type="button" aria-controls="sidebar" aria-expanded="false"><svg class="icon" aria-hidden="true"><use href="#more"/></svg><span>More</span></button>
+  </nav>
+
+  <section id="circleDialog" class="profile-dialog modal-surface" role="dialog" aria-modal="true" aria-labelledby="circleDialogTitle" hidden>
+    <form id="circleForm" class="directory-surface">
+      <button class="dialog-close" type="button" id="circleDialogClose" aria-label="Close circle form"><svg class="icon" aria-hidden="true"><use href="#close"/></svg></button>
+      <div class="directory-heading"><span class="view-icon navy"><svg class="icon" aria-hidden="true"><use href="#users"/></svg></span><div><span class="eyebrow">NEW CAMPUS COMMUNITY</span><h2 id="circleDialogTitle">Create a circle</h2><p>Start a university community with a clear name and purpose.</p></div></div>
+      <div class="profile-fields two-column"><label>Circle name<input id="circleName" type="text" minlength="3" maxlength="120" required placeholder="For example: Web Development Study Group"></label><label>Category<select id="circleCategory" required><option value="ACADEMIC">Academic</option><option value="SOCIAL">Social</option><option value="COMMUNITY">Community</option><option value="CAREERS">Careers</option><option value="PROJECTS">Projects</option></select></label></div>
+      <label>Purpose<textarea id="circleDescription" minlength="10" maxlength="600" rows="5" required placeholder="Explain what members will do and who the circle is for."></textarea></label>
+      <p class="form-status" id="circleFormStatus" role="status"></p>
+      <div class="dialog-actions"><button class="secondary-button" type="button" id="circleDialogCancel">Cancel</button><button class="primary-button" type="submit">Create circle</button></div>
+      <p class="privacy-note">Circle membership is visible only within this staging university. Owners are responsible for keeping activity safe and relevant.</p>
+    </form>
+  </section>
+
+  <section id="profileDialog" class="profile-dialog modal-surface" role="dialog" aria-modal="true" aria-labelledby="profileDialogTitle" hidden>
+    <form id="profileForm">
+      <button class="dialog-close" type="button" id="profileDialogClose" aria-label="Close profile"><svg class="icon" aria-hidden="true"><use href="#close"/></svg></button>
+      <div class="profile-dialog-heading">
+        <div class="profile-photo-preview avatar avatar-michael" id="profilePhotoPreview" aria-hidden="true">UC</div>
+        <div><span class="eyebrow">YOUR UNICIRCLE IDENTITY</span><h2 id="profileDialogTitle">Profile and privacy</h2><p>Your university email and role are controlled by verified sign-in.</p></div>
+      </div>
+      <div class="profile-status" id="profileStatus" role="status" aria-live="polite">Checking your secure session…</div>
+      <div class="profile-auth-actions" id="profileAuthActions">
+        <a class="primary-button profile-sign-in" id="profileSignIn" href="/sign-in" hidden>Sign in to UniCircle</a>
+        <button class="secondary-button" id="profileSignOut" type="button" hidden>Sign out securely</button>
+      </div>
+      <fieldset id="profileFields" disabled>
+        <div class="profile-fields two-column">
+          <label>Display name<input id="profileDisplayName" name="displayName" type="text" maxlength="160" required autocomplete="name"></label>
+          <label>Course<input id="profileCourse" name="courseName" type="text" maxlength="180" autocomplete="organization-title"></label>
+          <label>Year of study<input id="profileYear" name="yearOfStudy" type="number" min="1" max="12" inputmode="numeric"></label>
+          <label>Profile visibility<select id="profileVisibility" name="visibility"><option value="UNIVERSITY_ONLY">My university</option><option value="CONNECTIONS">Accepted connections</option><option value="PRIVATE">Only me</option></select></label>
+        </div>
+        <label>About you<textarea id="profileBiography" name="biography" rows="4" maxlength="500" placeholder="Share a short introduction for your campus profile"></textarea></label>
+        <label class="photo-upload" for="profilePhoto">
+          <span class="photo-upload-icon"><svg class="icon" aria-hidden="true"><use href="#camera"/></svg></span>
+          <span><strong>Choose a profile photograph</strong><small>PNG or JPEG · 128–4096 px · maximum 5 MB</small></span>
+          <input id="profilePhoto" name="photo" type="file" accept="image/png,image/jpeg">
+        </label>
+        <div class="profile-identity" id="profileIdentity" hidden><span><strong>University</strong><small id="profileUniversity"></small></span><span><strong>Verified email</strong><small id="profileEmail"></small></span></div>
+        <section class="university-context" id="universityContext" hidden aria-labelledby="universityContextTitle">
+          <div class="university-context-heading">
+            <div><span class="eyebrow">UNIVERSITY DATA</span><h3 id="universityContextTitle">Your academic context</h3></div>
+            <span class="fixture-badge" id="academicSource">Fictional sandbox</span>
+          </div>
+          <div class="programme-summary"><strong id="academicProgramme"></strong><span id="academicProgrammeMeta"></span></div>
+          <div class="academic-columns">
+            <div><h4>Current modules</h4><div class="module-chip-list" id="academicModules"></div></div>
+            <div><h4>People on your course</h4><div class="coursemate-list" id="academicCoursemates"></div></div>
+          </div>
+          <p class="academic-notice" id="academicNotice"></p>
+        </section>
+        <div class="dialog-actions"><button class="secondary-button" type="button" id="profileCancel">Cancel</button><button class="primary-button" id="profileSave" type="submit">Save profile</button></div>
+      </fieldset>
+      <p class="privacy-note">Profile changes require an authenticated university session. Photographs are reprocessed to remove embedded metadata before storage.</p>
+    </form>
+  </section>
+
+  <section id="studentDirectoryDialog" class="profile-dialog modal-surface directory-dialog" role="dialog" aria-modal="true" aria-labelledby="studentDirectoryTitle" hidden>
+    <div class="directory-surface">
+      <button class="dialog-close" type="button" id="studentDirectoryClose" aria-label="Close student directory"><svg class="icon" aria-hidden="true"><use href="#close"/></svg></button>
+      <div class="directory-heading"><span class="view-icon navy"><svg class="icon" aria-hidden="true"><use href="#users"/></svg></span><div><span class="eyebrow">VERIFIED CAMPUS DIRECTORY</span><h2 id="studentDirectoryTitle">Find students</h2><p>Discover new and existing students from your university, then request permission to connect.</p></div></div>
+      <label class="mini-search wide"><svg class="icon" aria-hidden="true"><use href="#search"/></svg><span class="sr-only">Search students by name or course</span><input id="studentDirectorySearch" type="search" maxlength="80" placeholder="Search by name or course"></label>
+      <div class="directory-notice"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><span><strong id="studentDirectoryIdentity">Sign in to find other student accounts. Your own account is never listed as a friend suggestion.</strong><small>Only profiles allowed by each member’s privacy setting are shown. Messaging activates after a request is accepted.</small></span></div>
+      <div class="student-directory-list" id="studentDirectoryList" aria-live="polite"></div>
+    </div>
+  </section>
+  <section id="safetyDialog" class="profile-dialog modal-surface safety-dialog" role="dialog" aria-modal="true" aria-labelledby="safetyTitle" hidden>
+    <div class="directory-surface">
+      <button class="dialog-close" type="button" id="safetyClose" aria-label="Close safety controls"><svg class="icon" aria-hidden="true"><use href="#close"/></svg></button>
+      <div class="directory-heading"><span class="view-icon coral"><svg class="icon" aria-hidden="true"><use href="#shield"/></svg></span><div><span class="eyebrow">YOUR SAFETY</span><h2 id="safetyTitle">Conversation controls</h2><p id="safetyPerson">Control contact or confidentially report a concern.</p></div></div>
+      <div class="safety-options">
+        <article><h3>Block this account</h3><p>Immediately removes the connection and prevents further private messages.</p><button class="danger-button" id="blockAccountButton" type="button">Block account</button></article>
+        <form id="reportAccountForm"><h3>Report a concern</h3><label for="reportReason">Reason</label><select id="reportReason" required><option value="">Choose a reason</option><option value="HARASSMENT">Harassment</option><option value="SPAM">Spam</option><option value="IMPERSONATION">Impersonation</option><option value="UNSAFE_BEHAVIOUR">Unsafe behaviour</option><option value="OTHER">Other</option></select><label for="reportDetails">Additional details <span>(optional)</span></label><textarea id="reportDetails" maxlength="1000" rows="4" placeholder="Give safeguarding staff useful context without adding unnecessary personal information."></textarea><button class="primary-button" type="submit">Submit confidential report</button></form>
+      </div>
+      <p class="privacy-note">Reports are stored for authorised safeguarding review. Blocking is private and the other student is not told who blocked them.</p>
+    </div>
+  </section>
+  <section id="opportunityDialog" class="profile-dialog modal-surface opportunity-dialog" role="dialog" aria-modal="true" aria-labelledby="opportunityDialogTitle" hidden>
+    <div class="directory-surface">
+      <button class="dialog-close" type="button" id="opportunityDialogClose" aria-label="Close opportunity details"><svg class="icon" aria-hidden="true"><use href="#close"/></svg></button>
+      <div class="directory-heading"><span class="view-icon orange"><svg class="icon" aria-hidden="true"><use href="#briefcase"/></svg></span><div><span class="eyebrow" id="opportunityDialogType">VERIFIED OPPORTUNITY</span><h2 id="opportunityDialogTitle">Opportunity details</h2><p id="opportunityDialogSummary"></p></div></div>
+      <div class="verified-publisher"><svg class="icon" aria-hidden="true"><use href="#check"/></svg><span><strong id="opportunityPublisher"></strong><small id="opportunityPublisherType"></small></span><span class="pill success">Verified publisher</span></div>
+      <div class="opportunity-detail-grid"><article><span class="eyebrow">ABOUT THE ROLE</span><p id="opportunityDescription"></p><h3>Skills</h3><div class="module-chip-list" id="opportunitySkills"></div></article><article><h3>Key details</h3><dl class="opportunity-facts"><div><dt>Location</dt><dd id="opportunityLocation"></dd></div><div><dt>Working pattern</dt><dd id="opportunityHours"></dd></div><div><dt>Compensation</dt><dd id="opportunityCompensation"></dd></div><div><dt>Closing date</dt><dd id="opportunityDeadline"></dd></div></dl><h3>Eligibility</h3><p id="opportunityEligibility"></p></article></div>
+      <div class="opportunity-tracker-controls"><label for="opportunityTrackingStatus">Your application stage<select id="opportunityTrackingStatus"><option value="PLANNING">Planning</option><option value="APPLIED">Applied</option><option value="INTERVIEW">Interview</option><option value="OFFER">Offer</option><option value="CLOSED">Closed</option></select></label><button class="secondary-button" id="opportunitySaveButton" type="button">Save opportunity</button><button class="primary-button" id="opportunityTrackButton" type="button">Update tracker</button></div>
+      <p class="privacy-note">Tracking is private to this fictional account. Applying must take place through a separately verified university or employer route.</p>
+    </div>
+  </section>
+  <section id="lostFoundReportDialog" class="profile-dialog modal-surface lost-found-dialog" role="dialog" aria-modal="true" aria-labelledby="lostFoundReportTitle" hidden>
+    <form id="lostFoundReportForm" class="directory-surface">
+      <button class="dialog-close" type="button" id="lostFoundReportClose" aria-label="Close item report"><svg class="icon" aria-hidden="true"><use href="#close"/></svg></button>
+      <div class="directory-heading"><span class="view-icon orange"><svg class="icon" aria-hidden="true"><use href="#camera"/></svg></span><div><span class="eyebrow">SECURE CAMPUS REPORT</span><h2 id="lostFoundReportTitle">Report a lost or found item</h2><p>Public information is separated from private ownership evidence.</p></div></div>
+      <div class="lost-found-form-grid">
+        <label>Report type<select id="lostFoundReportType" required><option value="FOUND">I found an item</option><option value="LOST">I lost an item</option></select></label>
+        <label>Category<select id="lostFoundReportCategory" required><option value="ELECTRONICS">Electronics</option><option value="KEYS">Keys</option><option value="BAGS">Bags</option><option value="CLOTHING">Clothing</option><option value="DOCUMENTS">Documents</option><option value="ACCESSORIES">Accessories</option><option value="OTHER">Other</option></select></label>
+        <label>Item name<input id="lostFoundItemName" type="text" maxlength="160" required placeholder="e.g. Black laptop sleeve"></label>
+        <label>Colour<input id="lostFoundColour" type="text" maxlength="80" placeholder="e.g. Black"></label>
+        <label>Last seen or found location<input id="lostFoundLocation" type="text" maxlength="180" required placeholder="Building and area"></label>
+        <label>Date<input id="lostFoundOccurredOn" type="date" required></label>
+        <label class="full-width">Public description<textarea id="lostFoundPublicDescription" maxlength="800" rows="3" required placeholder="Describe the item without revealing the secret detail only its owner should know."></textarea></label>
+        <label class="full-width private-field"><span>Private identifying detail</span><textarea id="lostFoundPrivateDetails" maxlength="1000" rows="3" required placeholder="A serial detail, mark or contents. This is stored privately and never shown on the public card."></textarea><small>Visible only to authorised review staff in a deployed service.</small></label>
+        <label id="lostFoundCustodyLabel">Where is the found item?<select id="lostFoundCustody"><option value="WITH_REPORTER">With me</option><option value="CAMPUS_SECURITY">Campus security</option><option value="SERVICE_DESK">University service desk</option></select></label>
+        <label class="photo-upload lost-found-photo" for="lostFoundPhoto"><span class="photo-upload-icon"><svg class="icon" aria-hidden="true"><use href="#camera"/></svg></span><span><strong>Optional item photograph</strong><small>PNG or JPEG · 240–4096 px · maximum 5 MB</small></span><input id="lostFoundPhoto" type="file" accept="image/png,image/jpeg"></label>
+      </div>
+      <div class="dialog-actions"><button class="secondary-button" type="button" id="lostFoundReportCancel">Cancel</button><button class="primary-button" id="lostFoundReportSubmit" type="submit">Submit for moderation</button></div>
+      <p class="privacy-note">Do not include bank details, passwords, identity-document numbers or sensitive personal information. Photographs are reprocessed to remove embedded metadata.</p>
+    </form>
+  </section>
+  <section id="lostFoundDetailDialog" class="profile-dialog modal-surface lost-found-dialog" role="dialog" aria-modal="true" aria-labelledby="lostFoundDetailTitle" hidden>
+    <div class="directory-surface">
+      <button class="dialog-close" type="button" id="lostFoundDetailClose" aria-label="Close item details"><svg class="icon" aria-hidden="true"><use href="#close"/></svg></button>
+      <div class="lost-found-detail-heading"><div class="lost-found-detail-photo" id="lostFoundDetailPhoto"><svg class="icon" aria-hidden="true"><use href="#search"/></svg></div><div><span class="eyebrow" id="lostFoundDetailType">MODERATED REPORT</span><h2 id="lostFoundDetailTitle">Item details</h2><p id="lostFoundDetailDescription"></p><div class="opportunity-badges"><span class="pill info" id="lostFoundDetailCategory"></span><span class="pill success" id="lostFoundDetailStatus"></span></div></div></div>
+      <div class="lost-found-detail-grid"><article><h3>Report information</h3><dl class="opportunity-facts"><div><dt>Colour</dt><dd id="lostFoundDetailColour"></dd></div><div><dt>Location</dt><dd id="lostFoundDetailLocation"></dd></div><div><dt>Date</dt><dd id="lostFoundDetailDate"></dd></div><div><dt>Custody</dt><dd id="lostFoundDetailCustody"></dd></div></dl><div class="review-feedback" id="lostFoundReviewNote" hidden><strong>Private review note</strong><p id="lostFoundReviewNoteText"></p></div></article><article class="secure-claim-panel" id="lostFoundClaimPanel"><span class="eyebrow">PRIVATE OWNERSHIP CHECK</span><h3>Is this yours?</h3><p>Describe a detail that was deliberately omitted from the public report. It is stored privately for authorised review.</p><form id="lostFoundClaimForm"><label for="lostFoundClaimEvidence">Private evidence</label><textarea id="lostFoundClaimEvidence" minlength="20" maxlength="1000" rows="4" required placeholder="Describe a mark, serial detail or contents only the owner should know."></textarea><button class="primary-button" type="submit">Submit private claim</button></form><p class="claim-status" id="lostFoundClaimStatus"></p></article></div>
+      <div class="dialog-actions"><button class="danger-button" id="lostFoundWithdrawButton" type="button" hidden>Withdraw my report</button><button class="secondary-button" id="lostFoundDetailDone" type="button">Done</button></div>
+      <p class="privacy-note">Never arrange a private handover with a stranger. Collection should use campus security or an approved university service desk.</p>
+    </div>
+  </section>
+  <section id="staffReviewDialog" class="profile-dialog modal-surface lost-found-dialog" role="dialog" aria-modal="true" aria-labelledby="staffReviewDialogTitle" hidden>
+    <form id="staffReviewForm" class="directory-surface">
+      <button class="dialog-close" type="button" id="staffReviewClose" aria-label="Close staff review"><svg class="icon" aria-hidden="true"><use href="#close"/></svg></button>
+      <div class="directory-heading"><span class="view-icon green"><svg class="icon" aria-hidden="true"><use href="#shield"/></svg></span><div><span class="eyebrow">PENDING STAFF DECISION</span><h2 id="staffReviewDialogTitle">Review item report</h2><p id="staffReviewReporter"></p></div></div>
+      <div class="staff-review-detail"><div class="staff-review-photo" id="staffReviewPhoto"><svg class="icon" aria-hidden="true"><use href="#camera"/></svg></div><div><h3>Public catalogue text</h3><p id="staffReviewPublic"></p><h3>Private identifying detail</h3><p class="staff-private-detail" id="staffReviewPrivate"></p><p id="staffReviewLocation"></p></div></div>
+      <fieldset class="staff-review-decision"><legend>Decision</legend><label><input type="radio" name="staffDecision" value="APPROVED" required> Approve for the university catalogue</label><label><input type="radio" name="staffDecision" value="REJECTED" required> Reject and return a private note</label></fieldset>
+      <label class="staff-review-reason" for="staffReviewReason">Review reason<textarea id="staffReviewReason" minlength="20" maxlength="500" rows="3" required placeholder="Record why this report should be published or returned for changes."></textarea></label>
+      <div class="dialog-actions"><button class="secondary-button" type="button" id="staffReviewCancel">Cancel</button><button class="primary-button" type="submit" id="staffReviewSubmit">Confirm decision</button></div>
+      <p class="privacy-note">This is a fictional staff account. Report decisions are audited; claim verification and physical handover require a separate authorised process.</p>
+    </form>
+  </section>
+  <section id="callDialog" class="call-dialog modal-surface" role="dialog" aria-modal="true" aria-labelledby="callPeerName" hidden>
+    <div class="call-surface">
+      <div class="call-security"><svg class="icon" aria-hidden="true"><use href="#lock"/></svg><span>Private call with an accepted connection</span></div>
+      <div class="call-stage" id="callStage">
+        <audio id="remoteCallAudio" autoplay></audio>
+        <video id="remoteCallVideo" autoplay muted playsinline hidden></video>
+        <div class="call-avatar avatar navy-avatar" id="callPeerAvatar" aria-hidden="true">UC</div>
+        <video class="local-call-video" id="localCallVideo" autoplay muted playsinline hidden></video>
+      </div>
+      <div class="call-copy"><span class="eyebrow" id="callDirection">UNICIRCLE CALL</span><h2 id="callPeerName">Connecting…</h2><p id="callStatus" role="status" aria-live="assertive">Preparing your private call.</p></div>
+      <div class="incoming-call-actions" id="incomingCallActions" hidden>
+        <button class="call-control answer" id="callAccept" type="button"><svg class="icon" aria-hidden="true"><use href="#phone"/></svg><span>Accept</span></button>
+        <button class="call-control end" id="callDecline" type="button"><svg class="icon" aria-hidden="true"><use href="#phone-off"/></svg><span>Decline</span></button>
+      </div>
+      <div class="active-call-actions" id="activeCallActions" hidden>
+        <button class="call-control" id="callMute" type="button" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#mic"/></svg><span>Mute</span></button>
+        <button class="call-control" id="callCamera" type="button" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#video"/></svg><span>Camera</span></button>
+        <button class="call-control end" id="callEnd" type="button"><svg class="icon" aria-hidden="true"><use href="#phone-off"/></svg><span>End</span></button>
+      </div>
+      <button class="secondary-button" id="callEnableSound" type="button" hidden>Enable call sound</button>
+      <p class="call-privacy" id="callAudioNotice" role="status" hidden></p>
+      <p class="call-privacy" id="callNetworkNotice">Your browser will ask before sharing your microphone or camera. UniCircle does not record calls.</p>
+    </div>
+  </section>
+  <div class="search-empty" id="searchEmpty" hidden role="status">No dashboard items match that search.</div>
+</body>
+</html>
