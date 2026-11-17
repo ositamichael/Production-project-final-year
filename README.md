@@ -1,183 +1,344 @@
 # UniCircle
 
-**Where campus meets connection.** UniCircle is a multi-university campus platform designed to bring people, schedules, communities, messaging, events, appointments, opportunities and trusted support into one coherent experience.
+**Where campus meets connection.** UniCircle is a Level 6 final-year software engineering project for exploring a secure, modular web platform that brings selected campus people, communities, messaging, events, services, opportunities and support journeys into one interface.
 
-This repository is being rebuilt as a Level 6 final-year software engineering project. It previously contained the ScamShield prototype. That work remains recoverable in Git history and the `archive/scamshield` reference; the active product direction is now UniCircle.
+UniCircle is an independent academic prototype using fictional or specifically approved data. It is **not** an official Leeds Beckett University service, it does not use live university student records, and it must not be used as a live student-information, emergency or safeguarding system.
 
-## Current status
+The repository previously contained a ScamShield prototype. That work remains recoverable in Git history; the active project direction is UniCircle.
 
-Sprint 1 established the testable engineering foundation, Sprint 2 added the account-backed identity and profile layer, Sprint 3 established the university-integration boundary, Sprint 4 added a complete authenticated demonstration journey, Sprint 5 added the first real social workflow, Sprint 6 added live multi-session communication and safety controls, Sprint 7 added transactional campus events and service bookings, Sprint 8 added moderated opportunities and personal application tracking, Sprint 9 added secure lost-and-found reporting, Sprint 10 added a fictional staff review workflow, Sprint 11 expanded the invitation-only pilot into a testable campus experience, Sprint 12 added trusted campus information, private support and live-learning participation, Sprint 13 added structured multi-user acceptance evidence, Sprint 14 added a responsible AI study and campus assistant, Sprint 15 hardened the application for a supervised deployment rehearsal, Sprint 16 added a useful no-cost basic assistant, Sprint 17 broadened it with opt-in sourced public knowledge, Sprint 18 added a private illustration creator and a phone-style navigation sheet, Sprint 19 added focused mobile workspaces and persistent Ask UniCircle conversations, and Sprint 20 adds permission-aware Test Campus administration and linked multi-user schedule evidence:
+## Problem being investigated
 
-- Spring Boot 4.1.1 with Java 21 as the target language level.
-- A responsive desktop, tablet and mobile dashboard prototype.
-- Spring Security with production OIDC configuration for university single sign-on.
-- A multi-university relational schema using explicit `university_id` boundaries.
-- A searchable same-university student directory for new and existing permitted profiles.
-- Persisted connection requests with recipient-only accept and decline decisions.
-- Human-to-human private messaging that activates only after connection consent.
-- Persisted direct conversations and messages with server-enforced membership checks.
-- Authenticated WebSocket events that refresh messages and notifications across signed-in browser sessions.
-- Account-specific, database-backed notifications and unread counts.
-- A university-scoped Test Campus administrator dashboard for tester roles, suspension, activities, availability, support, safety and audit records.
-- Administrator-created events, services, opportunities and assigned live sessions with persistent notifications and personal-schedule propagation.
-- Immediate server-side suspension enforcement, including sessions that were already signed in.
-- Permission-aware campus search across people, events, services, circles and opportunities.
-- Immediate account blocking that removes private messaging permission.
-- Confidential safeguarding reports with validated reasons and an auditable review state.
-- A university-scoped event catalogue with account-specific registration, cancellation, remaining-capacity calculation and schedule integration.
-- Service offerings and bookable time slots for appointments, facilities and campus support.
-- Transactional booking controls that reject duplicate, overlapping and fully occupied requests.
-- Account-specific booking history, cancellation and confirmation notifications.
-- A composed personal schedule that combines registered events with confirmed service bookings.
-- University-scoped jobs, placements and volunteering from verified fictional publishers.
-- Server-enforced moderation and publisher-verification gates that prevent unapproved listings appearing.
-- Account-specific saved opportunities and a private application-stage tracker.
-- Search, type filtering, detailed eligibility, skills, working pattern and deadline information.
-- University-scoped lost-and-found reports with type, category and text search.
-- Moderation-gated student reports that remain private until approved.
-- Private identifying details and ownership evidence that never appear in public catalogue responses.
-- Account-specific report history, private claim tracking, withdrawal and reporter notifications.
-- Validated PNG/JPEG item photographs that are re-encoded to strip embedded metadata.
-- A fictional service-desk reviewer with a staff-only queue, audited approve/reject decisions and private reporter feedback.
-- Four separate fictional student sign-ins for demonstrating requests and chat between people.
-- Flyway migrations, PostgreSQL production configuration and an H2 local profile.
-- Health monitoring, modular architecture checks, unit tests and CI.
-- Honest prototype labels wherever live university data is not yet connected.
-- Database-backed profile details and a protected profile API.
-- Validated PNG/JPEG profile-photograph processing that strips embedded metadata before local development storage.
-- A protected academic-context API for programmes, modules and privacy-filtered coursemates.
-- Fictional university fixtures that are visibly separated from future approved institutional data.
-- A development-only fictional student sign-in with a real Spring Security session and secure logout.
-- A dedicated sign-in experience that explicitly prevents the use of Leeds Beckett or Microsoft credentials.
-- API requests return a clear unauthorised response rather than leaking protected profile information or returning a login page.
-- Separate invitation-only pilot accounts with strong password hashing and database-backed profiles.
-- Persistent pilot profile photos, messages and short-lived consent-based locations.
-- Live WebRTC voice and video calls inside accepted private conversations, with authenticated signalling, consent prompts, mute/camera controls and no application recording.
-- Location sharing that is off by default, mutual between accepted connections, rounded and automatically expired.
-- A Docker deployment path and a focused campus-pilot test guide for a single-instance Render rehearsal.
-- A five-destination mobile navigation bar matching the mobile product design: My Campus, Circles, Messages, Events and More.
-- A scrollable phone-style More sheet with a close control, backdrop, safe-area spacing and access to every workspace without a desktop sidebar covering the screen.
-- Self-declared course and year onboarding, privacy-filtered pilot coursemates and clearly labelled non-institutional academic context.
-- Pilot event, service and opportunity catalogues with account-specific registration, booking, saving and tracking workflows.
-- University-scoped announcements for urgent notices, modules, placements and internships, with verified-publisher context and per-student read state.
-- A targeted Campus Updates workspace with category filters and direct routes into support, events, opportunities and live classes.
-- Private support cases routed to the appropriate fictional university team, with reference codes, status tracking and account isolation.
-- Scheduled lectures, project meetings and careers drop-ins with persisted attendance and participant lists.
-- A live-class workspace with class chat, Q&A, raise/lower hand controls, agendas and provider-aware video-room status.
-- A configurable boundary for an approved meeting provider through `UNICIRCLE_MEETING_PROVIDER_BASE_URL`.
-- An account-specific Pilot Test Centre covering profiles, discovery, connections, messaging, calls, consent-based location, safety, announcements, bookings, opportunities, support, live classes, lost property and mobile access.
-- Persisted pass, fail, blocked and not-tested results with device and non-sensitive evidence notes for supervised staging evaluation.
-- Five assistant workspaces for broad questions, current university research, guided study, code support and original image generation.
-- Server-side OpenAI Responses API integration with web search, visible source links, code execution and image generation tools.
-- Input moderation, per-account rate limiting, secure server-side credentials and a clear setup state when AI is not enabled.
-- A deterministic no-cost assistant that answers supported computing, programming, study, project-planning, campus and simple calculation questions without an external AI account.
-- A private no-cost SVG illustration creator for downloadable posters, banners and concept graphics. It runs inside the UniCircle server and is deliberately not described as photorealistic generative AI.
-- Account- or browser-session-scoped Ask UniCircle conversation history, with a New chat workflow and persisted questions, answers, sources and generated illustrations.
-- Focused phone layouts that remove dashboard-only greeting and search content from feature workspaces and give an open private conversation the available app screen.
-- An optional public-knowledge fallback for wider factual questions, with a visible Wikipedia source and no payment or provider key.
-- Explicit per-question public-lookup consent, shortened search topics and sensitive-input blocking before any external request.
-- Honest boundaries for unsupported questions: no-cost mode does not claim unrestricted reasoning, official live university data, arbitrary code execution or unlimited photorealistic image generation.
-- Academic-integrity instructions that support explanation, practice, feedback and debugging without impersonating a student or fabricating research.
-- Database-backed campus circles with university isolation, search, filtering, creation and real join/leave membership.
-- Downloadable standards-based calendar files for registered events and confirmed bookings.
-- An installable mobile web-app shell with an honest offline screen that never caches private API data.
-- Public privacy, acceptable-use and accessibility information for the staging pilot.
-- Content Security Policy, Permissions Policy and strict referrer controls on browser responses.
+Students may need to use several disconnected channels to find people and campus information, communicate, join activities and arrange selected services. UniCircle investigates whether a controlled, account-owned web prototype can combine representative journeys while retaining university boundaries, privacy, consent and safety controls.
 
-The dashboard now contains working local social, event-registration, booking, opportunity-tracking, lost-and-found, fictional staff-review, announcement, support-case and live-learning demonstrations, but it is not evidence of a live university integration. Real student identity, official timetables, staff publishing, university email, booking systems, employer vacancy feeds, staffed support services, multiparty video and location require institutional approval, integration contracts, security review and deployment infrastructure. The pilot records information in its own database; it does not falsely report that an email was sent or a video room was opened when those approved services are absent. Production push notifications, institutionally governed moderation and safeguarding operations, secure media storage and retention policies remain future work.
+Sector and academic evidence is recorded in the research evidence pack. It supports investigation of the problem; it does not establish a Leeds Beckett problem prevalence, prove improved retention or measure student outcomes.
 
-## Run in IntelliJ IDEA
+## Project aims and objectives
 
-1. Open this repository's `pom.xml` as a project.
-2. Set the project SDK to Java 21 or newer. IntelliJ's bundled Java 25 runtime can compile the Java 21 target.
-3. Allow IntelliJ to import the Maven project.
-4. Run `UniCircleApplication`.
-5. Open `http://localhost:8080`.
-6. Open the profile and choose **Sign in to fictional sandbox**. The local-only test account is:
-   - Email: `student@demo.unicircle.test`
-   - Password: `CampusDemo!2026`
+The project aims to design, implement and critically evaluate a secure, accessible and modular prototype using fictional or approved campus data.
 
-The sign-in page also offers fictional Aisha, James and Sophie student accounts and fictional service-desk reviewer Alex Morgan using the same development-only password. Use separate browser profiles or a private window to demonstrate connection decisions, live messaging and staff review.
+The working objectives are to:
 
-These credentials are deliberately fictional and exist only in the non-production profile. They can be overridden with `UNICIRCLE_DEMO_USERNAME` and `UNICIRCLE_DEMO_PASSWORD`. Never use a real university password or Authenticator code in this form.
+- create and protect university-scoped student accounts and profiles;
+- enforce ownership, role, connection and conversation permissions;
+- provide persistent messaging, circles, events, bookings and campus information;
+- include consent, blocking, reporting and moderation controls;
+- use repeatable migrations and an automated verification strategy;
+- preserve traceability from research and requirements to implementation and tests;
+- distinguish demonstrated workflows from unverified institutional integrations; and
+- record limitations, risks and remaining work honestly.
 
-No local PostgreSQL installation is required for the default profile. It uses an in-memory H2 database configured to behave like PostgreSQL for early development. Production uses PostgreSQL and environment variables documented in `.env.example`.
+## Implemented features
 
-## Ask UniCircle assistant setup
+The repository contains a working Spring Boot prototype and responsive web interface. Implemented areas include:
 
-Ask UniCircle works without an account, payment or external AI key. Its reviewed local engine provides deterministic guidance for common computing concepts, beginner Java, C#, Python, SQL, HTML/CSS/JavaScript, Spring Boot, REST APIs, debugging, testing, Agile, MoSCoW, risk registers, final-year-project planning, UniCircle use and simple arithmetic. Because these answers run inside the application, they remain fast and predictable on the small Render service.
+- university-scoped profiles, academic context and fictional/demo sign-in;
+- invitation-only pilot accounts, password recovery and strong password hashing;
+- same-university discovery, connection requests and consent-based private messaging;
+- live signed-in WebSocket notifications and conversation updates;
+- account blocking, safeguarding reports and staff-review workflows;
+- circles, event registration, service booking and an account-owned schedule;
+- moderated opportunities and private application tracking;
+- moderated lost-and-found reports and private claim workflows;
+- campus announcements, support cases and live-learning participation;
+- permission-aware Test Campus administration and audit records;
+- consent-led, approximate, short-lived location sharing;
+- an isolated no-cost campus assistant and private SVG illustration workspace;
+- optional public-knowledge and provider-based assistant modes;
+- downloadable calendar files and an installable mobile web-app shell;
+- privacy, acceptable-use and accessibility pages; and
+- security headers including a Content Security Policy, Permissions Policy and strict referrer policy.
 
-For a wider stable factual question, the user may explicitly enable **Use public sources**. UniCircle screens the text for obvious secrets and personal identifiers, shortens it to a search topic, retrieves a current English Wikipedia introduction and displays the page as a source. The control is off by default, the full conversation is not sent and a source-free failure never becomes an invented answer. This is retrieval, not a claim that Wikipedia is always correct or that UniCircle contains a perfect general-purpose language model.
+These are repository features, not evidence of university approval, production readiness or measured user outcomes. Optional and future integrations are identified in the limitations section.
 
-No-cost mode is deliberately limited. It does not analyse arbitrary large programs, verify changing university information, execute code or produce unlimited photorealistic images. Admissions, fees, visas, policies, deadlines and other high-stakes or current facts must still be checked on an official source.
+## Technology stack
 
-The existing advanced integration remains optional. If a future approved deployment receives a valid `OPENAI_API_KEY`, web research, broader answers, code execution and image generation become available automatically. Add the key only as a private server-side environment variable; never place it in JavaScript, commit it to Git or ask a student to enter it. Guest requests receive the same validation and session-based usage limit as signed-in requests; private profiles, messaging and university data remain account-protected.
+| Area | Technology |
+| --- | --- |
+| Language and runtime | Java 21 |
+| Application framework | Spring Boot 4.1.1 |
+| Architecture | Spring Modulith 2.1.1 modular monolith |
+| Persistence | Spring Data JPA, Flyway, PostgreSQL; H2 for local/test profiles |
+| Security | Spring Security, CSRF, OAuth2/OIDC client configuration |
+| Real-time features | WebSocket/STOMP; WebRTC call signalling |
+| Browser client | HTML, CSS and JavaScript in `src/main/resources/static` |
+| Build and verification | Maven Wrapper, JaCoCo |
+| Testing | Spring MVC/JPA/Security tests, Modulith and frontend-structure tests |
+| Containerisation | Docker multi-stage build and Docker Compose for PostgreSQL |
 
-The default main model is `gpt-6.1-sol`, selected as a strong balance of reasoning quality and cost, and the default image tool is `gpt-image-2.5-flare`. Both can be changed without code edits using `UNICIRCLE_ASSISTANT_MODEL` and `UNICIRCLE_ASSISTANT_IMAGE_MODEL`. Provider usage is chargeable and should be protected with account limits, budget alerts and institutional approval before a wider pilot.
-
-When advanced mode is enabled, Ask UniCircle can search the public web for general and university-research questions and display returned source links. It never has automatic access to a university's private systems and cannot guarantee that every answer is correct.
-
-For the invitation-only staging-account flow within the complete UniCircle application and Render rehearsal instructions, see [`docs/friends-pilot.md`](docs/friends-pilot.md). Pilot participants must never enter university credentials or Authenticator codes.
-
-The staging sign-in page includes a password-recovery form. Recovery requires a high-entropy, single-use code issued by the Test Campus operator, a matching pilot email address and a new password of at least 12 characters. Codes are stored only as SHA-256 hashes, expire, are consumed after one successful change and remain protected by CSRF validation. This operator-assisted staging recovery is not a substitute for institution-approved email delivery in a production deployment.
-
-## Command-line checks
-
-```bash
-./mvnw clean verify
-./mvnw spring-boot:run
-```
-
-## Product boundaries
-
-- People messaging is human-to-human. The campus information assistant is a separate, clearly labelled feature.
-- Location sharing will be off by default and limited to people explicitly accepted by the user.
-- UniCircle will never ask users to type their university password into the application. Production sign-in redirects to the university identity provider through OIDC.
-- The project does not claim that Leeds Beckett University or any other institution has approved, deployed or endorsed it.
-- Fixtures shown in the dashboard are demonstration data, not live records.
+The Maven parent is Spring Boot 4.1.1 and `pom.xml` sets Java 21.
 
 ## Architecture
 
-UniCircle begins as a modular monolith. This keeps deployment manageable for a final-year project while enforcing boundaries that can later support independent services. See:
+UniCircle begins as a modular monolith so that a single student project can preserve local transactions and a simple deployment while keeping functional boundaries explicit.
 
-- [`docs/architecture.md`](docs/architecture.md)
-- [`docs/assessment/requirements-traceability.md`](docs/assessment/requirements-traceability.md)
-- [`docs/assessment/research-and-requirements.md`](docs/assessment/research-and-requirements.md)
-- [`docs/research/literature-review.md`](docs/research/literature-review.md)
-- [`docs/research/source-evaluation-log.md`](docs/research/source-evaluation-log.md)
-- [`docs/assessment/requirements-and-scope.md`](docs/assessment/requirements-and-scope.md)
-- [`docs/assessment/architecture-evidence.md`](docs/assessment/architecture-evidence.md)
-- [`docs/assessment/production-manifest-reconciliation.md`](docs/assessment/production-manifest-reconciliation.md)
-- [`output/pdf/UniCircle_Research_and_Requirements_Evidence_Pack.pdf`](output/pdf/UniCircle_Research_and_Requirements_Evidence_Pack.pdf)
-- [`docs/adr/0001-platform-and-language.md`](docs/adr/0001-platform-and-language.md)
-- [`docs/adr/0002-modular-monolith.md`](docs/adr/0002-modular-monolith.md)
-- [`docs/adr/0003-identity-and-tenancy.md`](docs/adr/0003-identity-and-tenancy.md)
-- [`docs/sprints/01-foundation.md`](docs/sprints/01-foundation.md)
-- [`docs/sprints/02-identity-profile.md`](docs/sprints/02-identity-profile.md)
-- [`docs/sprints/03-university-context.md`](docs/sprints/03-university-context.md)
-- [`docs/sprints/04-demo-sign-in.md`](docs/sprints/04-demo-sign-in.md)
-- [`docs/sprints/05-connections-messaging.md`](docs/sprints/05-connections-messaging.md)
-- [`docs/sprints/06-realtime-safety.md`](docs/sprints/06-realtime-safety.md)
-- [`docs/sprints/07-events-bookings.md`](docs/sprints/07-events-bookings.md)
-- [`docs/sprints/08-opportunities.md`](docs/sprints/08-opportunities.md)
-- [`docs/sprints/09-lost-found.md`](docs/sprints/09-lost-found.md)
-- [`docs/sprints/10-lost-found-staff-review.md`](docs/sprints/10-lost-found-staff-review.md)
-- [`docs/sprints/11-campus-pilot.md`](docs/sprints/11-campus-pilot.md)
-- [`docs/sprints/12-campus-information-live-learning.md`](docs/sprints/12-campus-information-live-learning.md)
-- [`docs/sprints/13-staging-acceptance-evidence.md`](docs/sprints/13-staging-acceptance-evidence.md)
-- [`docs/sprints/14-responsible-ai-assistant.md`](docs/sprints/14-responsible-ai-assistant.md)
-- [`docs/sprints/15-deployment-hardening.md`](docs/sprints/15-deployment-hardening.md)
-- [`docs/sprints/16-no-cost-basic-assistant.md`](docs/sprints/16-no-cost-basic-assistant.md)
-- [`docs/sprints/17-sourced-public-knowledge.md`](docs/sprints/17-sourced-public-knowledge.md)
-- [`docs/sprints/18-mobile-shell-and-private-illustrations.md`](docs/sprints/18-mobile-shell-and-private-illustrations.md)
-- [`docs/sprints/19-focused-mobile-workspaces.md`](docs/sprints/19-focused-mobile-workspaces.md)
-- [`docs/sprints/20-test-campus-administration.md`](docs/sprints/20-test-campus-administration.md)
-- [`docs/qa/test-campus-evidence-2026-10-14.md`](docs/qa/test-campus-evidence-2026-10-14.md)
+```text
+Responsive browser/PWA
+        |
+        | HTTPS, session cookie and WebSocket
+        v
+Spring Security
+        |
+        v
+Spring Boot modular monolith
+        |
+        +-- identity and campus context
+        +-- social, communities and safety
+        +-- events, bookings and schedule
+        +-- information and support
+        +-- administration and optional extensions
+        |
+        v
+Flyway-managed PostgreSQL schema
+```
 
-## Branching and assessment evidence
+The browser never supplies the authoritative university or account identifier. Current identity and tenant context are derived on the server. H2 is used for the default local profile and the pilot-local rehearsal profile; PostgreSQL is the production and hosted-pilot database.
 
-Each sprint is developed on a feature branch and merged through a pull request. Commits, tests, architecture decisions, sprint records and verification evidence are retained so the project demonstrates professional software engineering practice rather than only a polished interface.
+## Repository structure
 
-## Licence and data
+```text
+.github/workflows/       Maven CI quality check
+.mvn/wrapper/            Maven Wrapper configuration
+docs/                    Architecture, ADR, sprint, QA and research evidence
+output/pdf/              Exported assessment evidence packs
+scripts/test-calls.mjs   Isolated JavaScript call-logic tests
+src/main/java/           Spring application modules
+src/main/resources/
+  application*.yml       Default, pilot and production configuration
+  db/migration/          Flyway SQL migrations
+  static/                Browser HTML, CSS, JavaScript and PWA assets
+src/test/java/           Maven unit, integration and architecture tests
+.env.example             Deployment environment-variable template
+compose.yml              Local PostgreSQL Compose service
+Dockerfile               Java 21 application image build
+pom.xml                  Maven dependencies and quality gates
+```
 
-No production licence has yet been selected. Do not deploy the project with real personal data until the university has approved the privacy, information-security, accessibility, retention and safeguarding arrangements.
+## Prerequisites
+
+- JDK 21 or newer for the Java 21 target.
+- Git.
+- IntelliJ IDEA for the IDE workflow, or Windows PowerShell for command-line use.
+- Docker Desktop only for the optional PostgreSQL Compose database.
+- Node.js only to run `scripts/test-calls.mjs`.
+
+The repository includes `mvnw` and `mvnw.cmd`; a separate Maven installation is not required.
+
+## Environment configuration
+
+The default `application.yml` profile runs with an in-memory H2 PostgreSQL-compatible database and does not require PostgreSQL or external provider credentials.
+
+`.env.example` is a deployment template. Do not commit real secrets. Configuration values used by the application include:
+
+| Variable | Purpose |
+| --- | --- |
+| `SPRING_PROFILES_ACTIVE` | Activates a Spring profile such as `pilot` or `prod` |
+| `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD` | PostgreSQL connection values for the `prod` profile |
+| `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_ISSUER_URI` | Approved OIDC provider values for production |
+| `UNICIRCLE_DEMO_USERNAME`, `UNICIRCLE_DEMO_PASSWORD` | Default-profile fictional demo credentials |
+| `UNICIRCLE_ASSISTANT_MODEL`, `UNICIRCLE_ASSISTANT_IMAGE_MODEL` | Optional assistant provider model names |
+| `UNICIRCLE_MEETING_PROVIDER_BASE_URL` | Optional provider boundary for meeting rooms |
+| `UNICIRCLE_STUN_URLS` | Comma-separated WebRTC STUN URLs |
+| `UNICIRCLE_TURN_URLS`, `UNICIRCLE_TURN_USERNAME`, `UNICIRCLE_TURN_CREDENTIAL` | TURN provider pair |
+| `UNICIRCLE_TURN_SHARED_SECRET`, `UNICIRCLE_TURN_CREDENTIAL_TTL_SECONDS` | Optional coturn shared-secret credential mode |
+| `UNICIRCLE_CALL_ICE_TRANSPORT_POLICY` | `all` or `relay` |
+| `UNICIRCLE_PROFILE_PHOTOS_DIR`, `UNICIRCLE_LOST_FOUND_PHOTOS_DIR` | Local upload storage directories |
+| `UNICIRCLE_BOOTSTRAP_ADMIN_EMAIL` | Optional pilot bootstrap administrator |
+| `PILOT_INVITE_CODE` | Required random code for the `pilot` profile |
+| `PORT` | Hosted-server port, default `8080` |
+
+Optional assistant provider variables documented in `.env.example` include `OPENAI_API_KEY`, `UNICIRCLE_XIRSYS_IDENT`, `UNICIRCLE_XIRSYS_SECRET` and `UNICIRCLE_XIRSYS_CHANNEL`. Provider credentials remain server-side secrets.
+
+## Database configuration
+
+### Default local database
+
+The default profile uses:
+
+```text
+H2 in-memory database
+URL: jdbc:h2:mem:unicircle;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+Schema management: Flyway validate
+```
+
+No local PostgreSQL installation is required. Restarting the application resets this database.
+
+### Local PostgreSQL
+
+`compose.yml` starts only PostgreSQL:
+
+```powershell
+docker compose up -d postgres
+docker compose ps
+```
+
+The compose service uses the database name and credentials declared in `compose.yml`: `unicircle`, `unicircle` and `local-development-only`, exposed on port `5432`. These values are local-development values, not production credentials.
+
+To activate PostgreSQL with a Spring profile, set matching environment variables and use the `prod` profile. The `prod` profile expects `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` and `OIDC_ISSUER_URI`; do not substitute placeholder OIDC credentials for a live provider.
+
+### Invitation-only local pilot
+
+Set `PILOT_INVITE_CODE` to a random value of at least 32 characters and activate `pilot,pilot-local`. The pilot-local profile uses a persistent file in `unicircle-pilot.mv.db`; do not commit that database file and do not expose the local profile to the public internet.
+
+## How to run UniCircle in IntelliJ IDEA
+
+1. Open the repository's `pom.xml` as a Maven project.
+2. Select JDK 21 or newer as the project SDK.
+3. Allow IntelliJ to import Maven dependencies.
+4. Open `UniCircleApplication`.
+5. Run with the default configuration to use the in-memory H2 profile.
+6. Open <http://localhost:8080>.
+
+For the default demo sign-in, use the profile-configured demo account only in local/demo use:
+
+```text
+Email: student@demo.unicircle.test
+Password: CampusDemo!2026
+```
+
+These credentials are fictional. `UNICIRCLE_DEMO_USERNAME` and `UNICIRCLE_DEMO_PASSWORD` may override them. Never enter a real university password or Authenticator code.
+
+For a local invitation pilot, create a run configuration with active profiles `pilot,pilot-local` and set `PILOT_INVITE_CODE`. Use separate browser profiles or devices for multi-account journeys.
+
+## How to run it from Windows PowerShell
+
+From the repository root:
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+Open <http://localhost:8080>.
+
+To build and verify first:
+
+```powershell
+.\mvnw.cmd clean verify
+java -jar .\target\unicircle-0.0.1-SNAPSHOT.jar
+```
+
+The packaged JAR name is `unicircle-0.0.1-SNAPSHOT.jar`.
+
+For an invitation-only local pilot:
+
+```powershell
+$env:PILOT_INVITE_CODE = "<private-random-code-at-least-32-characters>"
+$env:SPRING_PROFILES_ACTIVE = "pilot,pilot-local"
+.\mvnw.cmd spring-boot:run
+```
+
+Clear the pilot variables after the run if needed:
+
+```powershell
+Remove-Item Env:PILOT_INVITE_CODE
+Remove-Item Env:SPRING_PROFILES_ACTIVE
+```
+
+## How to confirm the application is working
+
+1. Start the application.
+2. Open <http://localhost:8080>.
+3. Check <http://localhost:8080/actuator/health>; the expected response contains `"status":"UP"`.
+4. Open the sign-in page and use only the documented fictional/demo account or a private invitation-code pilot account.
+5. Confirm the page does not request a university password or Microsoft/Authenticator credential.
+6. Exercise a relevant positive journey and a negative access attempt rather than only checking the home page.
+
+Production and hosted-pilot verification must use HTTPS, managed PostgreSQL and explicit provider configuration. The H2 happy path is not a deployment or security result.
+
+## How to run automated tests
+
+Maven suite and coverage gate:
+
+```powershell
+.\mvnw.cmd clean verify
+```
+
+PowerShell wrapper:
+
+```powershell
+.\mvnw.cmd test
+```
+
+Git Bash/Linux/macOS:
+
+```bash
+./mvnw clean verify
+```
+
+The suite includes Spring application, security, controller, persistence, frontend-structure and Spring Modulith architecture checks. JaCoCo enforces at least 75% line coverage.
+
+Run the isolated JavaScript call-logic tests where Node.js is available:
+
+```powershell
+node --test scripts/test-calls.mjs
+```
+
+This script uses simulated media and RTC objects. It is not evidence of real microphones, speakers, physical devices or a live TURN relay.
+
+Browser/device acceptance is not covered by an automated Playwright or Cypress suite in this repository. Use the recorded manual test checklists and report browser/device limitations separately.
+
+## Research and requirements evidence
+
+- [Literature review](docs/research/literature-review.md)
+- [Source evaluation log](docs/research/source-evaluation-log.md)
+- [Requirements and scope baseline](docs/assessment/requirements-and-scope.md)
+- [Requirements traceability](docs/assessment/requirements-traceability.md)
+- [UniCircle research and requirements evidence pack (PDF)](output/pdf/UniCircle_Research_and_Requirements_Evidence_Pack.pdf)
+
+These documents contain research synthesis, scope decisions and requirement mappings. They do not report participant findings or approval that has not been recorded in the repository.
+
+## Architecture and design evidence
+
+- [Architecture](docs/architecture.md)
+- [Architecture evidence](docs/assessment/architecture-evidence.md)
+- [Production manifest reconciliation](docs/assessment/production-manifest-reconciliation.md)
+- [ADR 0001: platform and language](docs/adr/0001-platform-and-language.md)
+- [ADR 0002: modular monolith](docs/adr/0002-modular-monolith.md)
+- [ADR 0003: identity and tenancy](docs/adr/0003-identity-and-tenancy.md)
+- [Campus pilot and deployment guide](docs/friends-pilot.md)
+- [Calling across networks](docs/calling-across-networks.md)
+- [Release-readiness review](docs/qa/release-readiness-2026-10-14.md)
+- [Test Campus evidence](docs/qa/test-campus-evidence-2026-10-14.md)
+
+Sprint records and implementation evidence are listed by numbered document from [`docs/sprints/01-foundation.md`](docs/sprints/01-foundation.md) through [`docs/sprints/20-test-campus-administration.md`](docs/sprints/20-test-campus-administration.md).
+
+## Known limitations and remaining work
+
+- Live Leeds Beckett or third-party institutional identity, records and schedules are not implemented or approved.
+- H2 is useful for development and tests; managed PostgreSQL, migrations, backup and restore require formal rehearsal.
+- Core single-instance WebSocket and session behaviour needs a shared broker and horizontal-scaling design before a larger deployment.
+- Call success across physical devices and restrictive networks requires real TURN/relay testing.
+- Location, messaging and optional AI features need real-device and cross-network privacy and safety evaluation.
+- Independent accessibility, penetration and performance testing have not established conformance or production thresholds.
+- Participant research must not begin before the required ethical approval and approved data-collection plan.
+- Production push notifications, secure institutional media storage, retention, deletion and fully governed moderation remain future work.
+- A production licence has not been selected.
+
+Do not present implemented code or browser-emulation screenshots as proof of accessibility conformance, security certification, performance, research outcomes or university endorsement.
+
+## Ethics, privacy and safety boundaries
+
+- Demonstration users and campus data are fictional.
+- UniCircle is not an official Leeds Beckett University service.
+- The application must not request real university passwords or Authenticator codes.
+- It does not use live university student records.
+- Participant research must not begin before favourable ethical approval and a valid approved participant/data plan.
+- University data, account data and participant data must remain purpose limited and access controlled.
+- Location sharing is off by default and is described as voluntary, approximate and short-lived.
+- The system must not replace emergency services, official support or institutional safeguarding operations.
+- Research evidence and public claims must include methods, scope and limitations.
+
+No academic-integrity declaration is added or modified here. It must remain the author's university/assessment responsibility.
+
+## Deployment information
+
+The Docker build uses Maven verification, Java 21 and a non-root Java 21 runtime. `compose.yml` provides PostgreSQL for local development only.
+
+The hosted-pilot guide describes a one-instance staging rehearsal. Set the `pilot` profile, `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, `PILOT_INVITE_CODE` and any reviewed TURN settings on the hosting platform. The application health endpoint is `/actuator/health`.
+
+Production OIDC configuration is an integration boundary, not evidence of university approval. Before institutional or public deployment, the project requires formal identity and data agreements, managed secrets, HTTPS, monitoring, backups, operational ownership, independent security and accessibility review, and approved data-governance processes.
+
+## Author and academic-project notice
+
+**Author:** Michael Osita
+
+This repository is a Level 6 final-year production project. The source, evidence and limitations should be treated as an academic engineering artefact in active development, not as an endorsed, certified or live university service.
