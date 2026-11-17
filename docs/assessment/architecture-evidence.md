@@ -98,7 +98,7 @@ flowchart TD
     Headers --> Security[Spring Security filter chain]
     Security --> Auth{Environment}
     Auth -->|Development| Demo[Seeded demonstration identities]
-    Auth -->|Invitation-only pilot| Pilot[Database accounts and encoded passwords]
+    Auth -->|Staging pilot| Pilot[Database accounts and encoded passwords]
     Auth -->|Institutional production| OIDC[OIDC identity provider]
     Security --> CSRF[CSRF protection for state changes]
     Security --> Access[Role, ownership and university-scope checks]

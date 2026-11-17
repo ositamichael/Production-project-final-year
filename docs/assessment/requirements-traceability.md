@@ -8,6 +8,22 @@ This document maps the qualities expected of a strong final-year production proj
 
 ## Current verification baseline
 
+**Current repository verification:** 17 November 2026
+
+At commit `4e9d8761933027cc302d24406a694f903b8a30ee`, the current clean verification produced:
+
+- Build result: **success**
+- Automated Maven tests: **158 passed, 0 failed, 0 errors, 0 skipped**
+- Node call-logic tests: **16 passed, 0 failed**
+- JaCoCo instruction coverage: **83%**
+- JaCoCo line coverage: **81.7%**
+- JaCoCo branch coverage: **56.3%**
+- JaCoCo method coverage: **84.7%**
+- Enforced quality gate: **at least 75% line coverage**
+- Local smoke test: `/` and `/actuator/health` returned HTTP 200
+
+These results are evidence of the tested commit and environment. They do not prove accessibility, security, performance or institutional production readiness.
+
 Run:
 
 ```bash
@@ -30,7 +46,7 @@ These figures must be regenerated before submission; screenshots are supporting 
 
 ## Requirements baseline v1.0 reconciliation
 
-This section reconciles the IDs in `requirements-and-scope.md` with the repository inspected on 5 November 2026. The status is based on source and existing test inspection. The full suite was **not** re-run for this documentation update, so the 27 October verification figures above remain historical rather than a claim about the current working tree.
+This section reconciles the IDs in `requirements-and-scope.md` with the repository inspected on 5 November 2026 and was reconciled against a clean 17 November 2026 verification. The status is based on source and test inspection.
 
 Status meanings:
 
@@ -69,7 +85,7 @@ Status meanings:
 | NFR-03 | Partially implemented | Semantic/structure checks, responsive styles, accessibility information | Run named automated scans and the complete manual WCAG 2.2 AA core-journey checklist, fix defects and retest. |
 | NFR-04 | Not yet evidenced | Target and proposed method exist only | Wait for Favourable Opinion; then retain approved task data, SUS calculations and limitations. |
 | NFR-05 | Not yet evidenced | No controlled current load report identified | Create repeatable HTTP/WebSocket load scripts and record environment, dataset, percentiles and failures. |
-| NFR-06 | Implemented; current run pending | Maven/Flyway build and historical 27 October result; booking transaction tests | Re-run from a clean state and add the simultaneous booking race test. |
+| NFR-06 | Implemented and current run passed | Maven/Flyway build re-run on 17 November 2026; booking transaction tests | Add the simultaneous final-place booking race test for stronger concurrency evidence. |
 | NFR-07 | Implemented and evidenced | `ArchitectureTests.modularBoundariesAreValid`; ADRs; Flyway migrations | Generate final diagrams from the implemented structure and evaluate coupling/trade-offs. |
 | NFR-08 | Implemented but reconciliation incomplete | JUnit/MockMvc tests and JaCoCo 75% line gate | Link every Must acceptance criterion to a named test and add missing negative/race cases. |
 | NFR-09 | Implemented but weakly evidenced | `FrontendStructureTests`, responsive CSS and retained screenshots | Perform named browser/viewport manual checks; structure assertions do not prove visual operability. |
@@ -87,7 +103,7 @@ Status meanings:
 | Non-functional requirements | Security headers, CSRF, access control, validation, rate limits, short-lived location data, responsive frontend, health endpoint | Implemented | Add measured load-test results and formal accessibility audit evidence |
 | Architecture and justification | `docs/architecture.md`, ADRs, modularity test, architecture diagrams | Implemented | Include selected diagrams and trade-off discussion in the dissertation |
 | Normalised data design | 18 Flyway migrations with keys, constraints, tenancy and join tables | Implemented | Export a final ERD image from the migration-backed schema |
-| Secure authentication | Development demo identities, invitation-only pilot accounts, production OIDC | Implemented by environment | Complete university identity-provider approval before any institutional deployment |
+| Secure authentication | Development demo identities, staging-pilot accounts, production OIDC | Implemented by environment | Complete university identity-provider approval before any institutional deployment |
 | Authorisation | Student, staff and administrator roles; university scoping; server-side ownership checks | Implemented and tested | Include negative-access test evidence in the appendix |
 | Password protection | Delegating password encoder and stored password hashes in the pilot | Implemented | State the selected encoder and upgrade path in the report |
 | Real-time communication | Authenticated WebSocket event gateway plus persistent database messages | Implemented and tested | Add a measured concurrent-connection test if required by the official brief |
@@ -107,7 +123,7 @@ Status meanings:
 
 ### Session security instead of a browser-managed JWT
 
-The generic checklist suggests JWT for every deployment. UniCircle deliberately uses Spring Security sessions for the invitation-only pilot and OIDC login for the production profile. This avoids storing a bearer token in browser JavaScript and lets Spring Security apply CSRF protection to state-changing requests. The final report should compare this choice with stateless JWT and explain why the selected design fits a server-rendered modular monolith.
+The generic checklist suggests JWT for every deployment. UniCircle deliberately uses Spring Security sessions for the staging pilot and OIDC login for the production profile. This avoids storing a bearer token in browser JavaScript and lets Spring Security apply CSRF protection to state-changing requests. The final report should compare this choice with stateless JWT and explain why the selected design fits a server-rendered modular monolith.
 
 ### Modular monolith instead of microservices
 
@@ -125,7 +141,7 @@ The pilot must continue to state that its campus data is fictional and that it i
 
 1. Claim only behaviour that is implemented and repeatably tested.
 2. Prefer source code, automated tests, migrations, logs and measured results over screenshots alone.
-3. Keep secrets, passwords and invitation codes outside Git.
+3. Keep secrets, passwords and pilot recovery codes outside Git.
 4. Do not use real student data without approval, consent and a defined retention process.
 5. Record limitations and unsuccessful decisions; critical evaluation earns more credibility than inflated claims.
 6. Re-run `./mvnw clean verify` immediately before every release and before collecting final submission evidence.
