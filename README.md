@@ -148,6 +148,7 @@ UniCircle begins as a modular monolith. This keeps deployment manageable for a f
 - [`docs/assessment/requirements-and-scope.md`](docs/assessment/requirements-and-scope.md)
 - [`docs/assessment/architecture-evidence.md`](docs/assessment/architecture-evidence.md)
 - [`docs/assessment/production-manifest-reconciliation.md`](docs/assessment/production-manifest-reconciliation.md)
+- [`output/pdf/UniCircle_Research_and_Requirements_Evidence_Pack.pdf`](output/pdf/UniCircle_Research_and_Requirements_Evidence_Pack.pdf)
 - [`docs/adr/0001-platform-and-language.md`](docs/adr/0001-platform-and-language.md)
 - [`docs/adr/0002-modular-monolith.md`](docs/adr/0002-modular-monolith.md)
 - [`docs/adr/0003-identity-and-tenancy.md`](docs/adr/0003-identity-and-tenancy.md)
